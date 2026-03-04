@@ -1,0 +1,276 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                           String    @id @default(cuid())
+  email                        String    @unique
+  password_hash                String?
+  full_name                    String?
+  role                         String    @default("user")
+  avatar_url                   String?
+  phone                        String?
+  bio                          String?
+  institution                  String?
+  job_title                    String?
+  duty_station                 String?
+  languages                    String    @default("[]") // JSON array string
+  verification_status          String    @default("unverified")
+  institutional_email_verified Boolean   @default(false)
+  subscription_plan_id         String?
+  subscription_status          String    @default("inactive")
+  subscription_renewal_date    DateTime?
+  has_first_year_guarantee     Boolean   @default(false)
+  guest_points                 Int       @default(500)
+  points_escrow                Int       @default(0)
+  referral_code                String?   @unique
+  referred_by                  String?
+  referred_users_verified_count Int      @default(0)
+  referral_earnings            Float     @default(0)
+  notification_preferences     String    @default("{}") // JSON string
+  swap_preferences             String    @default("{}") // JSON string
+  reset_password_token         String?   @unique
+  reset_password_expires       DateTime?
+  created_at                   DateTime  @default(now())
+  updated_at                   DateTime  @updatedAt
+}
+
+model Property {
+  id                  String    @id @default(cuid())
+  owner_email         String
+  title               String
+  description         String?
+  property_type       String?
+  status              String    @default("draft")
+  is_featured         Boolean   @default(false)
+  address             String?
+  city                String
+  country             String
+  latitude            Float?
+  longitude           Float?
+  duty_station        String?
+  bedrooms            Int       @default(1)
+  bathrooms           Int       @default(1)
+  max_guests          Int       @default(2)
+  square_meters       Float?
+  amenities           String    @default("[]") // JSON array string
+  photos              String    @default("[]") // JSON array string
+  swap_types_accepted String    @default("[\"reciprocal\"]") // JSON array string
+  availability        String?   // JSON string
+  nightly_points      Int       @default(100)
+  guest_points_value  Float?
+  total_swaps         Int       @default(0)
+  total_reviews       Int       @default(0)
+  average_rating      Float?
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
+}
+
+model SwapRequest {
+  id                     String    @id @default(cuid())
+  requester_email        String
+  host_email             String
+  property_id            String
+  requester_property_id  String?
+  property_title         String?
+  status                 String    @default("pending")
+  swap_type              String    @default("reciprocal")
+  check_in               DateTime?
+  check_out              DateTime?
+  duration_nights        Int?
+  purpose                String?
+  party_size             Int       @default(1)
+  total_points           Int?
+  points_in_escrow       Boolean   @default(false)
+  waiver_signed          Boolean   @default(false)
+  waiver_signed_at       DateTime?
+  insurance_activated    Boolean   @default(false)
+  video_call_completed   Boolean   @default(false)
+  video_call_id          String?
+  counter_check_in       DateTime?
+  counter_check_out      DateTime?
+  counter_notes          String?
+  completed_at           DateTime?
+  requester_completed    Boolean   @default(false)
+  host_completed         Boolean   @default(false)
+  requester_rating       Float?
+  host_rating            Float?
+  created_at             DateTime  @default(now())
+  updated_at             DateTime  @updatedAt
+}
+
+model Message {
+  id              String   @id @default(cuid())
+  sender_email    String
+  recipient_email String
+  swap_request_id String?
+  conversation_id String?
+  content         String
+  is_read         Boolean  @default(false)
+  message_type    String   @default("text")
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+}
+
+model Notification {
+  id           String   @id @default(cuid())
+  user_email   String
+  type         String
+  title        String
+  message      String
+  link         String?
+  related_id   String?
+  sender_email String?
+  sender_name  String?
+  is_read      Boolean  @default(false)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+}
+
+model Verification {
+  id                String    @id @default(cuid())
+  user_id           String?
+  user_name         String?
+  user_email        String
+  verification_type String
+  status            String    @default("pending")
+  document_url      String?
+  document_type     String?
+  organization      String?
+  staff_grade       String?
+  duty_station      String?
+  is_email_verified Boolean   @default(false)
+  notes             String?
+  reviewer_notes    String?   // Added to match frontend usage
+  reviewed_by       String?
+  reviewed_at       DateTime?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+}
+
+model Review {
+  id              String   @id @default(cuid())
+  property_id     String
+  author_email    String
+  target_email    String?
+  swap_request_id String?
+  rating          Float
+  content         String?
+  status          String   @default("pending")
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+}
+
+model VideoCall {
+  id                String    @id @default(cuid())
+  host_email        String
+  guest_email       String
+  property_id       String?
+  room_id           String?
+  room_url          String?
+  scheduled_at      DateTime?
+  status            String    @default("scheduled")
+  meeting_completed Boolean   @default(false)
+  call_ended_at     DateTime?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+}
+
+model SubscriptionPlan {
+  id                        String   @id @default(cuid())
+  name                      String
+  description               String?
+  price                     Float
+  currency                  String   @default("USD")
+  type                      String
+  exchanges_per_year        Int?
+  property_guarantee_amount Float?
+  max_swaps                 Int?
+  is_active                 Boolean  @default(true)
+  features                  String   @default("[]") // JSON array string
+  sort_order                Int      @default(0)
+  created_at                DateTime @default(now())
+  updated_at                DateTime @updatedAt
+}
+
+model PaymentTransaction {
+  id                   String   @id @default(cuid())
+  user_email           String
+  subscription_plan_id String?
+  amount               Float
+  currency             String   @default("USD")
+  status               String   @default("pending")
+  payment_gateway_id   String?
+  payment_method       String?
+  receipt_url          String?
+  transaction_type     String
+  metadata             String?  // JSON string
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+}
+
+model GuestPointTransaction {
+  id               String   @id @default(cuid())
+  user_email       String
+  transaction_type String
+  points           Int
+  balance_after    Int
+  description      String?
+  related_id       String?
+  metadata         String?  // JSON string
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+}
+
+model Referral {
+  id                     String    @id @default(cuid())
+  referrer_email         String
+  referred_email         String    @unique
+  referred_name          String?
+  status                 String    @default("pending")
+  referred_user_status   String    @default("invited")
+  referrer_reward_status String    @default("no_reward")
+  reward_details         String?   // JSON string
+  completed_at           DateTime?
+  created_at             DateTime  @default(now())
+  updated_at             DateTime  @updatedAt
+}
+
+model ActivityLog {
+  id            String   @id @default(cuid())
+  activity_type String
+  description   String
+  location_from String?
+  location_to   String?
+  is_public     Boolean  @default(false)
+  metadata      String?  // JSON string
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+}
+
+model PlatformSettings {
+  id                                     String   @id @default(cuid())
+  platform_name                          String   @default("Unswap")
+  platform_status                        String   @default("pre_launch")
+  founders_waiver_enabled                Boolean  @default(true)
+  required_verified_referrals_for_waiver Int      @default(5)
+  maintenance_mode                       Boolean  @default(false)
+  waitlist_enabled                       Boolean  @default(true)
+  max_properties_per_user                Int      @default(3)
+  early_bird_discount_pct                Float    @default(50)
+  early_bird_slots                       Int      @default(500)
+  trust_first_refund_days                Int      @default(30)
+  guest_points_per_swap_night            Int      @default(10)
+  institutional_email_domains            String?  // JSON array string
+  public_settings                        String?  // JSON string
+  created_at                             DateTime @default(now())
+  updated_at                             DateTime @updatedAt
+}
