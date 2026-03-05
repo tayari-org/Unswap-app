@@ -12,6 +12,7 @@ const functionsRouter = require('./routes/functions');
 const uploadsRouter = require('./routes/uploads');
 const emailRouter = require('./routes/email');
 const webhookRouter = require('./routes/webhook');
+const referralsRouter = require('./routes/referrals');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -49,6 +50,7 @@ app.use('/api/entities', entitiesRouter);
 app.use('/api/functions', functionsRouter);
 app.use('/api/upload', uploadsRouter);
 app.use('/api/email', emailRouter);
+app.use('/api/referrals', referralsRouter);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {

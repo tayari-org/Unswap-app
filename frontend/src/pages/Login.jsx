@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '@/api/apiClient';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,65 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Shield, Globe, ArrowRight, Loader2 } from 'lucide-react';
+
+// Google Client ID — set VITE_GOOGLE_CLIENT_ID in frontend/.env
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+
+// Divider between Google and email/password
+function OrDivider() {
+    return (
+        <div className="flex items-center gap-3 my-4">
+            <div className="flex-1 h-px bg-slate-700" />
+            <span className="text-xs text-slate-500 font-medium">or</span>
+            <div className="flex-1 h-px bg-slate-700" />
+        </div>
+    );
+}
+
+// Renders the official Google sign-in button via the GSI SDK
+function GoogleButton({ onCredential, disabled }) {
+    const containerRef = useRef(null);
+
+    useEffect(() => {
+        if (!GOOGLE_CLIENT_ID) return;
+        if (!window.google?.accounts?.id) return;
+        if (!containerRef.current) return;
+
+        window.google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: (response) => {
+                if (response.credential) onCredential(response.credential);
+            },
+        });
+
+        // Clear & render the button each time the component mounts
+        containerRef.current.innerHTML = '';
+        window.google.accounts.id.renderButton(containerRef.current, {
+            type: 'standard',
+            theme: 'filled_black',
+            size: 'large',
+            width: 360,
+            text: 'continue_with',
+            shape: 'rectangular',
+            logo_alignment: 'left',
+        });
+    }, [onCredential]);
+
+    if (!GOOGLE_CLIENT_ID) {
+        return (
+            <div className="w-full py-2 px-3 rounded-md bg-slate-800 border border-slate-600 text-slate-500 text-xs text-center">
+                Google Sign-In not configured — add VITE_GOOGLE_CLIENT_ID to frontend/.env
+            </div>
+        );
+    }
+
+    return (
+        <div
+            ref={containerRef}
+            className={`w-full flex justify-center transition-opacity ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
+        />
+    );
+}
 
 export default function Login() {
     const navigate = useNavigate();
@@ -30,9 +89,8 @@ export default function Login() {
     const [regReferral, setRegReferral] = useState('');
 
     // Forgot password state
-    const [forgotStep, setForgotStep] = useState('email'); // 'email', 'otp', 'success'
+    const [forgotStep, setForgotStep] = useState('email');
     const [resetEmail, setResetEmail] = useState('');
-    const [resetOtp, setResetOtp] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [message, setMessage] = useState('');
 
@@ -84,6 +142,19 @@ export default function Login() {
             setForgotStep('success');
         } catch (err) {
             setError(err.message || 'Failed to send reset code.');
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    async function handleGoogleCredential(credential) {
+        setError('');
+        setLoading(true);
+        try {
+            await api.auth.googleLogin(credential);
+            navigate(returnUrl);
+        } catch (err) {
+            setError(err.message || 'Google sign-in failed. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -146,6 +217,10 @@ export default function Login() {
 
                             {/* ── Login ── */}
                             <TabsContent value="login">
+                                {/* Google button at the top */}
+                                <GoogleButton onCredential={handleGoogleCredential} disabled={loading} />
+                                <OrDivider />
+
                                 <form onSubmit={handleLogin} className="space-y-4">
                                     <div className="space-y-2">
                                         <Label className="text-slate-300">Institutional Email</Label>
@@ -196,6 +271,10 @@ export default function Login() {
 
                             {/* ── Register ── */}
                             <TabsContent value="register">
+                                {/* Google button at the top */}
+                                <GoogleButton onCredential={handleGoogleCredential} disabled={loading} />
+                                <OrDivider />
+
                                 <form onSubmit={handleRegister} className="space-y-4">
                                     <div className="space-y-2">
                                         <Label className="text-slate-300">Full Name</Label>

@@ -141,6 +141,12 @@ const auth = {
         return post('/api/auth/reset-password', { token, new_password: newPassword });
     },
 
+    async googleLogin(credential) {
+        const data = await post('/api/auth/google', { credential });
+        setToken(data.token);
+        return data.user;
+    },
+
     logout(returnUrl) {
         setToken(null);
         const loginPath = '/login';

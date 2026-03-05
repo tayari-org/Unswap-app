@@ -2,10 +2,12 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
+const { OAuth2Client } = require('google-auth-library');
 const { prisma } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const INSTITUTIONAL_DOMAINS = [
     'un.org', 'undp.org', 'unicef.org', 'unhcr.org', 'unfpa.org', 'wfp.org',
@@ -284,6 +286,58 @@ router.post('/reset-password', async (req, res) => {
     } catch (err) {
         console.error('Reset password error:', err);
         res.status(500).json({ error: 'Failed to reset password' });
+    }
+});
+
+// ─── POST /api/auth/google ───────────────────────────────────────────────────
+router.post('/google', async (req, res) => {
+    try {
+        const { credential } = req.body;
+        if (!credential) return res.status(400).json({ error: 'Google credential is required' });
+
+        // Verify the ID token with Google
+        const ticket = await googleClient.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+        const payload = ticket.getPayload();
+        const { sub: googleId, email, name, picture } = payload;
+
+        if (!email) return res.status(400).json({ error: 'Could not retrieve email from Google account' });
+
+        // Find existing user by google_id or email
+        let user = await prisma.user.findFirst({
+            where: { OR: [{ google_id: googleId }, { email: email.toLowerCase() }] }
+        });
+
+        if (user) {
+            // Link google_id if not already linked
+            if (!user.google_id) {
+                user = await prisma.user.update({
+                    where: { id: user.id },
+                    data: { google_id: googleId, avatar_url: user.avatar_url || picture || null },
+                });
+            }
+        } else {
+            // Create new user from Google data
+            const referral_code = generateReferralCode();
+            user = await prisma.user.create({
+                data: {
+                    email: email.toLowerCase(),
+                    google_id: googleId,
+                    full_name: name || null,
+                    avatar_url: picture || null,
+                    referral_code,
+                    guest_points: 500,
+                },
+            });
+        }
+
+        const token = signToken(user.id);
+        res.json({ token, user: sanitizeUser(user) });
+    } catch (err) {
+        console.error('Google auth error detailing:', err);
+        res.status(401).json({ error: `Google authentication failed: ${err.message}` });
     }
 });
 
