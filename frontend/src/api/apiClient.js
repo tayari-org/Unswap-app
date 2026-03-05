@@ -141,8 +141,8 @@ const auth = {
         return post('/api/auth/reset-password', { token, new_password: newPassword });
     },
 
-    async googleLogin(credential) {
-        const data = await post('/api/auth/google', { credential });
+    async googleLogin(credential, referred_by) {
+        const data = await post('/api/auth/google', { credential, referred_by });
         setToken(data.token);
         return data.user;
     },
@@ -246,6 +246,17 @@ const integrations = {
     },
 };
 
+// ─── Referrals ────────────────────────────────────────────────────────────────
+
+const referrals = {
+    async getStats() {
+        return get('/api/referrals/stats');
+    },
+    async getColleagues() {
+        return get('/api/referrals/colleagues');
+    }
+};
+
 // ─── Main export ───────────────────────────────────────────────────────────────
 
 export const api = {
@@ -253,6 +264,7 @@ export const api = {
     entities,
     functions,
     integrations,
+    referrals,
     // asServiceRole is the same object — backend handles admin elevation via JWT role
     get asServiceRole() {
         return this;
@@ -260,3 +272,4 @@ export const api = {
 };
 
 export default api;
+

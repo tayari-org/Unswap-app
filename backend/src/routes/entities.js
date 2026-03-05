@@ -240,6 +240,13 @@ router.patch('/:entity/:id', requireAuth, async (req, res) => {
             where: { id },
             data,
         });
+
+        // Referral Hook: If a user is being updated to 'verified'
+        if (entity === 'User' && data.verification_status === 'verified') {
+            const { handleUserVerified } = require('../services/referralService');
+            handleUserVerified(record.email);
+        }
+
         res.json(transformRecord(record));
     } catch (err) {
         console.error(`PATCH entities/${req.params.entity}/${req.params.id} error:`, err);

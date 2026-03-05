@@ -65,6 +65,7 @@ import SubscriptionPlans from './pages/SubscriptionPlans';
 import Documentation from './pages/Documentation';
 import Login from './pages/Login';
 import ResetPassword from './pages/ResetPassword';
+import ReferralDashboard from './pages/ReferralDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -87,6 +88,7 @@ export const PAGES = {
     "Documentation": Documentation,
     "Login": Login,
     "ResetPassword": ResetPassword,
+    "ReferralDashboard": ReferralDashboard,
 }
 
 export const pagesConfig = {

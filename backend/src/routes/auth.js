@@ -292,7 +292,7 @@ router.post('/reset-password', async (req, res) => {
 // ─── POST /api/auth/google ───────────────────────────────────────────────────
 router.post('/google', async (req, res) => {
     try {
-        const { credential } = req.body;
+        const { credential, referred_by } = req.body;
         if (!credential) return res.status(400).json({ error: 'Google credential is required' });
 
         // Verify the ID token with Google
@@ -328,9 +328,26 @@ router.post('/google', async (req, res) => {
                     full_name: name || null,
                     avatar_url: picture || null,
                     referral_code,
+                    referred_by: referred_by || null,
                     guest_points: 500,
                 },
             });
+
+            if (referred_by) {
+                const referrer = await prisma.user.findUnique({
+                    where: { referral_code: referred_by }
+                });
+                if (referrer) {
+                    await prisma.referral.create({
+                        data: {
+                            referrer_email: referrer.email,
+                            referred_email: user.email,
+                            referred_name: name || null,
+                            referred_user_status: 'registered',
+                        },
+                    });
+                }
+            }
         }
 
         const token = signToken(user.id);
