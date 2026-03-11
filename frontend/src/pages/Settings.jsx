@@ -1,19 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  User, Shield, Bell, CreditCard, Users, Link as LinkIcon,
-  Upload, Check, AlertCircle, Loader2, Camera, Copy, LogOut
+  User, Shield, Bell, Users, Camera, LogOut,
+  Check, AlertCircle, Loader2, ChevronRight, Mail, Globe, Briefcase
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
@@ -32,15 +31,33 @@ const DUTY_STATIONS = [
   "World Bank DC", "IMF DC", "WHO Geneva", "UNICEF New York", "Other"
 ];
 
+const STAFF_GRADES = [
+  "G-1", "G-2", "G-3", "G-4", "G-5", "G-6", "G-7",
+  "P-1", "P-2", "P-3", "P-4", "P-5",
+  "D-1", "D-2", "ASG", "USG"
+];
+
 export default function Settings() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('profile');
   const [uploading, setUploading] = useState(false);
-  const [verificationFile, setVerificationFile] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const [profileData, setProfileData] = useState({
+    username: '',
+    phone: '',
+    bio: '',
+    organization: '',
+    staff_grade: '',
+    duty_station: '',
+  });
 
   const { data: user } = useQuery({
     queryKey: ['current-user'],
-    queryFn: () => api.auth.me(),
+    queryFn: async () => {
+      const isAuth = await api.auth.isAuthenticated();
+      if (!isAuth) return null;
+      return api.auth.me();
+    },
   });
 
   const { data: verification } = useQuery({
@@ -57,24 +74,7 @@ export default function Settings() {
     },
   });
 
-  const createVerificationMutation = useMutation({
-    mutationFn: (data) => api.entities.Verification.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['my-verification']);
-      toast.success('Verification submitted for review');
-    },
-  });
-
-  const [profileData, setProfileData] = useState({
-    username: '',
-    phone: '',
-    bio: '',
-    organization: '',
-    staff_grade: '',
-    duty_station: '',
-  });
-
-  React.useEffect(() => {
+  useEffect(() => {
     if (user) {
       setProfileData({
         username: user?.username || '',
@@ -91,391 +91,238 @@ export default function Settings() {
     setProfileData(prev => ({ ...prev, [field]: value }));
   };
 
-  const saveProfile = () => {
-    updateUserMutation.mutate(profileData);
-  };
+  const saveProfile = () => updateUserMutation.mutate(profileData);
 
   const handleAvatarUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setUploading(true);
-    const { file_url } = await api.integrations.Core.UploadFile({ file });
-    await updateUserMutation.mutateAsync({ avatar_url: file_url });
-    setUploading(false);
-  };
-
-  const handleVerificationSubmit = async (type) => {
-    if (type === 'document' && !verificationFile) {
-      toast.error('Please upload a document');
-      return;
+    try {
+      const { file_url } = await api.integrations.Core.UploadFile({ file });
+      await updateUserMutation.mutateAsync({ avatar_url: file_url });
+    } catch (error) {
+      toast.error('Failed to upload avatar');
+    } finally {
+      setUploading(false);
     }
-
-    let documentUrl = null;
-    if (verificationFile) {
-      const { file_url } = await api.integrations.Core.UploadFile({ file: verificationFile });
-      documentUrl = file_url;
-    }
-
-    await createVerificationMutation.mutateAsync({
-      user_id: user?.id,
-      user_email: user?.email,
-      user_name: user?.full_name,
-      verification_type: type === 'domain' ? 'domain_auto' : 'document_manual',
-      document_url: documentUrl,
-      organization: profileData.organization,
-      staff_grade: profileData.staff_grade,
-      duty_station: profileData.duty_station,
-      status: 'pending',
-    });
-
-    await updateUserMutation.mutateAsync({ verification_status: 'pending' });
   };
 
   const copyReferralLink = () => {
     const link = `${window.location.origin}?ref=${user?.referral_code || user?.id}`;
     navigator.clipboard.writeText(link);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
     toast.success('Referral link copied!');
   };
 
-  const verificationStatusColors = {
-    unverified: 'bg-slate-100 text-slate-700',
-    pending: 'bg-amber-100 text-amber-700',
-    verified: 'bg-emerald-100 text-emerald-700',
-    rejected: 'bg-red-100 text-red-700',
+  const navItems = [
+    { id: 'profile', label: 'Public Profile', icon: User, desc: 'Personal info & bio' },
+    { id: 'verification', label: 'Verification', icon: Shield, desc: 'Identity & documents' },
+    { id: 'notifications', label: 'Notifications', icon: Bell, desc: 'Alerts & emails' },
+  ];
+
+  const statusColors = {
+    unverified: 'bg-slate-100 text-slate-600 border-slate-200',
+    pending: 'bg-amber-50 text-amber-700 border-amber-200',
+    verified: 'bg-blue-50 text-blue-700 border-blue-200',
+    rejected: 'bg-red-50 text-red-700 border-red-200',
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-5xl mx-auto px-6 py-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Settings</h1>
-          <p className="text-slate-600">Manage your account and preferences</p>
+    <div className="min-h-screen bg-[#F8FAFC]">
+      {/* Top Navigation Bar */}
+      <header className="sticky top-0 z-30 w-full border-b bg-white/80 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <h1 className="text-lg font-bold text-slate-900">Settings</h1>
+            <Badge variant="outline" className={`hidden md:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full ${statusColors[user?.verification_status || 'unverified']}`}>
+              <span className={`w-1.5 h-1.5 rounded-full fill-current ${user?.verification_status === 'verified' ? 'bg-blue-500' : 'bg-amber-500'}`} />
+              {user?.verification_status?.toUpperCase() || 'UNVERIFIED'}
+            </Badge>
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => api.auth.logout()} className="text-slate-500 hover:text-unswap-blue-deep transition-all font-bold uppercase tracking-widest text-[10px]">
+            <LogOut className="w-3 h-3 mr-2" />
+            Sign Out
+          </Button>
         </div>
-      </div>
+      </header>
 
-      <div className="max-w-5xl mx-auto px-6 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="bg-white border border-slate-200 p-1 mb-8">
-            <TabsTrigger value="profile" className="data-[state=active]:bg-slate-900 data-[state=active]:text-white">
-              <User className="w-4 h-4 mr-2" />
-              Profile
-            </TabsTrigger>
-            <TabsTrigger value="verification" className="data-[state=active]:bg-slate-900 data-[state=active]:text-white">
-              <Shield className="w-4 h-4 mr-2" />
-              Verification
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="data-[state=active]:bg-slate-900 data-[state=active]:text-white">
-              <Bell className="w-4 h-4 mr-2" />
-              Notifications
-            </TabsTrigger>
-            <TabsTrigger value="referrals" className="data-[state=active]:bg-slate-900 data-[state=active]:text-white">
-              <Users className="w-4 h-4 mr-2" />
-              Referrals
-            </TabsTrigger>
-          </TabsList>
+      <div className="max-w-7xl mx-auto px-4 py-10">
+        <div className="flex flex-col md:flex-row gap-8">
 
-          {/* Profile Tab */}
-          <TabsContent value="profile">
-            <div className="grid lg:grid-cols-3 gap-8">
-              {/* Avatar Section */}
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <div className="relative w-32 h-32 mx-auto mb-4">
-                    {user?.avatar_url ? (
-                      <img
-                        src={user.avatar_url}
-                        alt={user.full_name}
-                        className="w-full h-full rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full rounded-full bg-slate-200 flex items-center justify-center">
-                        <User className="w-12 h-12 text-slate-400" />
-                      </div>
-                    )}
-                    <label className="absolute bottom-0 right-0 w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:bg-amber-600 transition-colors">
-                      {uploading ? (
-                        <Loader2 className="w-5 h-5 text-white animate-spin" />
-                      ) : (
-                        <Camera className="w-5 h-5 text-white" />
-                      )}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleAvatarUpload}
-                        disabled={uploading}
-                      />
-                    </label>
+          {/* SIDEBAR NAVIGATION - Updated active state to Blue */}
+          <aside className="w-full md:w-52 flex-shrink-0">
+            <nav className="space-y-1">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full group flex items-start gap-4 p-4 transition-all text-left border-l-2 ${activeTab === item.id
+                    ? 'bg-slate-50 border-unswap-blue-deep text-unswap-blue-deep shadow-sm'
+                    : 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'
+                    }`}
+                >
+                  <div className={`p-2 rounded-none transition-all ${activeTab === item.id ? 'bg-unswap-blue-deep text-white shadow-lg' : 'bg-slate-100 text-slate-400 group-hover:bg-white'}`}>
+                    <item.icon className="w-3.5 h-3.5" />
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-900">
-                    {user?.username || user?.full_name}
-                  </h3>
-                  <p className="text-slate-500 text-sm">{user?.email}</p>
-                  <Badge className={`mt-3 ${verificationStatusColors[user?.verification_status || 'unverified']}`}>
-                    {user?.verification_status === 'verified' ? 'verified' :
-                      user?.verification_status === 'pending' ? 'pending approval' :
-                        user?.verification_status || 'unverified'}
-                  </Badge>
-                </CardContent>
-              </Card>
-
-              {/* Profile Form */}
-              <div className="lg:col-span-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Profile Information</CardTitle>
-                    <CardDescription>Update your personal details</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div>
-                      <Label>Username</Label>
-                      <Input
-                        value={profileData.username}
-                        onChange={(e) => handleProfileChange('username', e.target.value)}
-                        placeholder="Your display name"
-                        className="mt-1"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Phone Number</Label>
-                      <Input
-                        value={profileData.phone}
-                        onChange={(e) => handleProfileChange('phone', e.target.value)}
-                        placeholder="+1 234 567 8900"
-                        className="mt-1"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Bio</Label>
-                      <Textarea
-                        value={profileData.bio}
-                        onChange={(e) => handleProfileChange('bio', e.target.value)}
-                        placeholder="Tell colleagues about yourself..."
-                        rows={3}
-                        className="mt-1"
-                      />
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <Label>Organization</Label>
-                        <Select value={profileData.organization} onValueChange={(v) => handleProfileChange('organization', v)}>
-                          <SelectTrigger className="mt-1">
-                            <SelectValue placeholder="Select organization" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {ORGANIZATIONS.map(org => (
-                              <SelectItem key={org} value={org}>{org}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <Label>Staff Grade</Label>
-                        <Input
-                          value={profileData.staff_grade}
-                          onChange={(e) => handleProfileChange('staff_grade', e.target.value)}
-                          placeholder="e.g., P-4, G-7"
-                          className="mt-1"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label>Current Duty Station</Label>
-                      <Select value={profileData.duty_station} onValueChange={(v) => handleProfileChange('duty_station', v)}>
-                        <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Select duty station" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {DUTY_STATIONS.map(station => (
-                            <SelectItem key={station} value={station}>{station}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <Button onClick={saveProfile} className="bg-amber-500 hover:bg-amber-600" disabled={updateUserMutation.isPending}>
-                      {updateUserMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                      Save Changes
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* Verification Tab */}
-          <TabsContent value="verification">
-            <div className="space-y-6">
-              {/* Current Status */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Verification Status</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${user?.verification_status === 'verified' ? 'bg-emerald-100' :
-                      user?.verification_status === 'pending' ? 'bg-amber-100' : 'bg-slate-100'
-                      }`}>
-                      {user?.verification_status === 'verified' ? (
-                        <Check className="w-6 h-6 text-emerald-600" />
-                      ) : user?.verification_status === 'pending' ? (
-                        <Loader2 className="w-6 h-6 text-amber-600 animate-spin" />
-                      ) : (
-                        <Shield className="w-6 h-6 text-slate-400" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-slate-900">
-                        {user?.verification_status === 'verified' ? 'Verified Member' :
-                          user?.verification_status === 'pending' ? 'Verification Pending' : 'Not Yet Verified'}
-                      </p>
-                      <p className="text-sm text-slate-500">
-                        {user?.verification_status === 'verified'
-                          ? 'Your identity has been confirmed'
-                          : user?.verification_status === 'pending'
-                            ? 'Your documents are being reviewed'
-                            : 'Complete the steps below to verify your identity'}
-                      </p>
-                    </div>
-                    <Badge className={verificationStatusColors[user?.verification_status || 'unverified']}>
-                      {user?.verification_status || 'unverified'}
-                    </Badge>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{item.label}</span>
+                    <span className="text-[9px] font-medium opacity-50 uppercase tracking-widest">{item.desc}</span>
                   </div>
-                </CardContent>
-              </Card>
+                </button>
+              ))}
+            </nav>
+          </aside>
 
-              {/* Verification Steps */}
-              <div className="grid lg:grid-cols-2 gap-6">
-                {/* Step 1: Email OTP */}
-                <EmailOtpVerification
-                  user={user}
-                  onVerified={() => queryClient.invalidateQueries(['current-user'])}
-                />
+          {/* MAIN CONTENT AREA */}
+          <main className="flex-1 min-w-0">
+            <Tabs value={activeTab} className="mt-0">
 
-                {/* Step 2: Document Upload */}
-                <DocumentUploadVerification
-                  user={user}
-                  emailVerified={user?.institutional_email_verified}
-                  existingVerification={verification?.[0]}
-                />
-              </div>
-
-              {/* Verification Benefits */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Why Verify?</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-3 gap-4">
-                    {[
-                      { title: 'Build Trust', desc: 'Verified badges increase swap acceptance rates by 80%' },
-                      { title: 'Full Access', desc: 'Unlock all platform features and priority support' },
-                      { title: 'Community Safety', desc: 'Help maintain our trusted diplomatic network' }
-                    ].map((benefit, i) => (
-                      <div key={i} className="p-4 bg-slate-50 rounded-lg">
-                        <h4 className="font-medium text-slate-900 mb-1">{benefit.title}</h4>
-                        <p className="text-sm text-slate-600">{benefit.desc}</p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Notifications Tab */}
-          <TabsContent value="notifications">
-            <NotificationPreferences user={user} />
-          </TabsContent>
-
-          {/* Referrals Tab */}
-          <TabsContent value="referrals">
-            <div className="grid lg:grid-cols-2 gap-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Referral Program</CardTitle>
-                  <CardDescription>Invite colleagues and earn rewards</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="p-6 bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl mb-6">
-                    <h3 className="text-2xl font-bold text-slate-900 mb-2">
-                      {user?.referral_count || 0} Referrals
-                    </h3>
-                    <p className="text-slate-600">
-                      Invite 5 colleagues for a lifetime fee waiver!
-                    </p>
-                  </div>
-
+              {/* PROFILE TAB */}
+              <TabsContent value="profile" className="m-0 focus-visible:outline-none">
+                <div className="space-y-6">
                   <div>
-                    <Label>Your Referral Link</Label>
-                    <div className="flex gap-2 mt-1">
-                      <Input
-                        readOnly
-                        value={`${window.location.origin}?ref=${user?.referral_code || user?.id}`}
-                        className="bg-slate-50"
-                      />
-                      <Button onClick={copyReferralLink} variant="outline">
-                        <Copy className="w-4 h-4" />
+                    <h2 className="text-4xl font-extralight tracking-tighter text-slate-900 mb-2">Public Profile</h2>
+                  </div>
+
+                  <Card className="overflow-hidden border-slate-200 rounded-none shadow-2xl">
+                    <div className="h-32 bg-gradient-to-r from-unswap-blue-deep to-unswap-blue-prussian relative overflow-hidden">
+                      <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_50%_-20%,#3b82f6,transparent)]" />
+                    </div>
+
+                    <CardContent className="relative pb-8 px-6">
+                      <div className="relative -top-12 mb-[-32px] flex flex-col sm:flex-row items-end gap-4">
+                        <div className="relative group">
+                          <div className="w-24 h-24 rounded-2xl border-4 border-white overflow-hidden bg-slate-100 shadow-md">
+                            {user?.avatar_url ? (
+                              <img src={user.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                <User className="w-10 h-10" />
+                              </div>
+                            )}
+                          </div>
+                          <label className="absolute inset-0 flex items-center justify-center bg-blue-900/40 text-white rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                            {uploading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Camera className="w-6 h-6" />}
+                            <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploading} />
+                          </label>
+                        </div>
+                        <div className="pb-2">
+                          <h3 className="text-2xl font-light text-slate-900 tracking-tight leading-tight">{user?.full_name}</h3>
+                          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">
+                            <Mail className="w-3 h-3 text-unswap-blue-deep/40" /> {user?.email}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-6 mt-10">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="username">Username</Label>
+                            <Input id="username" className="focus-visible:ring-blue-500" value={profileData.username} onChange={(e) => handleProfileChange('username', e.target.value)} placeholder="@username" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="phone">Phone Number</Label>
+                            <Input id="phone" className="focus-visible:ring-blue-500" value={profileData.phone} onChange={(e) => handleProfileChange('phone', e.target.value)} placeholder="+1..." />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="bio">Bio</Label>
+                          <Textarea id="bio" className="focus-visible:ring-blue-500" value={profileData.bio} onChange={(e) => handleProfileChange('bio', e.target.value)} placeholder="Short professional summary..." rows={4} />
+                        </div>
+
+                        <div className="p-8 bg-slate-50 border border-slate-100 rounded-none space-y-6">
+                          <h4 className="text-[10px] font-bold uppercase tracking-[0.4em] text-unswap-blue-deep">Organization Details</h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label>Organization</Label>
+                              <Select value={profileData.organization} onValueChange={(v) => handleProfileChange('organization', v)}>
+                                <SelectTrigger className="bg-white"><SelectValue placeholder="Select..." /></SelectTrigger>
+                                <SelectContent>
+                                  {ORGANIZATIONS.map(org => <SelectItem key={org} value={org}>{org}</SelectItem>)}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Duty Station</Label>
+                              <Select value={profileData.duty_station} onValueChange={(v) => handleProfileChange('duty_station', v)}>
+                                <SelectTrigger className="bg-white"><SelectValue placeholder="Select..." /></SelectTrigger>
+                                <SelectContent>
+                                  {DUTY_STATIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Staff Grade</Label>
+                            <Select value={profileData.staff_grade} onValueChange={(v) => handleProfileChange('staff_grade', v)}>
+                              <SelectTrigger className="bg-white"><SelectValue placeholder="Select grade..." /></SelectTrigger>
+                              <SelectContent>
+                                {STAFF_GRADES.map(grade => <SelectItem key={grade} value={grade}>{grade}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+
+                    {/* Primary Blue CTA */}
+                    <div className="px-6 py-4 bg-slate-50 border-t flex items-center justify-end">
+                      <Button onClick={saveProfile} disabled={updateUserMutation.isPending} className="bg-unswap-blue-deep text-white rounded-none h-14 px-10 text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-slate-900 transition-all shadow-xl">
+                        {updateUserMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                        Save Changes
                       </Button>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </Card>
+                </div>
+              </TabsContent>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Rewards</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {[
-                      { referrals: 1, reward: '100 bonus GuestPoints' },
-                      { referrals: 3, reward: '500 bonus GuestPoints' },
-                      { referrals: 5, reward: 'Lifetime fee waiver' },
-                      { referrals: 10, reward: 'VIP status + 1000 points' },
-                    ].map((tier, index) => (
-                      <div
-                        key={index}
-                        className={`flex items-center justify-between p-4 rounded-xl ${(user?.referral_count || 0) >= tier.referrals
-                          ? 'bg-emerald-50 border border-emerald-200'
-                          : 'bg-slate-50'
-                          }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          {(user?.referral_count || 0) >= tier.referrals ? (
-                            <Check className="w-5 h-5 text-emerald-600" />
-                          ) : (
-                            <div className="w-5 h-5 rounded-full border-2 border-slate-300" />
-                          )}
-                          <span className="font-medium">{tier.referrals} referrals</span>
-                        </div>
-                        <span className="text-sm text-slate-600">{tier.reward}</span>
+              {/* VERIFICATION TAB */}
+              <TabsContent value="verification" className="m-0 focus-visible:outline-none">
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-4xl font-extralight tracking-tighter text-slate-900 mb-2">Verification Status</h2>
+                  </div>
+
+                  <Card className="bg-white border-slate-200 rounded-none shadow-xl overflow-hidden group">
+                    <CardContent className="p-8 relative">
+                      <div className="absolute top-0 right-0 p-8 opacity-5">
+                        <Shield className="w-32 h-32" />
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
+                      <div className="flex items-center gap-8 relative z-10">
+                        <div className={`w-20 h-20 rounded-none flex items-center justify-center border transition-all duration-700 group-hover:scale-110 shadow-lg ${user?.verification_status === 'verified' ? 'bg-emerald-50 border-emerald-100' :
+                          user?.verification_status === 'pending' ? 'bg-amber-50 border-amber-100' : 'bg-slate-50 border-slate-100'
+                          }`}>
+                          {user?.verification_status === 'verified' ? <Check className="w-8 h-8 text-emerald-600" /> :
+                            user?.verification_status === 'pending' ? <Loader2 className="w-8 h-8 text-amber-600 animate-spin" /> :
+                              <Shield className="w-8 h-8 text-slate-300" />}
+                        </div>
+                        <div>
+                          <h4 className="text-2xl font-light text-slate-900 tracking-tight mb-2">
+                            {user?.verification_status === 'verified' ? 'Verified' :
+                              user?.verification_status === 'pending' ? 'Pending' : 'Unverified'}
+                          </h4>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-        {/* Logout */}
-        <div className="mt-8 pt-8 border-t border-slate-200">
-          <Button
-            variant="outline"
-            className="text-red-600 border-red-200 hover:bg-red-50"
-            onClick={() => api.auth.logout()}
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Log Out
-          </Button>
+                  <div className="grid gap-6">
+                    <EmailOtpVerification user={user} onVerified={() => queryClient.invalidateQueries(['current-user'])} />
+                    <DocumentUploadVerification user={user} emailVerified={user?.institutional_email_verified} existingVerification={verification?.[0]} />
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* NOTIFICATIONS TAB */}
+              <TabsContent value="notifications" className="m-0">
+                <NotificationPreferences user={user} />
+              </TabsContent>
+
+
+            </Tabs>
+          </main>
         </div>
       </div>
     </div>

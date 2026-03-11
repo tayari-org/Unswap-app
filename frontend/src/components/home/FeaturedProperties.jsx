@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
-export default function FeaturedPropertiesLight({ properties = [] }) {
+export default function FeaturedProperties({ properties = [] }) {
   const displayProperties = properties.length > 0 ? properties.slice(0, 3) : [
     {
       id: 1,
@@ -47,17 +47,15 @@ export default function FeaturedPropertiesLight({ properties = [] }) {
   ];
 
   return (
-    // Reduced vertical padding from py-24 to py-12
-    <section className="py-12 px-6 bg-white relative overflow-hidden">
+    <section className="py-16 px-6 bg-white relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-px bg-slate-100" />
-      
+
       <div className="max-w-7xl mx-auto relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          // Reduced margin bottom from mb-16 to mb-8
-          className="flex flex-col md:flex-row justify-between md:items-end mb-8 gap-4"
+          className="flex flex-col md:flex-row justify-between md:items-end mb-10 gap-4"
         >
           <div>
             <div className="flex items-center gap-2 mb-3">
@@ -71,7 +69,7 @@ export default function FeaturedPropertiesLight({ properties = [] }) {
               Vetted accommodations for frequent geographical rotation, located within 15 minutes of primary duty stations.
             </p>
           </div>
-          
+
           <Link to={createPageUrl('FindProperties')}>
             <Button variant="outline" size="sm" className="text-slate-900 border-slate-200 hover:bg-slate-50 group px-6">
               Explore Full Directory
@@ -91,57 +89,56 @@ export default function FeaturedPropertiesLight({ properties = [] }) {
               className="group cursor-pointer"
             >
               <Link to={createPageUrl('PropertyDetails') + `?id=${property.id}`}>
-                {/* Changed aspect ratio from 4/5 to 16/10 to reduce height */}
                 <div className="relative aspect-[16/10] rounded-2xl overflow-hidden border border-slate-100 mb-4 bg-slate-50 shadow-sm transition-shadow hover:shadow-xl">
                   <img
                     src={property.images?.[0]}
                     alt={property.title}
                     className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
                   />
-                
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
-                
-                {/* Credits Tag */}
-                <div className="absolute top-3 right-3 bg-white/80 backdrop-blur-md border border-white/40 px-3 py-1.5 rounded-xl shadow-sm">
-                  <span className="text-slate-900 font-bold text-base">{property.smart_credit_value}</span>
-                  <span className="text-slate-500 text-[9px] ml-1 uppercase tracking-widest">Credits</span>
-                </div>
 
-                {/* Verification Badge */}
-                {property.is_verified && (
-                  <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-indigo-600 text-white px-2.5 py-1 rounded-lg shadow-lg">
-                    <ShieldCheck className="w-3 h-3" />
-                    <span className="text-[9px] font-bold uppercase tracking-wider">Vault Verified</span>
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+
+                  {/* Credits Tag */}
+                  <div className="absolute top-3 right-3 bg-white/80 backdrop-blur-md border border-white/40 px-3 py-1.5 rounded-xl shadow-sm">
+                    <span className="text-slate-900 font-bold text-base">{property.smart_credit_value}</span>
+                    <span className="text-slate-500 text-[9px] ml-1 uppercase tracking-widest">Credits</span>
                   </div>
-                )}
 
-                {/* Bottom Info on Image */}
-                <div className="absolute bottom-4 left-4 right-4">
-                   <div className="flex items-center text-indigo-300 text-[9px] font-bold uppercase tracking-[0.2em] mb-1 drop-shadow-md">
-                    <MapPin className="w-2.5 h-2.5 mr-1" />
-                    {property.nearest_duty_station}
+                  {/* Verification Badge */}
+                  {property.is_verified && (
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-indigo-600 text-white px-2.5 py-1 rounded-lg shadow-lg">
+                      <ShieldCheck className="w-3 h-3" />
+                      <span className="text-[9px] font-bold uppercase tracking-wider">Vault Verified</span>
+                    </div>
+                  )}
+
+                  {/* Bottom Info on Image */}
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <div className="flex items-center text-indigo-300 text-[9px] font-bold uppercase tracking-[0.2em] mb-1 drop-shadow-md">
+                      <MapPin className="w-2.5 h-2.5 mr-1" />
+                      {property.nearest_duty_station}
+                    </div>
+                    <h3 className="text-lg font-medium text-white transition-colors truncate">
+                      {property.title}
+                    </h3>
                   </div>
-                  <h3 className="text-lg font-medium text-white transition-colors truncate">
-                    {property.title}
-                  </h3>
                 </div>
-              </div>
 
-              {/* Property Specs */}
-              <div className="grid grid-cols-3 py-2 border-t border-slate-100">
-                <div className="flex items-center gap-2 text-slate-400">
-                  <Bed className="w-3.5 h-3.5 text-slate-300" />
-                  <span className="text-[10px] font-medium uppercase tracking-tighter">{property.bedrooms} BR</span>
+                {/* Property Specs */}
+                <div className="grid grid-cols-3 py-2 border-t border-slate-100">
+                  <div className="flex items-center gap-2 text-slate-400">
+                    <Bed className="w-3.5 h-3.5 text-slate-300" />
+                    <span className="text-[10px] font-medium uppercase tracking-tighter">{property.bedrooms} BR</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-400 border-x border-slate-100 justify-center">
+                    <Bath className="w-3.5 h-3.5 text-slate-300" />
+                    <span className="text-[10px] font-medium uppercase tracking-tighter">{property.bathrooms} BA</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-400 justify-end">
+                    <Users className="w-3.5 h-3.5 text-slate-300" />
+                    <span className="text-[10px] font-medium uppercase tracking-tighter">{property.max_guests} Guests</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-slate-400 border-x border-slate-100 justify-center">
-                  <Bath className="w-3.5 h-3.5 text-slate-300" />
-                  <span className="text-[10px] font-medium uppercase tracking-tighter">{property.bathrooms} BA</span>
-                </div>
-                <div className="flex items-center gap-2 text-slate-400 justify-end">
-                  <Users className="w-3.5 h-3.5 text-slate-300" />
-                  <span className="text-[10px] font-medium uppercase tracking-tighter">{property.max_guests} Guests</span>
-                </div>
-              </div>
               </Link>
             </motion.div>
           ))}

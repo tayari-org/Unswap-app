@@ -21,8 +21,8 @@ export default function CompleteSwapDialog({ open, onOpenChange, request, user }
   const queryClient = useQueryClient();
   const [confirmed, setConfirmed] = useState(false);
 
-  const nights = request?.check_in && request?.check_out 
-    ? differenceInDays(new Date(request.check_out), new Date(request.check_in)) 
+  const nights = request?.check_in && request?.check_out
+    ? differenceInDays(new Date(request.check_out), new Date(request.check_in))
     : 0;
 
   const isRequester = request?.requester_email === user?.email;
@@ -50,7 +50,7 @@ export default function CompleteSwapDialog({ open, onOpenChange, request, user }
           const requesterPoints = req?.guest_points || 500;
           setInsufficientPoints(requesterPoints < request.total_points);
         }
-        
+
         // Get host data
         if (!isRequester) {
           setHostData(user);
@@ -58,7 +58,7 @@ export default function CompleteSwapDialog({ open, onOpenChange, request, user }
           const hostUsers = await api.entities.User.filter({ email: request.host_email });
           setHostData(hostUsers[0]);
         }
-        
+
         setLoadingUsers(false);
       };
       fetchUsers();
@@ -89,14 +89,17 @@ export default function CompleteSwapDialog({ open, onOpenChange, request, user }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <CheckCircle className="w-5 h-5 text-emerald-500" />
-            Complete Swap
+      <DialogContent className="max-w-md rounded-none border-0 shadow-2xl p-0 overflow-hidden">
+        <DialogHeader className="p-10 border-b bg-slate-50">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-px bg-emerald-500/20" />
+            <p className="text-emerald-600 font-bold tracking-[0.4em] uppercase text-[9px]">Swap Conclusion</p>
+          </div>
+          <DialogTitle className="text-3xl font-extralight text-slate-900 tracking-tighter leading-tight">
+            Stay <span className="italic font-serif">Completed.</span>
           </DialogTitle>
-          <DialogDescription>
-            Finalize this swap and {isGuestPointsSwap ? 'transfer points' : 'complete the exchange'}
+          <DialogDescription className="text-slate-500 text-sm font-light mt-4 leading-relaxed">
+            Please confirm that the home swap has been successfully concluded to release GuestPoints and finalize the record.
           </DialogDescription>
         </DialogHeader>
 
@@ -112,7 +115,7 @@ export default function CompleteSwapDialog({ open, onOpenChange, request, user }
                 <div>
                   <p className="text-sm text-slate-500">Dates</p>
                   <p className="font-medium">
-                    {request?.check_in && format(new Date(request.check_in), 'MMM d')} - 
+                    {request?.check_in && format(new Date(request.check_in), 'MMM d')} -
                     {request?.check_out && format(new Date(request.check_out), 'MMM d')}
                   </p>
                 </div>
@@ -151,7 +154,7 @@ export default function CompleteSwapDialog({ open, onOpenChange, request, user }
                     <p className="text-xs text-slate-500">Balance: {hostPoints} pts</p>
                   </div>
                 </div>
-                
+
                 {insufficientPoints && (
                   <div className="flex items-center gap-2 p-2 bg-red-100 rounded-lg">
                     <AlertCircle className="w-4 h-4 text-red-600" />
@@ -174,8 +177,8 @@ export default function CompleteSwapDialog({ open, onOpenChange, request, user }
 
           {/* Confirmation */}
           <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="confirm" 
+            <Checkbox
+              id="confirm"
               checked={confirmed}
               onCheckedChange={setConfirmed}
             />
@@ -189,7 +192,7 @@ export default function CompleteSwapDialog({ open, onOpenChange, request, user }
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button 
+          <Button
             onClick={() => completeSwapMutation.mutate()}
             disabled={!confirmed || completeSwapMutation.isPending || (isGuestPointsSwap && insufficientPoints) || loadingUsers}
             className="bg-emerald-500 hover:bg-emerald-600"

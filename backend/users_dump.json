@@ -1,0 +1,14 @@
+[
+  {
+    "email": "qasim@jacquelinetsuma.com",
+    "role": "user"
+  },
+  {
+    "email": "testagent@un.org",
+    "role": "user"
+  },
+  {
+    "email": "webdev@jacquelinetsuma.com",
+    "role": "admin"
+  }
+]

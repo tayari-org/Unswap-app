@@ -18,14 +18,14 @@ export default function ReviewList({ propertyId, hostEmail, showModeration = fal
     queryKey: ['reviews', propertyId, hostEmail],
     queryFn: async () => {
       if (propertyId) {
-        return await api.entities.Review.filter({ 
+        return await api.entities.Review.filter({
           property_id: propertyId,
           status: showModeration ? undefined : 'approved'
         }, '-created_date');
       }
       if (hostEmail) {
-        return await api.entities.Review.filter({ 
-          host_email: hostEmail,
+        return await api.entities.Review.filter({
+          target_email: hostEmail,
           status: showModeration ? undefined : 'approved'
         }, '-created_date');
       }
@@ -112,11 +112,10 @@ export default function ReviewList({ propertyId, hostEmail, showModeration = fal
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-4 h-4 ${
-                      i < Math.round(averageRating)
-                        ? 'fill-amber-400 text-amber-400'
-                        : 'text-slate-300'
-                    }`}
+                    className={`w-4 h-4 ${i < Math.round(averageRating)
+                      ? 'fill-amber-400 text-amber-400'
+                      : 'text-slate-300'
+                      }`}
                   />
                 ))}
               </div>
@@ -129,7 +128,7 @@ export default function ReviewList({ propertyId, hostEmail, showModeration = fal
                   <div key={category} className="flex items-center gap-2">
                     <span className="text-sm text-slate-600 capitalize w-32">{category}</span>
                     <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <div 
+                      <div
                         className="h-full bg-amber-400 rounded-full"
                         style={{ width: `${(avg / 5) * 100}%` }}
                       />
@@ -164,11 +163,10 @@ export default function ReviewList({ propertyId, hostEmail, showModeration = fal
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`w-4 h-4 ${
-                        i < review.rating
-                          ? 'fill-amber-400 text-amber-400'
-                          : 'text-slate-300'
-                      }`}
+                      className={`w-4 h-4 ${i < review.rating
+                        ? 'fill-amber-400 text-amber-400'
+                        : 'text-slate-300'
+                        }`}
                     />
                   ))}
                 </div>
@@ -220,7 +218,7 @@ export default function ReviewList({ propertyId, hostEmail, showModeration = fal
                 Helpful ({review.helpful_count || 0})
               </Button>
 
-              {user?.email === review.host_email && !review.response_from_host && (
+              {user?.email === review.target_email && !review.response_from_host && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -237,8 +235,8 @@ export default function ReviewList({ propertyId, hostEmail, showModeration = fal
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => moderateMutation.mutate({ 
-                      reviewId: review.id, 
+                    onClick={() => moderateMutation.mutate({
+                      reviewId: review.id,
                       status: 'flagged',
                       reason: 'Flagged for review'
                     })}
@@ -250,8 +248,8 @@ export default function ReviewList({ propertyId, hostEmail, showModeration = fal
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => moderateMutation.mutate({ 
-                      reviewId: review.id, 
+                    onClick={() => moderateMutation.mutate({
+                      reviewId: review.id,
                       status: 'removed',
                       reason: 'Removed by admin'
                     })}
@@ -274,9 +272,9 @@ export default function ReviewList({ propertyId, hostEmail, showModeration = fal
                 />
                 <div className="flex gap-2">
                   <Button
-                    onClick={() => respondMutation.mutate({ 
-                      reviewId: review.id, 
-                      response: responseText 
+                    onClick={() => respondMutation.mutate({
+                      reviewId: review.id,
+                      response: responseText
                     })}
                     disabled={!responseText.trim() || respondMutation.isPending}
                   >

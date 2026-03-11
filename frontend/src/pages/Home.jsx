@@ -19,7 +19,6 @@ export default function Home() {
     restDelta: 0.001
   });
 
-  // Data Fetching with Institutional Context
   const { data: user } = useQuery({
     queryKey: ['current-user'],
     queryFn: async () => {
@@ -41,56 +40,51 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white selection:bg-blue-500/10">
-      {/* Precision Progress Bar */}
-      <motion.div 
-        className="fixed top-0 left-0 right-0 h-1 bg-blue-600 origin-left z-50" 
-        style={{ scaleX }} 
+      {/* Progress Bar */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-1 bg-blue-600 origin-left z-50"
+        style={{ scaleX }}
       />
 
-      {/* Hero: Light Mode Entry */}
+      {/* Hero */}
       <HeroSection user={user} />
 
-      {/* Main Content Flow: Light Mode Aesthetics */}
+      {/* Main Content */}
       <main className="relative">
-        {/* Featured Assets Section */}
         <section className="bg-white">
           <FeaturedProperties properties={properties} />
         </section>
 
-        {/* The Protocol: How it Works */}
         <section className="bg-white">
           <HowItWorks />
         </section>
 
-        {/* Security Tier: Trust Section */}
         <section className="bg-white">
           <TrustSection />
         </section>
 
-        {/* Economics Tier: GuestPoints (Subtle Slate Background) */}
         <section className="bg-slate-50 border-y border-slate-100">
           <GuestPointsSection />
         </section>
 
-        {/* Live Intelligence: Activity Feed */}
         <ActivityFeed activities={activities} />
       </main>
 
-      {/* Footer: Institutional Sign-off (DARK MODE) */}
+      {/* Footer */}
       <footer className="bg-[#05080f] border-t border-white/5 pt-24 pb-12 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 mb-16">
             <div className="col-span-2">
               <div className="flex items-center gap-3 mb-6">
-                <img 
-                  src={logo} 
-                  alt="UNswap Logo" 
+                <img
+                  src={logo}
+                  alt="UNswap Logo"
                   className="w-10 h-10 grayscale brightness-200"
                 />
                 <span className="text-xl font-bold tracking-tighter text-white uppercase">UNSWAP</span>
               </div>
               <p className="text-slate-500 text-sm leading-relaxed max-w-sm font-light">
-                The exclusive mobility protocol for the international civil service. 
+                The exclusive mobility protocol for the international civil service.
                 Securing home exchanges across 193 member states.
               </p>
             </div>

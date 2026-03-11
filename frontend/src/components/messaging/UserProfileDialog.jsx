@@ -1,13 +1,13 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { 
-  User, MapPin, Building2, Mail, Shield, Star, Home, 
-  CheckCircle, Calendar, ArrowLeftRight 
+import {
+  User, MapPin, Building2, Mail, Shield, Star, Home,
+  CheckCircle, Calendar, ArrowLeftRight
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
@@ -18,21 +18,21 @@ export default function UserProfileDialog({ open, onOpenChange, userEmail }) {
     queryKey: ['user-profile', userEmail],
     queryFn: async () => {
       if (!userEmail) return null;
-      
+
       try {
         // First, try to fetch from User entity directly
         const allUsers = await api.entities.User.list();
         const foundUser = allUsers.find(u => u.email === userEmail);
-        
+
         if (foundUser) {
           return foundUser;
         }
-        
+
         // If not found in users, try to get info from their messages
         const messages = await api.entities.Message.filter({
           $or: [{ sender_email: userEmail }, { recipient_email: userEmail }]
         }, '-created_date', 1);
-        
+
         if (messages.length > 0) {
           const msg = messages[0];
           const isUser = msg.sender_email === userEmail;
@@ -44,7 +44,7 @@ export default function UserProfileDialog({ open, onOpenChange, userEmail }) {
             created_date: msg.created_date,
           };
         }
-        
+
         // Final fallback
         return {
           email: userEmail,
@@ -70,7 +70,7 @@ export default function UserProfileDialog({ open, onOpenChange, userEmail }) {
   const { data: verification } = useQuery({
     queryKey: ['user-verification', userEmail],
     queryFn: async () => {
-      const verifications = await api.entities.Verification.filter({ 
+      const verifications = await api.entities.Verification.filter({
         user_email: userEmail,
         status: 'approved'
       });
@@ -81,7 +81,7 @@ export default function UserProfileDialog({ open, onOpenChange, userEmail }) {
 
   const { data: properties = [] } = useQuery({
     queryKey: ['user-properties', userEmail],
-    queryFn: () => api.entities.Property.filter({ 
+    queryFn: () => api.entities.Property.filter({
       owner_email: userEmail,
       status: 'active'
     }),
@@ -90,7 +90,7 @@ export default function UserProfileDialog({ open, onOpenChange, userEmail }) {
 
   const { data: completedSwaps = [] } = useQuery({
     queryKey: ['user-swaps', userEmail],
-    queryFn: () => api.entities.SwapRequest.filter({ 
+    queryFn: () => api.entities.SwapRequest.filter({
       $or: [
         { requester_email: userEmail, status: 'completed' },
         { host_email: userEmail, status: 'completed' }
@@ -101,7 +101,7 @@ export default function UserProfileDialog({ open, onOpenChange, userEmail }) {
 
   const { data: reviews = [] } = useQuery({
     queryKey: ['user-reviews', userEmail],
-    queryFn: () => api.entities.Review.filter({ 
+    queryFn: () => api.entities.Review.filter({
       host_email: userEmail,
       status: 'approved'
     }),
@@ -114,9 +114,18 @@ export default function UserProfileDialog({ open, onOpenChange, userEmail }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>User Profile</DialogTitle>
+      <DialogContent className="max-w-2xl max-h-[90vh] p-0 overflow-y-auto rounded-none border-0 shadow-2xl">
+        <DialogHeader className="p-10 border-b bg-slate-50">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-px bg-unswap-blue-deep/20" />
+            <p className="text-unswap-blue-deep font-bold tracking-[0.4em] uppercase text-[9px]">Verification Status</p>
+          </div>
+          <DialogTitle className="text-3xl font-extralight text-slate-900 tracking-tighter leading-tight">
+            User <span className="italic font-serif">Profile</span>
+          </DialogTitle>
+          <DialogDescription className="text-slate-500 text-sm font-light mt-4 leading-relaxed">
+            Verified identity and status of the community member.
+          </DialogDescription>
         </DialogHeader>
 
         {isLoading ? (
@@ -126,12 +135,13 @@ export default function UserProfileDialog({ open, onOpenChange, userEmail }) {
         ) : (
           <div className="space-y-6">
             {/* Profile Header */}
-            <div className="flex items-start gap-4">
-              <div className="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0">
+            <div className="flex items-start gap-8 p-10 bg-white">
+              <div className="w-24 h-24 rounded-none bg-slate-50 flex items-center justify-center overflow-hidden flex-shrink-0 border border-slate-100 shadow-sm relative group">
+                <div className="absolute inset-0 bg-unswap-blue-deep/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                 {user.avatar_url ? (
-                  <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+                  <img src={user.avatar_url} alt="" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" />
                 ) : (
-                  <User className="w-10 h-10 text-slate-500" />
+                  <User className="w-10 h-10 text-slate-300" />
                 )}
               </div>
               <div className="flex-1">
@@ -168,30 +178,30 @@ export default function UserProfileDialog({ open, onOpenChange, userEmail }) {
             )}
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-3 gap-4">
-              <Card className="p-4 text-center">
-                <div className="text-2xl font-bold text-slate-900">{properties.length}</div>
-                <div className="text-sm text-slate-600 flex items-center justify-center gap-1 mt-1">
-                  <Home className="w-3 h-3" />
+            <div className="grid grid-cols-3 gap-0 border-y border-slate-100">
+              <div className="p-8 text-center border-r border-slate-100 hover:bg-slate-50 transition-colors">
+                <div className="text-2xl font-extralight text-slate-900 tracking-tighter mb-1">{properties.length}</div>
+                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
+                  <Home className="w-3 h-3 text-unswap-blue-deep/30" />
                   Properties
                 </div>
-              </Card>
-              <Card className="p-4 text-center">
-                <div className="text-2xl font-bold text-slate-900">{completedSwaps.length}</div>
-                <div className="text-sm text-slate-600 flex items-center justify-center gap-1 mt-1">
-                  <ArrowLeftRight className="w-3 h-3" />
+              </div>
+              <div className="p-8 text-center border-r border-slate-100 hover:bg-slate-50 transition-colors">
+                <div className="text-2xl font-extralight text-slate-900 tracking-tighter mb-1">{completedSwaps.length}</div>
+                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
+                  <ArrowLeftRight className="w-3 h-3 text-unswap-blue-deep/30" />
                   Swaps
                 </div>
-              </Card>
-              <Card className="p-4 text-center">
-                <div className="text-2xl font-bold text-slate-900">
+              </div>
+              <div className="p-8 text-center hover:bg-slate-50 transition-colors">
+                <div className="text-2xl font-extralight text-slate-900 tracking-tighter mb-1">
                   {averageRating || 'N/A'}
                 </div>
-                <div className="text-sm text-slate-600 flex items-center justify-center gap-1 mt-1">
-                  <Star className="w-3 h-3" />
+                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
+                  <Star className="w-3 h-3 text-unswap-blue-deep/30" />
                   Rating
                 </div>
-              </Card>
+              </div>
             </div>
 
             {/* Verification Details */}
@@ -233,7 +243,7 @@ export default function UserProfileDialog({ open, onOpenChange, userEmail }) {
                 </h4>
                 <div className="space-y-3">
                   {properties.slice(0, 3).map((property) => (
-                    <Link 
+                    <Link
                       key={property.id}
                       to={createPageUrl('PropertyDetails') + `?id=${property.id}`}
                       onClick={() => onOpenChange(false)}
@@ -241,9 +251,9 @@ export default function UserProfileDialog({ open, onOpenChange, userEmail }) {
                       <Card className="p-3 hover:shadow-md transition-shadow cursor-pointer">
                         <div className="flex gap-3">
                           {property.images?.[0] && (
-                            <img 
-                              src={property.images[0]} 
-                              alt="" 
+                            <img
+                              src={property.images[0]}
+                              alt=""
                               className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
                             />
                           )}

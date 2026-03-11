@@ -71,22 +71,25 @@ export default function SecurityChecklistDialog({ open, onOpenChange, property, 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-amber-600" />
-            Diplomatic Security Audit
+      <DialogContent className="max-w-2xl rounded-none border-0 shadow-2xl p-0 overflow-hidden">
+        <DialogHeader className="p-10 border-b bg-slate-50">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-px bg-amber-500/20" />
+            <p className="text-amber-600 font-bold tracking-[0.4em] uppercase text-[9px]">Asset Security</p>
+          </div>
+          <DialogTitle className="text-3xl font-extralight text-slate-900 tracking-tighter leading-tight">
+            Security <span className="italic font-serif">Protocol.</span>
           </DialogTitle>
-          <DialogDescription>
-            Ensure your property meets security standards for international civil servants
+          <DialogDescription className="text-slate-500 text-sm font-light mt-4 leading-relaxed">
+            Complete the mandatory security checklist to ensure institutional standards are met before stay commencement.
           </DialogDescription>
         </DialogHeader>
 
         <Card className="bg-amber-50 border-amber-200">
           <CardContent className="p-4">
             <p className="text-sm text-amber-900">
-              <strong>Why this matters:</strong> International staff often work with sensitive materials. 
-              This checklist helps ensure a secure environment that protects both professional obligations 
+              <strong>Why this matters:</strong> International staff often work with sensitive materials.
+              This checklist helps ensure a secure environment that protects both professional obligations
               and personal privacy.
             </p>
           </CardContent>
@@ -98,7 +101,7 @@ export default function SecurityChecklistDialog({ open, onOpenChange, property, 
               <Checkbox
                 id={item.key}
                 checked={checklist[item.key]}
-                onCheckedChange={(checked) => 
+                onCheckedChange={(checked) =>
                   setChecklist(prev => ({ ...prev, [item.key]: checked }))
                 }
                 className="mt-1"
@@ -126,7 +129,7 @@ export default function SecurityChecklistDialog({ open, onOpenChange, property, 
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button 
+          <Button
             onClick={() => updatePropertyMutation.mutate()}
             disabled={!isComplete || updatePropertyMutation.isPending}
             className="bg-emerald-500 hover:bg-emerald-600"

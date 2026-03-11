@@ -13,56 +13,56 @@ import ImageAttachment from './ImageAttachment';
 
 export default function MessageGroup({ messages, isMe, user, onReply, onDelete, reactions = [], onReact }) {
   if (messages.length === 0) return null;
-  
+
   const [showReactionPicker, setShowReactionPicker] = React.useState(null);
   const reactionEmojis = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
 
   return (
-    <div className={`flex gap-2 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
+    <div className={`flex gap-4 ${isMe ? 'flex-row-reverse' : 'flex-row'} mb-6`}>
       {/* Avatar - only show for received messages */}
       {!isMe && (
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-100 to-amber-50 flex items-center justify-center flex-shrink-0 text-amber-700 font-semibold text-xs mt-auto">
+        <div className="w-12 h-12 rounded-none bg-slate-50 flex items-center justify-center flex-shrink-0 text-slate-400 border border-slate-100 font-extralight text-lg mt-auto transition-all duration-700 group-hover:bg-unswap-blue-deep group-hover:text-white group-hover:border-unswap-blue-deep shadow-sm">
           {messages[0].sender_name?.charAt(0) || '?'}
         </div>
       )}
 
-      <div className={`flex flex-col gap-1 max-w-[75%] sm:max-w-[70%]`}>
+      <div className={`flex flex-col gap-1.5 max-w-[80%] sm:max-w-[75%]`}>
         {messages.map((msg, index) => (
           <motion.div
             key={msg.id}
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2, delay: index * 0.05 }}
-            className="group"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, delay: index * 0.05 }}
+            className="group relative"
           >
             <div className="relative">
               <div
-                className={`px-4 py-2.5 rounded-2xl shadow-sm relative ${
-                  isMe
-                    ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-br-md'
-                    : 'bg-white text-slate-900 rounded-bl-md border border-slate-100'
-                } ${index === 0 ? (isMe ? 'rounded-tr-2xl' : 'rounded-tl-2xl') : ''}`}
+                className={`px-8 py-5 rounded-none shadow-sm relative transition-all duration-500 ${isMe
+                  ? 'bg-unswap-blue-deep text-white border-l-[6px] border-white/10 hover:shadow-2xl'
+                  : 'bg-white text-slate-900 border border-slate-100 hover:shadow-2xl'
+                  }`}
               >
                 {/* Attachments */}
                 {msg.attachments && msg.attachments.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-2">
+                  <div className="flex flex-wrap gap-3 mb-4">
                     {msg.attachments.map((attachment, i) =>
                       attachment.type === 'image' ? (
-                        <ImageAttachment key={i} src={attachment.url} />
+                        <div key={i} className="rounded-none overflow-hidden border border-slate-100/10">
+                          <ImageAttachment src={attachment.url} />
+                        </div>
                       ) : (
                         <a
                           key={i}
                           href={attachment.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={`flex items-center gap-2 p-2 rounded-lg ${
-                            isMe ? 'bg-amber-600/50' : 'bg-slate-50'
-                          } hover:opacity-80 transition-opacity`}
+                          className={`flex items-center gap-3 p-3 rounded-none ${isMe ? 'bg-white/10' : 'bg-slate-50'
+                            } hover:opacity-80 transition-all border border-transparent hover:border-white/20`}
                         >
                           <FileText className="w-4 h-4" />
-                          <div className="text-xs">
-                            <p className="font-medium truncate max-w-[200px]">{attachment.name}</p>
-                            <p className={isMe ? 'text-white/70' : 'text-slate-500'}>
+                          <div className="text-[10px] font-bold uppercase tracking-widest">
+                            <p className="truncate max-w-[150px]">{attachment.name}</p>
+                            <p className={isMe ? 'text-white/60' : 'text-slate-400'}>
                               {(attachment.size / 1024).toFixed(1)} KB
                             </p>
                           </div>
@@ -72,12 +72,12 @@ export default function MessageGroup({ messages, isMe, user, onReply, onDelete, 
                     )}
                   </div>
                 )}
-                {msg.content && <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.content}</p>}
+                {msg.content && <p className="text-sm font-light leading-relaxed tracking-tight whitespace-pre-wrap break-words">{msg.content}</p>}
               </div>
 
-              {/* Reactions */}
+              {/* Reactions - Architectural Pill */}
               {reactions.filter(r => r.message_id === msg.id).length > 0 && (
-                <div className={`flex flex-wrap gap-1 mt-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
+                <div className={`flex flex-wrap gap-1.5 mt-2 ${isMe ? 'justify-end' : 'justify-start'}`}>
                   {Object.entries(
                     reactions
                       .filter(r => r.message_id === msg.id)
@@ -89,58 +89,56 @@ export default function MessageGroup({ messages, isMe, user, onReply, onDelete, 
                     <button
                       key={emoji}
                       onClick={() => onReact(msg.id, emoji)}
-                      className={`px-2 py-0.5 rounded-full text-xs flex items-center gap-1 transition-all ${
-                        reactions.find(r => r.message_id === msg.id && r.reaction === emoji && r.user_email === user?.email)
-                          ? 'bg-amber-100 border border-amber-300'
-                          : 'bg-slate-100 border border-slate-200 hover:bg-slate-200'
-                      }`}
+                      className={`px-2.5 py-1 rounded-none text-[10px] font-bold flex items-center gap-2 transition-all border shadow-sm ${reactions.find(r => r.message_id === msg.id && r.reaction === emoji && r.user_email === user?.email)
+                        ? 'bg-unswap-blue-deep text-white border-unswap-blue-deep'
+                        : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                        }`}
                     >
                       <span>{emoji}</span>
-                      <span className="font-medium">{count}</span>
+                      <span className="tracking-tighter">{count}</span>
                     </button>
                   ))}
                 </div>
               )}
 
-              {/* Message Actions */}
+              {/* Message Actions - Minimalist */}
               <div
-                className={`absolute top-1/2 -translate-y-1/2 ${
-                  isMe ? '-left-10' : '-right-10'
-                } opacity-0 group-hover:opacity-100 transition-all duration-200`}
+                className={`absolute top-1/2 -translate-y-1/2 ${isMe ? '-left-12' : '-right-12'
+                  } opacity-0 group-hover:opacity-100 transition-all duration-300 z-10`}
               >
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 bg-white hover:bg-slate-50 shadow-lg rounded-full border border-slate-200"
+                      className="h-10 w-10 bg-white border border-slate-200 rounded-none shadow-xl hover:bg-slate-50"
                     >
-                      <MoreVertical className="w-4 h-4 text-slate-600" />
+                      <MoreVertical className="w-4 h-4 text-slate-400" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align={isMe ? 'start' : 'end'}>
-                    <DropdownMenuItem onClick={() => setShowReactionPicker(msg.id)}>
-                      <Smile className="w-4 h-4 mr-2" />
+                  <DropdownMenuContent align={isMe ? 'start' : 'end'} className="rounded-none border-slate-200 p-1">
+                    <DropdownMenuItem onClick={() => setShowReactionPicker(msg.id)} className="rounded-none py-2 text-[10px] font-bold uppercase tracking-widest">
+                      <Smile className="w-4 h-4 mr-3 text-slate-400" />
                       React
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onReply(msg)}>
-                      <Reply className="w-4 h-4 mr-2" />
+                    <DropdownMenuItem onClick={() => onReply(msg)} className="rounded-none py-2 text-[10px] font-bold uppercase tracking-widest">
+                      <Reply className="w-4 h-4 mr-3 text-slate-400" />
                       Reply
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onDelete(msg.id)} className="text-red-600">
-                      <Trash2 className="w-4 h-4 mr-2" />
+                    <DropdownMenuItem onClick={() => onDelete(msg.id)} className="rounded-none py-2 text-[10px] font-bold uppercase tracking-widest text-red-600 focus:text-red-600 focus:bg-rose-50">
+                      <Trash2 className="w-4 h-4 mr-3" />
                       Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
 
-              {/* Reaction Picker */}
+              {/* Reaction Picker - Architectural Overlay */}
               {showReactionPicker === msg.id && (
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className={`absolute ${isMe ? 'left-0' : 'right-0'} top-full mt-1 bg-white rounded-lg shadow-lg border border-slate-200 p-2 flex gap-1 z-10`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`absolute ${isMe ? 'left-0' : 'right-0'} top-full mt-2 bg-white rounded-none shadow-2xl border border-slate-200 p-2 flex gap-1 z-20`}
                 >
                   {reactionEmojis.map(emoji => (
                     <button
@@ -149,7 +147,7 @@ export default function MessageGroup({ messages, isMe, user, onReply, onDelete, 
                         onReact(msg.id, emoji);
                         setShowReactionPicker(null);
                       }}
-                      className="w-8 h-8 flex items-center justify-center hover:bg-slate-100 rounded transition-colors text-lg"
+                      className="w-10 h-10 flex items-center justify-center hover:bg-slate-50 rounded-none transition-all text-xl grayscale hover:grayscale-0"
                     >
                       {emoji}
                     </button>
@@ -160,19 +158,18 @@ export default function MessageGroup({ messages, isMe, user, onReply, onDelete, 
           </motion.div>
         ))}
 
-        {/* Timestamp and Read Receipt - only on last message */}
+        {/* Timestamp and Status - Minimalist */}
         <div
-          className={`flex items-center gap-1.5 text-xs px-1 ${
-            isMe ? 'justify-end text-slate-400' : 'justify-start text-slate-500'
-          }`}
+          className={`flex items-center gap-4 text-[9px] font-bold uppercase tracking-[0.4em] mt-3 ${isMe ? 'justify-end text-slate-300' : 'justify-start text-slate-300 font-light'
+            }`}
         >
-          <span className="font-medium">{format(new Date(messages[messages.length - 1].created_date), 'h:mm a')}</span>
+          <span>{format(new Date(messages[messages.length - 1].created_date), 'h:mm a')}</span>
           {isMe && (
             <span className="flex items-center">
               {messages[messages.length - 1].is_read ? (
-                <CheckCheck className="w-3.5 h-3.5 text-blue-500" />
+                <CheckCheck className="w-3.5 h-3.5 text-unswap-blue-deep/40" />
               ) : (
-                <Check className="w-3.5 h-3.5 text-slate-400" />
+                <Check className="w-3.5 h-3.5 text-slate-200" />
               )}
             </span>
           )}

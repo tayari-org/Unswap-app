@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
-  ArrowLeftRight, Calendar, Clock, CheckCircle, XCircle, 
+  ArrowLeftRight, Calendar, Clock, CheckCircle, XCircle,
   Video, MessageSquare, Coins, ChevronRight, Home, AlertCircle, Plus,
   LayoutDashboard, History, CalendarDays, Globe
 } from 'lucide-react';
@@ -42,7 +42,7 @@ import GuestFinalizeApprovalDialog from '../components/swaps/GuestFinalizeApprov
 export default function MySwaps() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('incoming');
+  const [activeTab, setActiveTab] = useState('overview');
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
   const [showVideoScheduler, setShowVideoScheduler] = useState(null);
@@ -113,7 +113,7 @@ export default function MySwaps() {
       id: request.id,
       data: { status: 'approved' }
     });
-    
+
     await notifySwapApproved({
       requesterEmail: request.requester_email,
       hostName: user?.full_name || user?.email,
@@ -137,14 +137,14 @@ export default function MySwaps() {
       id: showVideoScheduler.id,
       data: { status: 'video_scheduled' }
     });
-    
+
     await notifySwapApproved({
       requesterEmail: showVideoScheduler.requester_email,
       hostName: user?.full_name || user?.email,
       propertyTitle: showVideoScheduler.property_title,
       swapRequestId: showVideoScheduler.id
     });
-    
+
     setShowVideoScheduler(null);
   };
 
@@ -154,14 +154,14 @@ export default function MySwaps() {
       id: selectedRequest.id,
       data: { status: 'rejected' }
     });
-    
+
     await notifySwapRejected({
       requesterEmail: selectedRequest.requester_email,
       hostName: user?.full_name || user?.email,
       propertyTitle: selectedRequest.property_title,
       swapRequestId: selectedRequest.id
     });
-    
+
     toast.success('Request rejected');
     setRejectReason('');
   };
@@ -203,224 +203,295 @@ export default function MySwaps() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F1F5F9]">
-      {/* UNSwap Branded Header */}
-      <div className="bg-white border-b border-blue-100 sticky top-0 z-30">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-[#009EDB]/10 p-2 rounded-lg">
-              <Globe className="w-6 h-6 text-[#009EDB]" />
-            </div>
+    <div className="min-h-screen bg-[#F8FAFC]">
+      {/* Structural Header */}
+      <div className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-6 py-12">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">My Swaps</h1>
-              <p className="text-slate-500 text-sm">Coordinate your global mission mobility</p>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-px bg-unswap-blue-deep/20" />
+                <p className="text-unswap-blue-deep/60 font-bold tracking-[0.4em] uppercase text-[10px]">Operations</p>
+              </div>
+              <h1 className="text-4xl font-extralight tracking-tighter text-slate-900 mb-2">My <span className="italic font-serif">Swaps</span></h1>
+              <p className="text-slate-500 text-sm font-light">Manage and track your swap requests</p>
             </div>
+            <Button onClick={handleNewSwapRequest} className="bg-unswap-blue-deep hover:bg-slate-900 text-white rounded-none h-14 px-8 text-[10px] font-bold uppercase tracking-[0.3em] transition-all shadow-xl">
+              <Plus className="w-4 h-4 mr-2" />
+              New Swap Request
+            </Button>
           </div>
-          <Button 
-            onClick={handleNewSwapRequest}
-            className="bg-[#009EDB] hover:bg-[#007bb1] text-white shadow-sm transition-all active:scale-95"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Swap Request
-          </Button>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-        {/* Stats Grid - Updated with UN Blue and Teal */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {[
-            { label: 'Pending', value: swapRequests.filter(r => r.status === 'pending').length, color: 'text-amber-600', bg: 'bg-amber-50', icon: Clock },
-            { label: 'Approved', value: swapRequests.filter(r => r.status === 'approved').length, color: 'text-teal-600', bg: 'bg-teal-50', icon: CheckCircle },
-            { label: 'Completed', value: swapRequests.filter(r => r.status === 'completed').length, color: 'text-[#009EDB]', bg: 'bg-blue-50', icon: History },
-            { label: 'Total Swaps', value: swapRequests.length, color: 'text-slate-600', bg: 'bg-slate-50', icon: LayoutDashboard },
-          ].map((stat, index) => (
-            <Card key={index} className="border-none shadow-sm hover:shadow-md transition-all border-b-2 border-transparent hover:border-[#009EDB]">
-              <CardContent className="p-5 flex items-center gap-4">
-                <div className={`w-12 h-12 ${stat.bg} rounded-full flex items-center justify-center`}>
-                  <stat.icon className={`w-6 h-6 ${stat.color}`} />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">{stat.label}</p>
-                  <p className="text-2xl font-bold text-slate-900 leading-none mt-1">{stat.value}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        <div className="flex flex-col lg:flex-row gap-12">
+          {/* Sidebar Navigation - Prestigious Architectural Style */}
+          <aside className="lg:w-80 shrink-0">
+            <nav className="flex flex-col gap-2">
+              {[
+                { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+                { id: 'incoming', label: 'Incoming', icon: ArrowLeftRight, badge: incomingRequests.filter(r => r.status === 'pending').length },
+                { id: 'outgoing', label: 'Outgoing', icon: ArrowLeftRight },
+                { id: 'upcoming', label: 'Upcoming', icon: CalendarDays },
+                { id: 'video-calls', label: 'Video Calls', icon: Video },
+                { id: 'completed', label: 'History', icon: History }
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`flex items-center justify-between w-full px-6 py-5 text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 border-l-2 ${activeTab === item.id
+                    ? 'bg-white border-unswap-blue-deep text-unswap-blue-deep shadow-lg shadow-unswap-blue-deep/5'
+                    : 'bg-transparent border-transparent text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+                    }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <item.icon className={`w-4 h-4 ${activeTab === item.id ? 'text-unswap-blue-deep' : 'text-slate-300'}`} />
+                    <span>{item.label}</span>
+                  </div>
+                  {item.badge > 0 && (
+                    <span className="h-5 min-w-[20px] px-1.5 flex items-center justify-center bg-unswap-blue-deep text-white text-[9px] font-bold">
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </nav>
+          </aside>
+
+          {/* Main Content Area */}
+          <div className="flex-1">
+            <AnimatePresence mode="wait">
+              {activeTab === 'overview' && (
+                <motion.div
+                  key="overview"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.4 }}
+                  className="space-y-12"
+                >
+                  {/* Stats Grid - High Contrast Architectural */}
+                  <div className="grid grid-cols-2 gap-6">
+                    {[
+                      { label: 'Pending', value: swapRequests.filter(r => r.status === 'pending').length, icon: Clock },
+                      { label: 'Approved', value: swapRequests.filter(r => r.status === 'approved').length, icon: CheckCircle },
+                      { label: 'Completed', value: swapRequests.filter(r => r.status === 'completed').length, icon: History },
+                      { label: 'Total', value: swapRequests.length, icon: LayoutDashboard },
+                    ].map((stat, index) => (
+                      <Card key={index} className="rounded-none border-slate-200 shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-500 border-l-4 border-l-unswap-blue-deep/5 hover:border-l-unswap-blue-deep">
+                        <CardContent className="p-8 flex items-center gap-6">
+                          <div className="w-12 h-12 bg-slate-50 border border-slate-100 rounded-none flex items-center justify-center transition-all duration-500 group-hover:bg-unswap-blue-deep group-hover:text-white">
+                            <stat.icon className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
+                            <p className="text-3xl font-extralight text-slate-900 tracking-tighter leading-none">{stat.value}</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+
+                  <div className="bg-white p-12 border border-slate-100 rounded-none border-l-4 border-l-unswap-blue-deep">
+                    <h3 className="text-xl font-light tracking-tight text-slate-900 mb-4 italic font-serif">Overview</h3>
+                    <p className="text-slate-500 text-sm font-light leading-relaxed max-w-2xl">
+                      Manage your swap requests and track their status. Use the sidebar to navigate through your incoming, outgoing, and upcoming swaps.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              {activeTab === 'incoming' && (
+                <motion.div
+                  key="incoming"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.4 }}
+                  className="space-y-6"
+                >
+                  {incomingRequests.filter(r => r.status !== 'completed').length === 0 ? (
+                    <EmptyState message="No incoming swap requests yet" />
+                  ) : (
+                    incomingRequests
+                      .filter(r => r.status !== 'completed')
+                      .map(request => (
+                        <SwapRequestCard
+                          key={request.id}
+                          request={request} isIncoming user={user}
+                          onApprove={handleApprove} onReject={setSelectedRequest}
+                          onCounterPropose={setShowCounterDialog} onScheduleVideo={handleScheduleVideo}
+                          onMessage={setShowMessaging} onCompleteSwap={setShowCompleteDialog}
+                          onFinalizeSwap={setShowFinalizeDialog} onGuestApprovalNeeded={setShowGuestApprovalDialog}
+                          onDelete={handleDelete}
+                        />
+                      ))
+                  )}
+                </motion.div>
+              )}
+
+              {activeTab === 'outgoing' && (
+                <motion.div
+                  key="outgoing"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.4 }}
+                  className="space-y-6"
+                >
+                  {outgoingRequests.filter(r => r.status !== 'completed').length === 0 ? (
+                    <EmptyState message="You haven't requested any swaps yet" onCreateNew={handleNewSwapRequest} />
+                  ) : (
+                    outgoingRequests
+                      .filter(r => r.status !== 'completed')
+                      .map(request => (
+                        <SwapRequestCard
+                          key={request.id}
+                          request={request} isIncoming={false} user={user}
+                          onApprove={handleApprove} onReject={setSelectedRequest}
+                          onCounterPropose={setShowCounterDialog} onScheduleVideo={handleScheduleVideo}
+                          onMessage={setShowMessaging} onCompleteSwap={setShowCompleteDialog}
+                          onFinalizeSwap={setShowFinalizeDialog} onGuestApprovalNeeded={setShowGuestApprovalDialog}
+                          onDelete={handleDelete}
+                        />
+                      ))
+                  )}
+                </motion.div>
+              )}
+
+              {activeTab === 'upcoming' && (
+                <motion.div
+                  key="upcoming"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.4 }}
+                  className="space-y-6"
+                >
+                  {swapRequests.filter(r => r.status === 'approved' && new Date(r.check_in) > new Date()).length === 0 ? (
+                    <EmptyState message="No upcoming swaps scheduled" onCreateNew={handleNewSwapRequest} />
+                  ) : (
+                    swapRequests
+                      .filter(r => r.status === 'approved' && new Date(r.check_in) > new Date())
+                      .map(request => (
+                        <SwapRequestCard
+                          key={request.id}
+                          request={request} isIncoming={request.host_email === user?.email} user={user}
+                          onApprove={handleApprove} onReject={setSelectedRequest}
+                          onCounterPropose={setShowCounterDialog} onScheduleVideo={handleScheduleVideo}
+                          onMessage={setShowMessaging} onCompleteSwap={setShowCompleteDialog}
+                          onFinalizeSwap={setShowFinalizeDialog} onGuestApprovalNeeded={setShowGuestApprovalDialog}
+                          onDelete={handleDelete}
+                        />
+                      ))
+                  )}
+                </motion.div>
+              )}
+
+              {activeTab === 'video-calls' && (
+                <motion.div
+                  key="video-calls"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  {videoCalls.length === 0 ? (
+                    <EmptyState message="No scheduled video calls yet" />
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {videoCalls.map(call => (
+                        <ScheduledCallCard
+                          key={call.id} videoCall={call} user={user}
+                          onJoinCall={() => setActiveVideoCall(call)}
+                          onEdit={setEditVideoCall} onDelete={setDeleteVideoCall}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
+              {activeTab === 'completed' && (
+                <motion.div
+                  key="completed"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.4 }}
+                  className="space-y-6"
+                >
+                  {swapRequests.filter(r => r.status === 'completed').length === 0 ? (
+                    <EmptyState message="No completed swaps yet" />
+                  ) : (
+                    swapRequests
+                      .filter(r => r.status === 'completed')
+                      .map(request => (
+                        <SwapRequestCard
+                          key={request.id}
+                          request={request} isIncoming={request.host_email === user?.email} user={user}
+                          onApprove={handleApprove} onReject={setSelectedRequest}
+                          onCounterPropose={setShowCounterDialog} onScheduleVideo={setShowVideoScheduler}
+                          onMessage={setShowMessaging} onCompleteSwap={setShowCompleteDialog}
+                          onFinalizeSwap={setShowFinalizeDialog} onLeaveReview={setShowReviewDialog}
+                          onDelete={handleDelete}
+                        />
+                      ))
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="bg-slate-200/50 p-1 mb-8 w-full sm:w-auto overflow-x-auto rounded-xl border border-slate-200">
-            <TabsTrigger value="incoming" className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-[#009EDB] data-[state=active]:shadow-sm px-6 py-2 transition-all">
-              Incoming
-              {incomingRequests.filter(r => r.status === 'pending').length > 0 && (
-                <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#009EDB] text-[10px] font-bold text-white">
-                  {incomingRequests.filter(r => r.status === 'pending').length}
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="outgoing" className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-[#009EDB] px-6 py-2">
-              Outgoing
-            </TabsTrigger>
-            <TabsTrigger value="upcoming" className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-[#009EDB] px-6 py-2">
-              Upcoming
-            </TabsTrigger>
-            <TabsTrigger value="video-calls" className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-[#009EDB] px-6 py-2">
-              <Video className="w-4 h-4 mr-2" />
-              Pre-Swap Calls
-            </TabsTrigger>
-            <TabsTrigger value="completed" className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-[#009EDB] px-6 py-2">
-              History
-            </TabsTrigger>
-          </TabsList>
-
-          <AnimatePresence mode="wait">
-            <TabsContent value="incoming" className="space-y-5 focus-visible:outline-none">
-              {incomingRequests.filter(r => r.status !== 'completed').length === 0 ? (
-                <EmptyState message="No incoming swap requests yet" />
-              ) : (
-                incomingRequests
-                  .filter(r => r.status !== 'completed')
-                  .map(request => (
-                    <motion.div key={request.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                      <SwapRequestCard 
-                        request={request} isIncoming user={user}
-                        onApprove={handleApprove} onReject={setSelectedRequest}
-                        onCounterPropose={setShowCounterDialog} onScheduleVideo={handleScheduleVideo}
-                        onMessage={setShowMessaging} onCompleteSwap={setShowCompleteDialog}
-                        onFinalizeSwap={setShowFinalizeDialog} onGuestApprovalNeeded={setShowGuestApprovalDialog}
-                        onDelete={handleDelete}
-                      />
-                    </motion.div>
-                  ))
-              )}
-            </TabsContent>
-
-            <TabsContent value="outgoing" className="space-y-5 focus-visible:outline-none">
-              {outgoingRequests.filter(r => r.status !== 'completed').length === 0 ? (
-                <EmptyState message="You haven't requested any swaps yet" onCreateNew={handleNewSwapRequest} />
-              ) : (
-                outgoingRequests
-                  .filter(r => r.status !== 'completed')
-                  .map(request => (
-                    <motion.div key={request.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                      <SwapRequestCard 
-                        request={request} isIncoming={false} user={user}
-                        onApprove={handleApprove} onReject={setSelectedRequest}
-                        onCounterPropose={setShowCounterDialog} onScheduleVideo={handleScheduleVideo}
-                        onMessage={setShowMessaging} onCompleteSwap={setShowCompleteDialog}
-                        onFinalizeSwap={setShowFinalizeDialog} onGuestApprovalNeeded={setShowGuestApprovalDialog}
-                        onDelete={handleDelete}
-                      />
-                    </motion.div>
-                  ))
-              )}
-            </TabsContent>
-
-            <TabsContent value="upcoming" className="space-y-5 focus-visible:outline-none">
-              {swapRequests.filter(r => r.status === 'approved' && new Date(r.check_in) > new Date()).length === 0 ? (
-                <EmptyState message="No upcoming swaps scheduled" onCreateNew={handleNewSwapRequest} />
-              ) : (
-                swapRequests
-                  .filter(r => r.status === 'approved' && new Date(r.check_in) > new Date())
-                  .map(request => (
-                    <motion.div key={request.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                      <SwapRequestCard 
-                        request={request} isIncoming={request.host_email === user?.email} user={user}
-                        onApprove={handleApprove} onReject={setSelectedRequest}
-                        onCounterPropose={setShowCounterDialog} onScheduleVideo={handleScheduleVideo}
-                        onMessage={setShowMessaging} onCompleteSwap={setShowCompleteDialog}
-                        onFinalizeSwap={setShowFinalizeDialog} onGuestApprovalNeeded={setShowGuestApprovalDialog}
-                        onDelete={handleDelete}
-                      />
-                    </motion.div>
-                  ))
-              )}
-            </TabsContent>
-
-            <TabsContent value="video-calls" className="space-y-5 focus-visible:outline-none">
-              {videoCalls.length === 0 ? (
-                <EmptyState message="No scheduled video calls yet" />
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {videoCalls.map(call => (
-                    <ScheduledCallCard 
-                      key={call.id} videoCall={call} user={user}
-                      onJoinCall={() => setActiveVideoCall(call)}
-                      onEdit={setEditVideoCall} onDelete={setDeleteVideoCall}
-                    />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="completed" className="space-y-5 focus-visible:outline-none">
-              {swapRequests.filter(r => r.status === 'completed').length === 0 ? (
-                <EmptyState message="No completed swaps yet" />
-              ) : (
-                swapRequests
-                  .filter(r => r.status === 'completed')
-                  .map(request => (
-                    <motion.div key={request.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                      <SwapRequestCard 
-                        request={request} isIncoming={request.host_email === user?.email} user={user}
-                        onApprove={handleApprove} onReject={setSelectedRequest}
-                        onCounterPropose={setShowCounterDialog} onScheduleVideo={setShowVideoScheduler}
-                        onMessage={setShowMessaging} onCompleteSwap={setShowCompleteDialog}
-                        onFinalizeSwap={setShowFinalizeDialog} onLeaveReview={setShowReviewDialog}
-                        onDelete={handleDelete}
-                      />
-                    </motion.div>
-                  ))
-              )}
-            </TabsContent>
-          </AnimatePresence>
-        </Tabs>
       </div>
 
-      {/* Video Call Scheduler Dialog */}
+      {/* Video Call Scheduler Dialog - Architectural refinement */}
       <Dialog open={!!showVideoScheduler} onOpenChange={() => setShowVideoScheduler(null)}>
-        <DialogContent className="max-w-2xl rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Schedule Meet & Greet Call (Optional)</DialogTitle>
-          </DialogHeader>
-          {showVideoScheduler && (
-            <VideoCallScheduler 
-              swapRequest={showVideoScheduler} user={user}
-              onScheduled={handleVideoCallScheduled} isOptional={true}
-            />
-          )}
+        <DialogContent className="max-w-2xl rounded-none border-0 shadow-2xl p-0 overflow-hidden">
+          <div className="p-8 border-b bg-slate-50">
+            <DialogTitle className="text-2xl font-extralight tracking-tight text-slate-900">Schedule Video Call</DialogTitle>
+            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Video Call Verification</p>
+          </div>
+          <div className="p-8">
+            {showVideoScheduler && (
+              <VideoCallScheduler
+                swapRequest={showVideoScheduler} user={user}
+                onScheduled={handleVideoCallScheduled} isOptional={true}
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
-      {/* Reject Dialog */}
+      {/* Reject Dialog - High Contrast */}
       <Dialog open={!!selectedRequest} onOpenChange={() => setSelectedRequest(null)}>
-        <DialogContent className="rounded-2xl border-t-4 border-t-red-500">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold flex items-center gap-2">
-              <XCircle className="w-5 h-5 text-red-500" />
+        <DialogContent className="rounded-none border-slate-200 shadow-2xl p-0 overflow-hidden">
+          <div className="p-8 border-b bg-rose-50/30">
+            <DialogTitle className="text-2xl font-extralight tracking-tight text-slate-900 flex items-center gap-4">
+              <XCircle className="w-6 h-6 text-red-500" />
               Decline Swap Request
             </DialogTitle>
-          </DialogHeader>
-          <div className="py-2">
-            <p className="text-slate-500 mb-4">Are you sure you want to decline this swap request?</p>
+          </div>
+          <div className="p-8">
+            <p className="text-slate-500 font-light mb-6 tracking-tight leading-relaxed">Please provide a reason for declining this request.</p>
             <Textarea
-              placeholder="Optional: Add a reason..."
+              placeholder="Reason for decline (Optional)..."
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              className="min-h-[100px] bg-slate-50 border-slate-200 focus:ring-red-500"
+              className="min-h-[120px] bg-slate-50/30 border-slate-200 focus-visible:ring-red-500 rounded-none font-light italic"
             />
+            <div className="mt-8 flex justify-end gap-4">
+              <Button variant="ghost" onClick={() => setSelectedRequest(null)} className="rounded-none font-bold text-[10px] uppercase tracking-widest">Cancel</Button>
+              <Button onClick={handleReject} className="bg-red-600 hover:bg-red-700 text-white rounded-none h-12 px-8 text-[10px] font-bold uppercase tracking-widest shadow-xl">Confirm Decline</Button>
+            </div>
           </div>
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="ghost" onClick={() => setSelectedRequest(null)}>Cancel</Button>
-            <Button onClick={handleReject} className="bg-red-600 hover:bg-red-700 text-white">Confirm Decline</Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Messaging Sheet */}
+      {/* Messaging Sheet - Architectural Precision */}
       <Sheet open={!!showMessaging} onOpenChange={() => setShowMessaging(null)}>
-        <SheetContent className="w-full sm:max-w-lg p-0 border-l border-slate-200 shadow-2xl">
+        <SheetContent className="w-full sm:max-w-xl p-0 border-l border-slate-200 shadow-2xl rounded-none">
           {showMessaging && (
             <SwapMessaging swapRequest={showMessaging} user={user} onClose={() => setShowMessaging(null)} />
           )}
@@ -429,26 +500,26 @@ export default function MySwaps() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!showDeleteDialog} onOpenChange={() => setShowDeleteDialog(null)}>
-        <DialogContent className="rounded-2xl">
+        <DialogContent className="rounded-none border-slate-200 shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-red-600">Delete Swap Request</DialogTitle>
+            <DialogTitle className="text-2xl font-extralight tracking-tight text-red-600">Delete Request</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <p className="text-slate-600">This action cannot be undone. Are you sure you want to delete this request?</p>
+          <div className="py-8">
+            <p className="text-slate-500 font-light tracking-tight leading-relaxed">Are you sure you want to delete this swap request? This action cannot be undone.</p>
             {showDeleteDialog && (
-              <div className="mt-4 p-4 bg-red-50 rounded-xl border border-red-100">
-                <p className="text-sm font-bold text-red-900">{showDeleteDialog.property_title}</p>
-                <div className="flex items-center gap-2 mt-2 text-xs text-red-700 opacity-80">
-                  <CalendarDays className="w-3 h-3" />
-                  {showDeleteDialog.check_in && format(new Date(showDeleteDialog.check_in), 'MMM d')} - 
+              <div className="mt-6 p-6 bg-slate-50 border border-slate-100 rounded-none border-l-4 border-l-red-400">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-900">{showDeleteDialog.property_title}</p>
+                <div className="flex items-center gap-3 mt-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  <CalendarDays className="w-3.5 h-3.5" />
+                  {showDeleteDialog.check_in && format(new Date(showDeleteDialog.check_in), 'MMM d')} -
                   {showDeleteDialog.check_out && format(new Date(showDeleteDialog.check_out), 'MMM d, yyyy')}
                 </div>
               </div>
             )}
           </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setShowDeleteDialog(null)}>Cancel</Button>
-            <Button onClick={confirmDelete} className="bg-red-600 hover:bg-red-700 text-white">Delete Request</Button>
+          <DialogFooter className="gap-4">
+            <Button variant="outline" onClick={() => setShowDeleteDialog(null)} className="rounded-none font-bold text-[10px] uppercase tracking-widest border-slate-200">Cancel</Button>
+            <Button onClick={confirmDelete} className="bg-red-600 hover:bg-red-700 text-white rounded-none h-12 px-8 text-[10px] font-bold uppercase tracking-widest shadow-xl">Delete</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -459,9 +530,14 @@ export default function MySwaps() {
       <CounterProposalDialog open={!!showCounterDialog} onOpenChange={() => setShowCounterDialog(null)} request={showCounterDialog} user={user} />
       <CompleteSwapDialog open={!!showCompleteDialog} onOpenChange={() => setShowCompleteDialog(null)} request={showCompleteDialog} user={user} />
       <Dialog open={!!showReviewDialog} onOpenChange={() => setShowReviewDialog(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl">
-          <DialogHeader><DialogTitle className="text-xl font-bold">Leave a Review</DialogTitle></DialogHeader>
-          {showReviewDialog && <ReviewForm swapRequest={showReviewDialog} onSuccess={() => setShowReviewDialog(null)} />}
+        <DialogContent className="max-w-2xl rounded-none border-0 shadow-2xl p-0 overflow-hidden">
+          <div className="p-8 border-b bg-slate-50">
+            <DialogTitle className="text-2xl font-extralight tracking-tight text-slate-900">Review</DialogTitle>
+            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Leave a Review</p>
+          </div>
+          <div className="p-8 max-h-[70vh] overflow-y-auto">
+            {showReviewDialog && <ReviewForm swapRequest={showReviewDialog} onSuccess={() => setShowReviewDialog(null)} />}
+          </div>
         </DialogContent>
       </Dialog>
       {showFinalizeDialog && <FinalizeSwapDialog open={!!showFinalizeDialog} onOpenChange={() => setShowFinalizeDialog(null)} swapRequest={showFinalizeDialog} user={user} property={properties.find(p => p.id === showFinalizeDialog.property_id)} />}
@@ -472,23 +548,23 @@ export default function MySwaps() {
 
 function EmptyState({ message, onCreateNew }) {
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20 bg-white rounded-3xl border border-slate-200 shadow-sm">
-      <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
-        <ArrowLeftRight className="w-10 h-10 text-[#009EDB]/40" />
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-32 bg-white rounded-none border border-slate-100 shadow-sm border-2 border-dashed">
+      <div className="w-16 h-16 bg-slate-50 border border-slate-100 rounded-none flex items-center justify-center mx-auto mb-8">
+        <ArrowLeftRight className="w-8 h-8 text-slate-200" />
       </div>
-      <h3 className="text-lg font-semibold text-slate-900 mb-2">No active missions found</h3>
-      <p className="text-slate-500 font-medium mb-8 max-w-xs mx-auto leading-relaxed">{message}</p>
-      <div className="flex flex-col sm:flex-row gap-3 justify-center px-4">
+      <h3 className="text-2xl font-light text-slate-900 tracking-tight mb-2">No Active Records</h3>
+      <p className="text-slate-500 font-light text-sm mb-10 max-w-sm mx-auto">{message}</p>
+      <div className="flex flex-col sm:flex-row gap-4 justify-center px-8">
         {onCreateNew && (
-          <Button onClick={onCreateNew} className="bg-[#009EDB] hover:bg-[#007bb1] text-white px-8">
-            <Plus className="w-4 h-4 mr-2" />
-            Start a Request
+          <Button onClick={onCreateNew} className="bg-unswap-blue-deep hover:bg-slate-900 text-white rounded-none h-14 px-10 text-[10px] font-bold uppercase tracking-widest shadow-xl transition-all">
+            <Plus className="w-4 h-4 mr-2.5" />
+            New Swap Request
           </Button>
         )}
         <Link to={createPageUrl('FindProperties')}>
-          <Button variant="outline" className="w-full sm:w-auto border-slate-200 hover:bg-slate-50">
-            Explore Duty Stations
-            <ChevronRight className="w-4 h-4 ml-2" />
+          <Button variant="outline" className="rounded-none border-slate-200 h-14 px-10 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-50 transition-all">
+            Explore Properties
+            <ChevronRight className="w-4 h-4 ml-2.5" />
           </Button>
         </Link>
       </div>

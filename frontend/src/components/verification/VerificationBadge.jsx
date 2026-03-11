@@ -10,24 +10,24 @@ export default function VerificationBadge({ verification, size = 'default', show
     switch (verification.verification_level) {
       case 'staff':
         return {
-          icon: Star,
-          label: 'UN Staff Verified',
-          color: 'bg-amber-100 text-amber-700 border-amber-300',
-          description: 'Verified UN or international organization staff member',
+          icon: Shield,
+          label: 'Institutional Staff',
+          color: 'bg-unswap-blue-deep/5 text-unswap-blue-deep border-unswap-blue-deep/20',
+          description: 'Verified international organization staff member',
         };
       case 'trusted':
         return {
-          icon: Shield,
-          label: 'Trusted Guest',
-          color: 'bg-green-100 text-green-700 border-green-300',
-          description: 'Fully verified with multiple trust signals',
+          icon: CheckCircle,
+          label: 'Trust Accredited',
+          color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+          description: 'Highest trust level with comprehensive verification signals',
         };
       case 'verified':
         return {
-          icon: CheckCircle,
-          label: 'Verified',
-          color: 'bg-blue-100 text-blue-700 border-blue-300',
-          description: 'Identity verified with government-issued ID',
+          icon: Shield,
+          label: 'Identity Verified',
+          color: 'bg-slate-50 text-slate-600 border-slate-200',
+          description: 'Authentication via government-issued credentials',
         };
       default:
         return null;
@@ -42,8 +42,8 @@ export default function VerificationBadge({ verification, size = 'default', show
   const textSize = size === 'small' ? 'text-xs' : 'text-sm';
 
   const badgeContent = (
-    <Badge variant="outline" className={`${info.color} border ${textSize} font-medium`}>
-      <Icon className={`${iconSize} ${showLabel ? 'mr-1' : ''}`} />
+    <Badge variant="outline" className={`${info.color} border rounded-none ${textSize} font-bold uppercase tracking-[0.2em] py-1.5 px-3 shadow-sm transition-all hover:shadow-md`}>
+      <Icon className={`${iconSize} ${showLabel ? 'mr-3' : ''} opacity-60`} />
       {showLabel && info.label}
     </Badge>
   );
@@ -54,19 +54,34 @@ export default function VerificationBadge({ verification, size = 'default', show
         <TooltipTrigger asChild>
           <div className="inline-flex">{badgeContent}</div>
         </TooltipTrigger>
-        <TooltipContent>
-          <div className="max-w-xs">
-            <p className="font-semibold mb-1">{info.label}</p>
-            <p className="text-xs text-slate-600">{info.description}</p>
-            {verification.email_verified && (
-              <p className="text-xs text-slate-500 mt-1">✓ Email verified</p>
-            )}
-            {verification.phone_verified && (
-              <p className="text-xs text-slate-500">✓ Phone verified</p>
-            )}
-            {verification.social_profiles_verified?.linkedin && (
-              <p className="text-xs text-slate-500">✓ LinkedIn connected</p>
-            )}
+        <TooltipContent className="rounded-none border-slate-100 shadow-2xl p-6 bg-white max-w-xs">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-px bg-unswap-blue-deep/20" />
+              <p className="text-unswap-blue-deep/60 font-bold tracking-[0.4em] uppercase text-[8px]">Accreditation</p>
+            </div>
+            <div>
+              <p className="text-sm font-light text-slate-900 tracking-tight">{info.label}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5 leading-relaxed">{info.description}</p>
+            </div>
+
+            <div className="pt-4 border-t border-slate-50 space-y-2">
+              {verification.email_verified && (
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                  <div className="w-1 h-1 bg-emerald-500/40" /> Secure Email Verified
+                </p>
+              )}
+              {verification.phone_verified && (
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                  <div className="w-1 h-1 bg-emerald-500/40" /> Bio-Communication Sync
+                </p>
+              )}
+              {verification.social_profiles_verified?.linkedin && (
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                  <div className="w-1 h-1 bg-emerald-500/40" /> LinkedIn Professional Link
+                </p>
+              )}
+            </div>
           </div>
         </TooltipContent>
       </Tooltip>

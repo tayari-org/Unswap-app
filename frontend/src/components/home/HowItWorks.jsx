@@ -35,12 +35,12 @@ const steps = [
   },
 ];
 
-export default function HowItWorksDark() {
+export default function HowItWorks() {
   return (
     <section id="how-it-works" className="py-24 px-6 bg-[#05080F] relative overflow-hidden">
       {/* Background visual texture */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,#1e293b,transparent)] opacity-30" />
-      
+
       <div className="max-w-7xl mx-auto relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -74,7 +74,7 @@ export default function HowItWorksDark() {
                 className="group relative"
               >
                 <div className="h-full bg-white/[0.02] border border-white/10 rounded-2xl p-8 backdrop-blur-sm hover:bg-white/[0.04] hover:border-blue-500/50 transition-all duration-500 shadow-2xl">
-                  
+
                   {/* Protocol Number */}
                   <div className="text-[10px] font-mono text-blue-500/50 mb-6 tracking-widest uppercase">
                     Protocol 00{index + 1}
@@ -103,7 +103,7 @@ export default function HowItWorksDark() {
         </div>
 
         {/* Bottom Trust Signal */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           className="mt-20 text-center"

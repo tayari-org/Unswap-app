@@ -1,28 +1,30 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Shield, Globe, ArrowRight, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
 export default function HeroSection({ user }) {
+  const { scrollY } = useScroll();
+  const opacity = useTransform(scrollY, [0, 300], [1, 0]);
+
   return (
     <section className="relative h-screen min-h-[650px] max-h-[900px] flex items-center justify-center overflow-hidden bg-[#05080f] px-6">
-      
-      {/* 1. Background Image with Dark Overlay */}
+
+      {/* Background Image */}
       <div className="absolute inset-0 z-0">
-        <img 
-          src="https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&q=80&w=2000" 
+        <img
+          src="https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&q=80&w=2000"
           alt="Diplomatic Hub"
           className="w-full h-full object-cover opacity-40 grayscale-[0.5]"
         />
-        {/* Gradient mask to ensure text contrast and transition to next section */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#05080f]/80 via-[#05080f]/60 to-[#05080f]" />
       </div>
 
       <div className="max-w-5xl mx-auto w-full relative z-10 flex flex-col items-center text-center">
-        
-        {/* 2. Badge - High Contrast */}
+
+        {/* Badge */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -34,29 +36,29 @@ export default function HeroSection({ user }) {
           </span>
         </motion.div>
 
-        {/* 3. Title - Reduced scale slightly for better breathing room */}
+        {/* Title — properly scaled, not zoomed */}
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="text-4xl md:text-5xl lg:text-7xl font-extralight tracking-tighter text-white leading-[1.1] mb-6"
+          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extralight tracking-tighter text-white leading-[1.1] mb-6"
         >
           Secure Home Exchange for <br />
           <span className="italic font-serif text-blue-200/90">Global Civil Servants.</span>
         </motion.h1>
 
-        {/* 4. Subtext - Muted Gray */}
+        {/* Subtext */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="text-sm md:text-lg text-slate-400 font-light max-w-2xl mb-8 leading-relaxed"
+          className="text-sm md:text-base lg:text-lg text-slate-400 font-light max-w-2xl mb-10 leading-relaxed"
         >
-          The exclusive, peer-to-peer network connecting verified staff from the UN, 
+          The exclusive, peer-to-peer network connecting verified staff from the UN,
           World Bank, and international agencies across 193 member states.
         </motion.p>
 
-        {/* 5. Action Cluster */}
+        {/* Action Cluster */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -69,9 +71,9 @@ export default function HeroSection({ user }) {
               <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>
-          
-          <Button 
-            variant="outline" 
+
+          <Button
+            variant="outline"
             onClick={() => {
               const howItWorks = document.getElementById('how-it-works');
               howItWorks?.scrollIntoView({ behavior: 'smooth' });
@@ -83,14 +85,14 @@ export default function HeroSection({ user }) {
           </Button>
         </motion.div>
 
-        {/* 6. Trust Indicators - Minimalist */}
+        {/* Trust Indicators */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
           className="pt-8 border-t border-white/5 flex flex-wrap justify-center gap-x-10 gap-y-4"
         >
-          {['Verified Agencies', 'Lloyd’s Insured', 'Encrypted'].map((text, i) => (
+          {['Verified Agencies', 'Lloyd\u2019s Insured', 'Encrypted'].map((text, i) => (
             <div key={i} className="flex items-center gap-2">
               <div className="w-1 h-1 bg-blue-500 rounded-full" />
               <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{text}</span>
@@ -99,8 +101,9 @@ export default function HeroSection({ user }) {
         </motion.div>
       </div>
 
-      {/* 7. Scroll Indicator - Visual cue for content below */}
-      <motion.div 
+      {/* Scroll Indicator */}
+      <motion.div
+        style={{ opacity }}
         animate={{ y: [0, 8, 0] }}
         transition={{ duration: 2, repeat: Infinity }}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 text-slate-500 opacity-50"

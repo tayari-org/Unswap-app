@@ -46,7 +46,7 @@ export default function HostDashboard() {
   // Fetch reviews for host
   const { data: reviews = [] } = useQuery({
     queryKey: ['host-reviews', user?.email],
-    queryFn: () => api.entities.Review.filter({ host_email: user?.email, status: 'approved' }),
+    queryFn: () => api.entities.Review.filter({ target_email: user?.email, status: 'approved' }),
     enabled: !!user?.email,
   });
 
@@ -93,25 +93,26 @@ export default function HostDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-6">
+    <div className="min-h-screen bg-[#F8FAFC] py-8 px-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">Host Dashboard</h1>
-            <p className="text-slate-600 mt-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-unswap-blue-deep mb-2">Dashboard</p>
+            <h1 className="text-4xl font-extralight tracking-tighter text-slate-900">Host Dashboard</h1>
+            <p className="text-slate-500 text-sm mt-1 font-serif italic">
               Manage your listings and track your performance
             </p>
           </div>
           <div className="flex items-center gap-3">
             <Link to={createPageUrl('MyListings')}>
-              <Button variant="outline">
+              <Button variant="outline" className="rounded-none border-unswap-border text-[10px] uppercase font-bold tracking-[0.2em] h-11">
                 <Home className="w-4 h-4 mr-2" />
                 My Listings
               </Button>
             </Link>
             <Link to={createPageUrl('PropertyForm')}>
-              <Button className="bg-slate-900 hover:bg-slate-800">
+              <Button className="bg-unswap-blue-deep hover:bg-slate-800 rounded-none text-[10px] uppercase font-bold tracking-[0.2em] h-11">
                 <Plus className="w-4 h-4 mr-2" />
                 New Listing
               </Button>
@@ -122,7 +123,7 @@ export default function HostDashboard() {
         {/* Property Filter */}
         {properties.length > 1 && (
           <div className="flex items-center gap-3 flex-wrap">
-            <span className="text-sm font-medium text-slate-700">View data for:</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">View data for:</span>
             <div className="flex gap-2 flex-wrap">
               <Button
                 variant={selectedProperty === 'all' ? 'default' : 'outline'}
@@ -152,14 +153,14 @@ export default function HostDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0 }}
           >
-            <Card className="hover:shadow-lg transition-shadow">
+            <Card className="hover:shadow-xl transition-shadow rounded-none border-unswap-border">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <Home className="w-8 h-8 text-slate-600" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-2xl font-bold text-slate-900">{activeListings}</p>
-                  <p className="text-sm text-slate-600 mt-1">Active Listings</p>
+                  <p className="text-3xl font-extralight italic font-serif text-slate-900">{activeListings}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mt-2">Active Listings</p>
                 </div>
               </CardContent>
             </Card>
@@ -170,14 +171,14 @@ export default function HostDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Card className="hover:shadow-lg transition-shadow">
+            <Card className="hover:shadow-xl transition-shadow rounded-none border-unswap-border">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <Eye className="w-8 h-8 text-blue-600" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-2xl font-bold text-slate-900">{totalViews}</p>
-                  <p className="text-sm text-slate-600 mt-1">Total Views</p>
+                  <p className="text-3xl font-extralight italic font-serif text-slate-900">{totalViews}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mt-2">Total Views</p>
                 </div>
               </CardContent>
             </Card>
@@ -188,14 +189,14 @@ export default function HostDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Card className="hover:shadow-lg transition-shadow">
+            <Card className="hover:shadow-xl transition-shadow rounded-none border-unswap-border">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <Heart className="w-8 h-8 text-red-500" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-2xl font-bold text-slate-900">{totalFavorites}</p>
-                  <p className="text-sm text-slate-600 mt-1">Favorites</p>
+                  <p className="text-3xl font-extralight italic font-serif text-slate-900">{totalFavorites}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mt-2">Favorites</p>
                 </div>
               </CardContent>
             </Card>
@@ -206,14 +207,14 @@ export default function HostDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <Card className="hover:shadow-lg transition-shadow">
+            <Card className="hover:shadow-xl transition-shadow rounded-none border-unswap-border">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <Star className="w-8 h-8 text-amber-500" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-2xl font-bold text-slate-900">{averageRating || '—'}</p>
-                  <p className="text-sm text-slate-600 mt-1">Avg Rating</p>
+                  <p className="text-3xl font-extralight italic font-serif text-slate-900">{averageRating || '—'}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mt-2">Avg Rating</p>
                 </div>
               </CardContent>
             </Card>
@@ -224,14 +225,14 @@ export default function HostDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <Card className="hover:shadow-lg transition-shadow">
+            <Card className="hover:shadow-xl transition-shadow rounded-none border-unswap-border">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <Users className="w-8 h-8 text-green-600" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-2xl font-bold text-slate-900">{completedSwaps}</p>
-                  <p className="text-sm text-slate-600 mt-1">Completed</p>
+                  <p className="text-3xl font-extralight italic font-serif text-slate-900">{completedSwaps}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mt-2">Completed</p>
                 </div>
               </CardContent>
             </Card>
@@ -242,14 +243,14 @@ export default function HostDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
           >
-            <Card className="hover:shadow-lg transition-shadow">
+            <Card className="hover:shadow-xl transition-shadow rounded-none border-unswap-border">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <Clock className="w-8 h-8 text-orange-600" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-2xl font-bold text-slate-900">{pendingRequests}</p>
-                  <p className="text-sm text-slate-600 mt-1">Pending</p>
+                  <p className="text-3xl font-extralight italic font-serif text-slate-900">{pendingRequests}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mt-2">Pending</p>
                 </div>
               </CardContent>
             </Card>
@@ -260,19 +261,19 @@ export default function HostDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
           >
-            <Card className="hover:shadow-lg transition-shadow">
+            <Card className="hover:shadow-xl transition-shadow rounded-none border-unswap-border">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <MessageSquare className="w-8 h-8 text-purple-600" />
                   {unreadMessages > 0 && (
-                    <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    <span className="bg-red-500 text-white text-[10px] rounded-none w-5 h-5 flex items-center justify-center font-bold">
                       {unreadMessages}
                     </span>
                   )}
                 </div>
                 <div className="mt-4">
-                  <p className="text-2xl font-bold text-slate-900">{unreadMessages}</p>
-                  <p className="text-sm text-slate-600 mt-1">Unread</p>
+                  <p className="text-3xl font-extralight italic font-serif text-slate-900">{unreadMessages}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mt-2">Unread</p>
                 </div>
               </CardContent>
             </Card>
@@ -280,7 +281,7 @@ export default function HostDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <QuickActions 
+        <QuickActions
           pendingCount={pendingRequests}
           unreadCount={unreadMessages}
         />

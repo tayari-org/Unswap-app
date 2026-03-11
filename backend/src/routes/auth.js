@@ -295,7 +295,7 @@ router.post('/google', async (req, res) => {
         const { credential, referred_by } = req.body;
         if (!credential) return res.status(400).json({ error: 'Google credential is required' });
 
-        // Verify the ID token with Google
+        console.log('Verifying Google token with audience:', process.env.GOOGLE_CLIENT_ID);
         const ticket = await googleClient.verifyIdToken({
             idToken: credential,
             audience: process.env.GOOGLE_CLIENT_ID,
@@ -353,7 +353,19 @@ router.post('/google', async (req, res) => {
         const token = signToken(user.id);
         res.json({ token, user: sanitizeUser(user) });
     } catch (err) {
-        console.error('Google auth error detailing:', err);
+        console.error('Google auth error:', err);
+        // Special debug: if it's an audience mismatch, let's see what the token actually says (decode without verification for logging ONLY)
+        try {
+            const { credential } = req.body;
+            const parts = credential.split('.');
+            if (parts.length === 3) {
+                const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
+                console.log('DEBUG: Token payload "aud":', payload.aud);
+                console.log('DEBUG: Expected audience:', process.env.GOOGLE_CLIENT_ID);
+            }
+        } catch (e) {
+            console.error('Failed to decode token for debugging:', e);
+        }
         res.status(401).json({ error: `Google authentication failed: ${err.message}` });
     }
 });

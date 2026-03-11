@@ -34,7 +34,8 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
     title: property?.title || '',
     description: property?.description || '',
     property_type: property?.property_type || 'apartment',
-    location: property?.location || '',
+    city: property?.city || '',
+    country: property?.country || '',
     address: property?.address || '',
     nearest_duty_station: property?.nearest_duty_station || '',
     distance_to_duty_station: property?.distance_to_duty_station || '',
@@ -58,6 +59,8 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
     available_from: property?.available_from || '',
     available_to: property?.available_to || '',
     swap_preference: property?.swap_preference || 'both',
+    swap_types_accepted: property?.swap_types_accepted || [],
+    nightly_points: property?.nightly_points || property?.smart_credit_value || 200,
     status: property?.status || 'draft',
   });
 
@@ -123,13 +126,12 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
       <div className="flex items-center justify-between mb-8">
         {steps.map((s, index) => (
           <React.Fragment key={s.num}>
-            <div 
+            <div
               className={`flex items-center cursor-pointer ${step >= s.num ? 'text-amber-600' : 'text-slate-400'}`}
               onClick={() => setStep(s.num)}
             >
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
-                step >= s.num ? 'bg-amber-500 text-white' : 'bg-slate-200'
-              }`}>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${step >= s.num ? 'bg-amber-500 text-white' : 'bg-slate-200'
+                }`}>
                 {step > s.num ? <Check className="w-5 h-5" /> : s.num}
               </div>
               <span className="ml-2 hidden sm:block text-sm font-medium">{s.title}</span>
@@ -144,10 +146,9 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
       <Card>
         <CardContent className="p-6">
           <AnimatePresence mode="wait">
-            {/* Step 1: Basic Info */}
             {step === 1 && (
               <motion.div
-                key="step1"
+                key="property-form-step-1"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
@@ -192,11 +193,21 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
                   </div>
 
                   <div>
-                    <Label>Location *</Label>
+                    <Label>City *</Label>
                     <Input
-                      value={formData.location}
-                      onChange={(e) => handleChange('location', e.target.value)}
-                      placeholder="City, Country"
+                      value={formData.city}
+                      onChange={(e) => handleChange('city', e.target.value)}
+                      placeholder="e.g., Geneva"
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Country *</Label>
+                    <Input
+                      value={formData.country}
+                      onChange={(e) => handleChange('country', e.target.value)}
+                      placeholder="e.g., Switzerland"
                       className="mt-1"
                     />
                   </div>
@@ -266,8 +277,8 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
                   <Input
                     type="number"
                     min={0}
-                    value={formData.smart_credit_value}
-                    onChange={(e) => handleChange('smart_credit_value', parseInt(e.target.value) || 0)}
+                    value={formData.nightly_points}
+                    onChange={(e) => handleChange('nightly_points', parseInt(e.target.value) || 0)}
                     className="mt-1 w-40"
                   />
                   <p className="text-sm text-slate-500 mt-1">Average is ~200 points/night</p>
@@ -275,10 +286,9 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
               </motion.div>
             )}
 
-            {/* Step 2: Photos */}
             {step === 2 && (
               <motion.div
-                key="step2"
+                key="property-form-step-2"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
@@ -287,7 +297,7 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
                 <div>
                   <Label>Property Photos</Label>
                   <p className="text-sm text-slate-500 mb-4">Upload high-quality photos of your property</p>
-                  
+
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {formData.images.map((url, index) => (
                       <div key={index} className="relative aspect-video rounded-lg overflow-hidden group">
@@ -300,7 +310,7 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
                         </button>
                       </div>
                     ))}
-                    
+
                     <label className="aspect-video rounded-lg border-2 border-dashed border-slate-300 flex flex-col items-center justify-center cursor-pointer hover:border-amber-500 transition-colors">
                       {uploading ? (
                         <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
@@ -324,10 +334,9 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
               </motion.div>
             )}
 
-            {/* Step 3: Amenities */}
             {step === 3 && (
               <motion.div
-                key="step3"
+                key="property-form-step-3"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
@@ -340,9 +349,8 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
                       <Badge
                         key={amenity}
                         variant={formData.amenities.includes(amenity) ? 'default' : 'outline'}
-                        className={`cursor-pointer px-4 py-2 text-sm ${
-                          formData.amenities.includes(amenity) ? 'bg-amber-500 hover:bg-amber-600' : ''
-                        }`}
+                        className={`cursor-pointer px-4 py-2 text-sm ${formData.amenities.includes(amenity) ? 'bg-amber-500 hover:bg-amber-600' : ''
+                          }`}
                         onClick={() => toggleArrayItem('amenities', amenity)}
                       >
                         {amenity}
@@ -350,7 +358,6 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
                     ))}
                   </div>
                 </div>
-
                 <div>
                   <Label className="mb-4 block">Mobility-Specific Tags</Label>
                   <div className="flex flex-wrap gap-2">
@@ -358,9 +365,8 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
                       <Badge
                         key={tag}
                         variant={formData.mobility_tags.includes(tag) ? 'default' : 'outline'}
-                        className={`cursor-pointer px-4 py-2 text-sm ${
-                          formData.mobility_tags.includes(tag) ? 'bg-slate-800 hover:bg-slate-700' : ''
-                        }`}
+                        className={`cursor-pointer px-4 py-2 text-sm ${formData.mobility_tags.includes(tag) ? 'bg-slate-800 hover:bg-slate-700' : ''
+                          }`}
                         onClick={() => toggleArrayItem('mobility_tags', tag)}
                       >
                         {tag}
@@ -371,17 +377,16 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
               </motion.div>
             )}
 
-            {/* Step 4: Security */}
             {step === 4 && (
               <motion.div
-                key="step4"
+                key="property-form-step-4"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-6"
               >
                 <div>
-                  <Label className="mb-2 block">Diplomatic Security Checklist</Label>
+                  <Label className="mb-2 block">Security Checklist</Label>
                   <p className="text-sm text-slate-500 mb-4">Help colleagues understand security features available</p>
 
                   <div className="space-y-4">
@@ -390,7 +395,7 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
                       { key: 'secure_wifi', label: 'Secure Wi-Fi network' },
                       { key: 'locked_storage', label: 'Locked closets/storage for sensitive materials' },
                       { key: 'building_security', label: 'Building security (doorman, cameras, etc.)' },
-                      { key: 'safe_available', label: 'Safe available for documents/valuables' },
+                      { key: 'safe_available', label: 'Safe available for documents/valuable' },
                     ].map(item => (
                       <div key={item.key} className="flex items-center space-x-3 p-4 bg-slate-50 rounded-lg">
                         <Checkbox
@@ -406,16 +411,33 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
               </motion.div>
             )}
 
-            {/* Step 5: Availability */}
             {step === 5 && (
               <motion.div
-                key="step5"
+                key="property-form-step-5"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="space-y-6"
+                className="space-y-8"
               >
                 <div>
+                  <Label>Swap Types Accepted</Label>
+                  <p className="text-sm text-slate-500 mb-4">What kind of swaps will you accept?</p>
+                  <div className="flex flex-wrap gap-2">
+                    {['reciprocal', 'guestpoints', 'both'].map(type => (
+                      <Badge
+                        key={type}
+                        variant={formData.swap_types_accepted.includes(type) ? 'default' : 'outline'}
+                        className={`cursor-pointer px-4 py-2 text-sm capitalize ${formData.swap_types_accepted.includes(type) ? 'bg-amber-500 hover:bg-amber-600' : ''
+                          }`}
+                        onClick={() => toggleArrayItem('swap_types_accepted', type)}
+                      >
+                        {type === 'reciprocal' ? 'Reciprocal Swaps' : type === 'guestpoints' ? 'GuestPoints' : 'Both'}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t pt-6">
                   <Label>Availability Type</Label>
                   <Select value={formData.availability_type} onValueChange={(v) => handleChange('availability_type', v)}>
                     <SelectTrigger className="mt-1">
@@ -505,7 +527,7 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
               {onCancel && (
                 <Button variant="outline" onClick={onCancel}>Cancel</Button>
               )}
-              
+
               {step < 5 ? (
                 <Button onClick={() => setStep(step + 1)} className="bg-slate-900 hover:bg-slate-800">
                   Next
@@ -516,9 +538,9 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
                   <Button variant="outline" onClick={() => handleSubmit(true)} disabled={saving}>
                     Save as Draft
                   </Button>
-                  <Button 
-                    onClick={() => handleSubmit(false)} 
-                    disabled={saving || !formData.title || !formData.location}
+                  <Button
+                    onClick={() => handleSubmit(false)}
+                    disabled={saving || !formData.title || !formData.city || !formData.country}
                     className="bg-amber-500 hover:bg-amber-600"
                   >
                     {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

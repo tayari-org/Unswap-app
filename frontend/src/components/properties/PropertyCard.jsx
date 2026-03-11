@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Bed, Bath, Users, MapPin, Heart, Shield, Wifi, Car, Star, Lock } from 'lucide-react';
+import { Bed, Bath, Users, MapPin, Heart, Shield, Wifi, Car, Star, Lock, Share2, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import VerificationRequiredDialog from '../verification/VerificationRequiredDialog';
+import { toast } from 'sonner';
 
 const amenityIcons = {
   'Wi-Fi': Wifi,
@@ -15,13 +16,55 @@ const amenityIcons = {
   'Secure': Shield,
 };
 
-export default function PropertyCard({ property, onFavorite, isFavorite }) {
+export default function PropertyCard({ property, variant = 'default', index = 0 }) {
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: currentUser } = useQuery({
     queryKey: ['current-user'],
     queryFn: () => api.auth.me(),
   });
+
+  const isFavorite = currentUser?.saved_properties?.includes(property.id);
+
+  const updateUserMutation = useMutation({
+    mutationFn: (data) => api.auth.updateMe(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['current-user']);
+    },
+  });
+
+  const toggleFavorite = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!currentUser) {
+      toast.error('Please log in to save properties');
+      return;
+    }
+
+    const saved = currentUser.saved_properties || [];
+    const newSaved = saved.includes(property.id)
+      ? saved.filter(id => id !== property.id)
+      : [...saved, property.id];
+
+    queryClient.setQueryData(['current-user'], { ...currentUser, saved_properties: newSaved });
+    updateUserMutation.mutate({ saved_properties: newSaved });
+
+    if (newSaved.includes(property.id)) {
+      toast.success('Added to favorites');
+    } else {
+      toast.success('Removed from favorites');
+    }
+  };
+
+  const handleShare = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const url = `${window.location.origin}${createPageUrl('PropertyDetails')}?id=${property.id}`;
+    navigator.clipboard.writeText(url);
+    toast.success('Property link copied to clipboard!');
+  };
 
   const isCurrentUserVerified = currentUser?.verification_status === 'verified' || currentUser?.role === 'admin';
 
@@ -48,127 +91,147 @@ export default function PropertyCard({ property, onFavorite, isFavorite }) {
       return;
     }
 
-    // Navigate to host profile
     window.location.href = createPageUrl('HostProfile') + `?email=${encodeURIComponent(property.owner_email)}`;
   };
+
+  const isList = variant === 'list';
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100"
+      transition={{ delay: index * 0.05, duration: 0.5 }}
+      className={`group bg-white rounded-none border-slate-200 overflow-hidden hover:shadow-2xl transition-all duration-500 ${isList ? 'w-full' : ''}`}
     >
-      <Link to={createPageUrl('PropertyDetails') + `?id=${property.id}`}>
-        <div className="relative h-56 overflow-hidden">
+      <div className={`flex flex-col ${isList ? 'md:flex-row min-h-[220px]' : ''}`}>
+
+        {/* Image Section */}
+        <div className={`relative overflow-hidden shrink-0 ${isList ? 'w-full md:w-64 lg:w-80 h-48 md:h-auto' : 'h-64'}`}>
           <img
             src={property.images?.[0] || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800'}
             alt={property.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
           />
+          <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-transparent transition-colors duration-500" />
 
-          {/* Points Badge */}
-          <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm">
-            <span className="font-bold text-slate-900">{property.smart_credit_value || 200}</span>
-            <span className="text-slate-500 text-sm"> pts/night</span>
-          </div>
-
-          {/* Favorite Button */}
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              onFavorite?.(property.id);
-            }}
-            className="absolute top-4 left-4 w-9 h-9 bg-white/95 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm hover:scale-110 transition-transform"
-          >
-            <Heart className={`w-5 h-5 ${isFavorite ? 'fill-rose-500 text-rose-500' : 'text-slate-400'}`} />
-          </button>
-
-          {/* Badges */}
-          <div className="absolute bottom-4 left-4 flex gap-2">
-            {property.is_verified && (
-              <Badge className="bg-emerald-500 text-white shadow-lg">
-                <Shield className="w-3 h-3 mr-1" />
-                Verified Property
-              </Badge>
-            )}
-            {property.availability_type === 'long_term' && (
-              <Badge className="bg-blue-500 text-white shadow-lg">Long-term</Badge>
-            )}
-          </div>
-        </div>
-      </Link>
-
-      <div className="p-5">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center text-slate-500 text-sm">
-            <MapPin className="w-4 h-4 mr-1" />
-            {property.location}
-          </div>
-          {reviews.length > 0 && (
-            <div className="flex items-center gap-1">
-              <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-              <span className="text-sm font-semibold text-slate-900">{averageRating}</span>
-              <span className="text-xs text-slate-500">({reviews.length})</span>
+          {/* Points Badge (Only in Grid) */}
+          {!isList && (
+            <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-none shadow-lg border border-slate-100 z-10">
+              <span className="font-serif italic font-extralight text-lg text-slate-900">{property.smart_credit_value || 200}</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 ml-1"> pts/night</span>
             </div>
           )}
-        </div>
 
-        <Link to={createPageUrl('PropertyDetails') + `?id=${property.id}`}>
-          <h3 className="text-lg font-semibold text-slate-900 mb-3 group-hover:text-amber-600 transition-colors line-clamp-1">
-            {property.title}
-          </h3>
-        </Link>
-
-        <div className="flex items-center gap-4 text-slate-600 text-sm mb-4">
-          <div className="flex items-center gap-1">
-            <Bed className="w-4 h-4" />
-            <span>{property.bedrooms || 1}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Bath className="w-4 h-4" />
-            <span>{property.bathrooms || 1}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Users className="w-4 h-4" />
-            <span>{property.max_guests || 2}</span>
+          {/* Action Buttons */}
+          <div className="absolute top-4 left-4 flex flex-col gap-2 z-10 transition-all duration-300 opacity-0 group-hover:opacity-100 translate-x-[-10px] group-hover:translate-x-0">
+            <button
+              onClick={toggleFavorite}
+              className="w-9 h-9 bg-white shadow-xl flex items-center justify-center hover:bg-slate-50 transition-colors"
+            >
+              <Heart className={`w-4 h-4 ${isFavorite ? 'fill-rose-500 text-rose-500' : 'text-slate-400'}`} />
+            </button>
+            <button
+              onClick={handleShare}
+              className="w-9 h-9 bg-white shadow-xl flex items-center justify-center hover:bg-slate-50 transition-colors"
+            >
+              <Share2 className="w-4 h-4 text-slate-400" />
+            </button>
           </div>
         </div>
 
-        {property.nearest_duty_station && (
-          <Badge variant="outline" className="text-slate-600 mb-3">
-            Near {property.nearest_duty_station}
-          </Badge>
-        )}
+        {/* Content Section */}
+        <div className="flex-1 flex flex-col p-8 lg:p-10">
+          <div className="flex items-start justify-between mb-4">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                {property.is_verified && (
+                  <Badge className="rounded-none px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest bg-unswap-blue-deep/10 text-unswap-blue-deep border-unswap-blue-deep/20 border">
+                    Verified
+                  </Badge>
+                )}
+                <Badge className="rounded-none px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest bg-slate-100 text-slate-600 border border-slate-200">
+                  {property.status || 'Active'}
+                </Badge>
+              </div>
 
-        {property.mobility_tags?.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-3">
-            {property.mobility_tags.slice(0, 3).map((tag, index) => (
-              <Badge key={index} variant="secondary" className="text-xs bg-slate-100">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        )}
+              <Link to={createPageUrl('PropertyDetails') + `?id=${property.id}`}>
+                <h3 className="text-2xl font-light text-slate-900 tracking-tight leading-tight group-hover:text-unswap-blue-deep transition-colors duration-300">
+                  {property.title}
+                </h3>
+              </Link>
 
-        {/* Host Link */}
-        {property.owner_email && (
-          <button
-            onClick={handleHostProfileClick}
-            className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-100 text-sm text-slate-500 hover:text-amber-600 transition-colors w-full"
-          >
-            <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center">
-              {!currentUser || !isCurrentUserVerified ? (
-                <Lock className="w-3 h-3 text-slate-400" />
-              ) : (
-                <Users className="w-3 h-3" />
-              )}
+              <div className="flex items-center gap-2 text-slate-400">
+                <MapPin className="w-3.5 h-3.5" />
+                <p className="text-[10px] font-bold uppercase tracking-[0.1em]">{property.location || property.city}</p>
+              </div>
             </div>
-            <span>View host profile</span>
-          </button>
-        )}
+
+            {reviews.length > 0 && (
+              <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 border border-slate-100">
+                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                <span className="text-xs font-bold text-slate-900">{averageRating}</span>
+                <span className="text-[10px] text-slate-400 uppercase tracking-widest">({reviews.length})</span>
+              </div>
+            )}
+          </div>
+
+          {!isList && (
+            <div className="flex items-center gap-6 text-slate-500 text-xs mb-8 py-4 border-y border-slate-50 font-serif italic">
+              <div className="flex items-center gap-2">
+                <Bed className="w-4 h-4 opacity-40 text-unswap-blue-deep" />
+                <span>{property.bedrooms || 1} Bed</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Bath className="w-4 h-4 opacity-40 text-unswap-blue-deep" />
+                <span>{property.bathrooms || 1} Bath</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 opacity-40 text-unswap-blue-deep" />
+                <span>{property.max_guests || 2} Guests</span>
+              </div>
+            </div>
+          )}
+
+          {/* Footer Stats - From "My Listings" */}
+          <div className={`mt-auto pt-6 border-t border-slate-50 flex items-center justify-between ${isList ? 'gap-12' : ''}`}>
+            <div className="flex items-center gap-8">
+              <div className="flex items-center gap-2 text-slate-500">
+                <Eye className="w-3.5 h-3.5 text-unswap-blue-deep/30" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">{property.views_count || 0} views</span>
+              </div>
+              <div className="flex items-center gap-2 text-slate-500">
+                <Heart className="w-3.5 h-3.5 text-rose-300" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">{property.favorites_count || 0} favs</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-end">
+              <div className="flex items-baseline gap-1">
+                <span className="text-xl font-serif italic font-extralight text-slate-900">{property.smart_credit_value || 200}</span>
+                <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400">pts / night</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Host Link (Optional for List) */}
+          {property.owner_email && !isList && (
+            <button
+              onClick={handleHostProfileClick}
+              className="flex items-center gap-3 mt-6 pt-6 border-t border-slate-50 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-unswap-blue-deep transition-colors w-full"
+            >
+              <div className="w-8 h-8 rounded-none bg-slate-50 border border-slate-100 flex items-center justify-center">
+                {!currentUser || !isCurrentUserVerified ? (
+                  <Lock className="w-3.5 h-3.5 text-slate-300" />
+                ) : (
+                  <Users className="w-3.5 h-3.5" />
+                )}
+              </div>
+              <span>View Host Protocol</span>
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Verification Dialog */}
       <VerificationRequiredDialog
         open={showVerificationDialog}
         onOpenChange={setShowVerificationDialog}

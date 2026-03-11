@@ -10,7 +10,6 @@ const activityIcons = {
   review_posted: Star,
 };
 
-// Refined Light Mode Palette: Institutional Indigo & Slate
 const activityColors = {
   swap_completed: 'bg-indigo-50 text-indigo-600 border-indigo-100',
   new_listing: 'bg-slate-50 text-slate-600 border-slate-200',
@@ -19,9 +18,9 @@ const activityColors = {
   review_posted: 'bg-indigo-50 text-indigo-600 border-indigo-100',
 };
 
-export default function ActivityFeedLight({ activities = [] }) {
+export default function ActivityFeed({ activities = [] }) {
   const displayActivities = activities.length > 0 ? activities : [
-    { id: 1, activity_type: 'swap_completed', description: 'P-4 (Geneva) ⇄ P-3 (New York) Swap Secured', created_date: new Date().toISOString() },
+    { id: 1, activity_type: 'swap_completed', description: 'P-4 (Geneva) \u21c4 P-3 (New York) Swap Secured', created_date: new Date().toISOString() },
     { id: 2, activity_type: 'new_listing', description: 'New Secure Residence: Gigiri, Nairobi (UNON)', created_date: new Date().toISOString() },
     { id: 3, activity_type: 'new_member', description: 'WHO Personnel (Bangkok) joined the Vault', created_date: new Date().toISOString() },
     { id: 4, activity_type: 'swap_completed', description: 'Diplomatic Mission Complete: D-1 (Vienna)', created_date: new Date().toISOString() },
@@ -45,10 +44,9 @@ export default function ActivityFeedLight({ activities = [] }) {
 
         {/* Scrolling Ticker */}
         <div className="relative">
-          {/* Glassmorphism Fades */}
           <div className="absolute left-0 top-0 bottom-0 w-40 bg-gradient-to-r from-white via-white/80 to-transparent z-10" />
           <div className="absolute right-0 top-0 bottom-0 w-40 bg-gradient-to-l from-white via-white/80 to-transparent z-10" />
-          
+
           <motion.div
             animate={{ x: [0, -1500] }}
             transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}
@@ -57,16 +55,16 @@ export default function ActivityFeedLight({ activities = [] }) {
             {[...displayActivities, ...displayActivities, ...displayActivities].map((activity, index) => {
               const Icon = activityIcons[activity.activity_type] || ArrowLeftRight;
               const style = activityColors[activity.activity_type] || 'bg-slate-50 text-slate-600 border-slate-100';
-              
+
               return (
                 <div
                   key={index}
                   className={`flex-shrink-0 flex items-center gap-4 px-6 py-3 rounded-xl border ${style} shadow-sm bg-white/50 backdrop-blur-sm group hover:border-indigo-400 transition-colors cursor-default`}
                 >
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center`}>
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center">
                     <Icon className="w-4 h-4" />
                   </div>
-                  
+
                   <div className="flex flex-col">
                     <span className="text-xs font-bold text-slate-900 whitespace-nowrap tracking-tight">
                       {activity.description}
@@ -76,7 +74,6 @@ export default function ActivityFeedLight({ activities = [] }) {
                     </span>
                   </div>
 
-                  {/* Visual separator inside the pill */}
                   <div className="w-1 h-1 rounded-full bg-slate-200 ml-2" />
                 </div>
               );

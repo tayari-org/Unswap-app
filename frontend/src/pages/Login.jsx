@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import logo from '@/assets/logo.png';
 import { api } from '@/api/apiClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,14 +12,15 @@ import { Shield, Globe, ArrowRight, Loader2 } from 'lucide-react';
 
 // Google Client ID — set VITE_GOOGLE_CLIENT_ID in frontend/.env
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+// Google Client ID loaded from env
 
 // Divider between Google and email/password
 function OrDivider() {
     return (
-        <div className="flex items-center gap-3 my-6">
-            <div className="flex-1 h-px bg-slate-200" />
-            <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">or</span>
-            <div className="flex-1 h-px bg-slate-200" />
+        <div className="flex items-center gap-4 my-8">
+            <div className="flex-1 h-px bg-unswap-blue-deep/10" />
+            <span className="text-[10px] text-unswap-blue-deep/40 font-bold uppercase tracking-[0.4em]">or</span>
+            <div className="flex-1 h-px bg-unswap-blue-deep/10" />
         </div>
     );
 }
@@ -26,30 +28,58 @@ function OrDivider() {
 // Renders the official Google sign-in button via the GSI SDK
 function GoogleButton({ onCredential, disabled }) {
     const containerRef = useRef(null);
+    const [scriptLoaded, setScriptLoaded] = useState(false);
 
     useEffect(() => {
         if (!GOOGLE_CLIENT_ID) return;
-        if (!window.google?.accounts?.id) return;
-        if (!containerRef.current) return;
 
-        window.google.accounts.id.initialize({
-            client_id: GOOGLE_CLIENT_ID,
-            callback: (response) => {
-                if (response.credential) onCredential(response.credential);
-            },
-        });
+        // Function to initialize and render the button
+        const initGoogleButton = () => {
+            if (!window.google?.accounts?.id || !containerRef.current) return;
 
-        // Clear & render the button each time the component mounts
-        containerRef.current.innerHTML = '';
-        window.google.accounts.id.renderButton(containerRef.current, {
-            type: 'standard',
-            theme: 'outline',
-            size: 'large',
-            width: 360,
-            text: 'continue_with',
-            shape: 'pill',
-            logo_alignment: 'left',
-        });
+            window.google.accounts.id.initialize({
+                client_id: GOOGLE_CLIENT_ID,
+                callback: (response) => {
+                    if (response.credential) onCredential(response.credential);
+                },
+            });
+
+            // Clear & render the button each time the component mounts
+            containerRef.current.innerHTML = '';
+            window.google.accounts.id.renderButton(containerRef.current, {
+                type: 'standard',
+                theme: 'outline',
+                size: 'large',
+                width: 360,
+                text: 'continue_with',
+                shape: 'pill',
+                logo_alignment: 'left',
+            });
+        };
+
+        // If SDK already exists, immediately init
+        if (window.google?.accounts?.id) {
+            initGoogleButton();
+            setScriptLoaded(true);
+            return;
+        }
+
+        // Otherwise dynamically load the SDK
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+        script.onload = () => {
+            setScriptLoaded(true);
+            initGoogleButton();
+        };
+        document.body.appendChild(script);
+
+        return () => {
+            if (document.body.contains(script)) {
+                document.body.removeChild(script);
+            }
+        };
     }, [onCredential]);
 
     if (!GOOGLE_CLIENT_ID) {
@@ -166,39 +196,42 @@ export default function Login() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
-            {/* Background design elements */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-50/50 rounded-full blur-[100px] -mr-48 -mt-48" />
-                <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-sky-50/50 rounded-full blur-[100px] -ml-48 -mb-48" />
+        <div className="min-h-screen bg-white flex items-center justify-center p-6 font-sans relative overflow-hidden">
+            {/* Background design elements - Architectural & Institutional */}
+            <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-0 left-0 w-full h-1/3 bg-slate-50 border-b border-slate-100" />
+                <div className="absolute top-1/3 left-[10%] w-px h-2/3 bg-unswap-blue-deep/5" />
+                <div className="absolute top-1/2 right-[15%] w-px h-1/2 bg-unswap-blue-deep/5" />
+                <div className="absolute bottom-[20%] left-0 w-full h-px bg-unswap-blue-deep/5" />
+
+                {/* Subtle Radial Polishing */}
+                <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-unswap-blue-deep/[0.02] rounded-full blur-[120px] -mr-96 -mt-96" />
             </div>
 
             <div className="relative w-full max-w-md">
                 {/* Brand Header */}
-                <div className="text-center mb-10 space-y-4">
-                    <div className="flex items-center justify-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-indigo-600 shadow-xl shadow-indigo-200 flex items-center justify-center">
-                            <Globe className="w-7 h-7 text-white" />
+                <div className="text-center mb-12">
+                    <div className="flex items-center justify-center gap-4">
+                        <img src={logo} alt="Unswap" className="w-10 h-10 object-contain" />
+                        <div className="flex flex-col items-start leading-none">
+                            <span className="text-4xl font-extralight text-slate-900 tracking-[-0.05em]">UN<span className="italic font-serif">swap</span></span>
+                            <div className="w-8 h-px bg-unswap-blue-deep/20 mt-1" />
                         </div>
-                        <span className="text-3xl font-bold text-slate-900 tracking-tighter">UNswap</span>
                     </div>
                 </div>
 
-                <Card className="bg-white border-slate-200 shadow-2xl rounded-[2.5rem] overflow-hidden">
-                    <CardHeader className="p-8 pb-4 text-center">
-                        <div className="flex items-center justify-center gap-2 mb-3">
-                            <Shield className="w-3.5 h-3.5 text-indigo-500" />
-                            <span className="text-[10px] text-indigo-500 font-black uppercase tracking-[0.2em]">Secure Access</span>
-                        </div>
-                        <CardTitle className="text-2xl font-bold text-slate-900 tracking-tight">
-                            {tab === 'login' ? 'Welcome back' : tab === 'forgot' ? 'Reset Password' : 'Request Access'}
+                <Card className="bg-white border-slate-200 shadow-2xl rounded-none overflow-hidden relative">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-unswap-blue-deep" />
+                    <CardHeader className="p-10 pb-6 text-center">
+                        <CardTitle className="text-3xl font-extralight text-slate-900 tracking-tight">
+                            {tab === 'login' ? 'Welcome back' : tab === 'forgot' ? 'Reset Password' : 'Register'}
                         </CardTitle>
                         <CardDescription className="text-slate-400 font-medium">
                             {tab === 'login'
                                 ? 'Sign in with your Unswap credentials'
                                 : tab === 'forgot'
                                     ? 'Follow the steps to reset your password'
-                                    : 'Create your account — exclusive to international civil servants'}
+                                    : 'Create your account'}
                         </CardDescription>
                     </CardHeader>
 
@@ -210,11 +243,11 @@ export default function Login() {
                         )}
 
                         <Tabs value={tab} onValueChange={(v) => { setTab(v); setError(''); setMessage(''); }}>
-                            <TabsList className="w-full bg-slate-50 border border-slate-100 mb-8 p-1.5 rounded-2xl h-14">
-                                <TabsTrigger value="login" className="flex-1 rounded-xl font-bold text-xs uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-indigo-600 text-slate-400">
+                            <TabsList className="w-full bg-white border-b border-slate-100 mb-10 p-0 rounded-none h-14 flex items-end">
+                                <TabsTrigger value="login" className="flex-1 h-full rounded-none font-bold text-[10px] uppercase tracking-[0.3em] bg-transparent data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-unswap-blue-deep data-[state=active]:text-unswap-blue-deep text-slate-400 border-b border-transparent transition-all">
                                     Sign In
                                 </TabsTrigger>
-                                <TabsTrigger value="register" className="flex-1 rounded-xl font-bold text-xs uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-indigo-600 text-slate-400">
+                                <TabsTrigger value="register" className="flex-1 h-full rounded-none font-bold text-[10px] uppercase tracking-[0.3em] bg-transparent data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-unswap-blue-deep data-[state=active]:text-unswap-blue-deep text-slate-400 border-b border-transparent transition-all">
                                     Register
                                 </TabsTrigger>
                             </TabsList>
@@ -225,24 +258,24 @@ export default function Login() {
                                 <OrDivider />
 
                                 <form onSubmit={handleLogin} className="space-y-5">
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Institutional Email</Label>
+                                    <div className="space-y-3">
+                                        <Label className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 ml-1">Email</Label>
                                         <Input
                                             type="email"
                                             placeholder="name@un.org"
                                             value={loginEmail}
                                             onChange={e => setLoginEmail(e.target.value)}
                                             required
-                                            className="bg-slate-50/50 border-slate-100 text-slate-900 placeholder:text-slate-300 h-12 px-4 rounded-xl focus:ring-2 focus:ring-indigo-100 border-indigo-50 transition-all font-medium"
+                                            className="bg-slate-50/30 border-slate-200 text-slate-900 placeholder:text-slate-200 h-14 rounded-none focus-visible:ring-unswap-blue-deep transition-all font-mono text-sm"
                                         />
                                     </div>
-                                    <div className="space-y-2">
+                                    <div className="space-y-3">
                                         <div className="flex items-center justify-between ml-1">
-                                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Password</Label>
+                                            <Label className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">Password</Label>
                                             <button
                                                 type="button"
                                                 onClick={() => setTab('forgot')}
-                                                className="text-[10px] font-bold text-indigo-500 hover:text-indigo-600 transition-colors uppercase tracking-widest"
+                                                className="text-[9px] font-bold text-unswap-blue-deep hover:text-slate-900 transition-colors uppercase tracking-[0.2em]"
                                             >
                                                 Forgot password?
                                             </button>
@@ -253,7 +286,7 @@ export default function Login() {
                                             value={loginPassword}
                                             onChange={e => setLoginPassword(e.target.value)}
                                             required
-                                            className="bg-slate-50/50 border-slate-100 text-slate-900 placeholder:text-slate-300 h-12 px-4 rounded-xl focus:ring-2 focus:ring-indigo-100 border-indigo-50 transition-all font-medium"
+                                            className="bg-slate-50/30 border-slate-200 text-slate-900 placeholder:text-slate-200 h-14 rounded-none focus-visible:ring-unswap-blue-deep transition-all font-mono text-sm"
                                         />
                                     </div>
 
@@ -266,10 +299,10 @@ export default function Login() {
                                     <Button
                                         type="submit"
                                         disabled={loading}
-                                        className="w-full bg-slate-900 hover:bg-slate-800 text-white h-14 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-slate-200"
+                                        className="w-full bg-unswap-blue-deep hover:bg-slate-900 text-white h-16 rounded-none font-bold text-[10px] uppercase tracking-[0.4em] transition-all shadow-2xl border-none outline-none group mt-4"
                                     >
-                                        {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <ArrowRight className="w-4 h-4 mr-2" />}
-                                        {loading ? 'Signing in…' : 'Sign In'}
+                                        {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Shield className="w-3.5 h-3.5 mr-2 transition-transform group-hover:scale-110" />}
+                                        {loading ? 'Signing in...' : 'Sign In'}
                                     </Button>
                                 </form>
                             </TabsContent>
@@ -280,69 +313,69 @@ export default function Login() {
                                 <OrDivider />
 
                                 <form onSubmit={handleRegister} className="space-y-4">
-                                    <div className="space-y-1.5">
-                                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Full Name</Label>
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 ml-1">Full Name</Label>
                                         <Input
-                                            placeholder="Ambassador Jean Dupont"
+                                            placeholder="John Doe"
                                             value={regName}
                                             onChange={e => setRegName(e.target.value)}
-                                            className="bg-slate-50/50 border-slate-100 text-slate-900 placeholder:text-slate-300 h-11 px-4 rounded-xl focus:ring-2 focus:ring-indigo-100 border-indigo-50 transition-all font-medium"
+                                            className="bg-slate-50/30 border-slate-200 text-slate-900 placeholder:text-slate-200 h-12 rounded-none focus-visible:ring-unswap-blue-deep font-light"
                                         />
                                     </div>
-                                    <div className="space-y-1.5">
-                                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Institutional Email</Label>
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 ml-1">Email</Label>
                                         <Input
                                             type="email"
                                             placeholder="name@un.org"
                                             value={regEmail}
                                             onChange={e => setRegEmail(e.target.value)}
                                             required
-                                            className="bg-slate-50/50 border-slate-100 text-slate-900 placeholder:text-slate-300 h-11 px-4 rounded-xl focus:ring-2 focus:ring-indigo-100 border-indigo-50 transition-all font-medium"
+                                            className="bg-slate-50/30 border-slate-200 text-slate-900 placeholder:text-slate-200 h-12 rounded-none focus-visible:ring-unswap-blue-deep font-mono text-xs"
                                         />
                                     </div>
-                                    <div className="space-y-1.5">
-                                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Institution</Label>
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 ml-1">Institution</Label>
                                         <Input
-                                            placeholder="UN, IMF, World Bank…"
+                                            placeholder="Institution (UN, IMF, etc.)"
                                             value={regInstitution}
                                             onChange={e => setRegInstitution(e.target.value)}
-                                            className="bg-slate-50/50 border-slate-100 text-slate-900 placeholder:text-slate-300 h-11 px-4 rounded-xl focus:ring-2 focus:ring-indigo-100 border-indigo-50 transition-all font-medium"
+                                            className="bg-slate-50/30 border-slate-200 text-slate-900 placeholder:text-slate-200 h-12 rounded-none focus-visible:ring-unswap-blue-deep"
                                         />
                                     </div>
-                                    <div className="space-y-1.5">
-                                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Password</Label>
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 ml-1">Password</Label>
                                         <Input
                                             type="password"
-                                            placeholder="Min. 8 characters"
+                                            placeholder="••••••••"
                                             value={regPassword}
                                             onChange={e => setRegPassword(e.target.value)}
                                             required
-                                            className="bg-slate-50/50 border-slate-100 text-slate-900 placeholder:text-slate-300 h-11 px-4 rounded-xl focus:ring-2 focus:ring-indigo-100 border-indigo-50 transition-all font-medium"
+                                            className="bg-slate-50/30 border-slate-200 text-slate-900 placeholder:text-slate-200 h-12 rounded-none focus-visible:ring-unswap-blue-deep font-mono text-xs"
                                         />
                                     </div>
-                                    <div className="space-y-1.5">
-                                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Referral Code <span className="text-slate-300 font-normal italic">(optional)</span></Label>
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 ml-1">Referral Code <span className="text-slate-300 font-normal italic lowercase">(optional)</span></Label>
                                         <Input
                                             placeholder="UNSWAP-XXXXXX"
                                             value={refCode}
                                             onChange={e => setRefCode(e.target.value)}
-                                            className={`bg-slate-50/50 border-slate-100 text-slate-900 placeholder:text-slate-300 h-11 px-4 rounded-xl font-mono text-xs ${refCode && searchParams.get('ref') ? 'opacity-60 grayscale' : ''}`}
+                                            className={`bg-slate-50/30 border-slate-200 text-slate-900 placeholder:text-slate-200 h-12 rounded-none focus-visible:ring-unswap-blue-deep font-mono text-[10px] uppercase tracking-wider ${refCode && searchParams.get('ref') ? 'opacity-40 grayscale pointer-events-none' : ''}`}
                                         />
                                     </div>
 
                                     {error && (
-                                        <Alert variant="destructive" className="bg-rose-50 border-rose-100 text-rose-600 rounded-2xl border">
-                                            <AlertDescription className="font-medium text-sm">{error}</AlertDescription>
+                                        <Alert variant="destructive" className="bg-rose-50 border-rose-100 text-rose-600 rounded-none animate-in fade-in slide-in-from-top-1">
+                                            <AlertDescription className="text-[10px] font-bold uppercase tracking-widest">{error}</AlertDescription>
                                         </Alert>
                                     )}
 
                                     <Button
                                         type="submit"
                                         disabled={loading}
-                                        className="w-full bg-indigo-600 hover:bg-indigo-500 text-white h-14 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-indigo-100 mt-2"
+                                        className="w-full bg-unswap-blue-deep hover:bg-slate-900 text-white h-16 rounded-none font-bold text-[10px] uppercase tracking-[0.4em] transition-all shadow-2xl border-none outline-none group mt-6"
                                     >
-                                        {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <ArrowRight className="w-4 h-4 mr-2" />}
-                                        {loading ? 'Creating account…' : 'Create Account'}
+                                        {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Globe className="w-3.5 h-3.5 mr-2 transition-transform group-hover:rotate-180 duration-1000" />}
+                                        {loading ? 'Creating account...' : 'Create Account'}
                                     </Button>
                                 </form>
                             </TabsContent>
@@ -406,15 +439,19 @@ export default function Login() {
                         </Tabs>
                     </CardContent>
 
-                    <CardFooter className="p-8 pt-0 flex flex-col gap-6">
+                    <CardFooter className="p-10 pt-0 flex flex-col gap-8">
                         <div className="w-full h-px bg-slate-50" />
-                        <div className="flex flex-col gap-2 items-center text-center">
-                            <p className="text-[9px] text-slate-300 font-black uppercase tracking-[0.2em] leading-relaxed max-w-[240px]">
+                        <div className="space-y-4 text-center">
+                            <p className="text-[9px] text-slate-300 font-bold uppercase tracking-[0.4em] leading-relaxed">
                                 Restricted Access • UN System • IMF • World Bank • Diplomatic Corps
                             </p>
-                            <p className="text-[8px] text-slate-200 uppercase tracking-widest font-medium">
-                                GDPR Secured • ISO 27001 Compliant
-                            </p>
+                            <div className="flex items-center justify-center gap-4 text-[7px] text-slate-200 font-bold uppercase tracking-[0.3em]">
+                                <span>GDPR Secured</span>
+                                <div className="w-1 h-1 rounded-full bg-slate-200" />
+                                <span>ISO 27001 Compliant</span>
+                                <div className="w-1 h-1 rounded-full bg-slate-200" />
+                                <span>TLS 1.3 Active</span>
+                            </div>
                         </div>
                     </CardFooter>
                 </Card>

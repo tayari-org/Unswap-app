@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { format } from 'date-fns';
-import { 
-  CheckCircle, FileText, Shield, Key, Building, Download, 
-  MapPin, Phone, Mail, Lock, Loader2 
+import {
+  CheckCircle, FileText, Shield, Key, Building, Download,
+  MapPin, Phone, Mail, Lock, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,7 +34,7 @@ export default function FinalizeSwapDialog({ open, onOpenChange, swapRequest, us
     mutationFn: async () => {
       // Generate insurance certificate
       const insuranceCert = `https://insurance.clementsworldwide.com/cert/${swapRequest.id}`;
-      
+
       // Update swap request with finalization details
       await api.entities.SwapRequest.update(swapRequest.id, {
         insurance_certificate_url: insuranceCert,
@@ -45,7 +45,7 @@ export default function FinalizeSwapDialog({ open, onOpenChange, swapRequest, us
         special_instructions: specialInstructions,
         finalized_at: new Date().toISOString()
       });
-      
+
       // Send finalization details email to guest
       await api.integrations.Core.SendEmail({
         to: swapRequest.requester_email,
@@ -77,7 +77,7 @@ export default function FinalizeSwapDialog({ open, onOpenChange, swapRequest, us
           <p>Please log in to UNswap to review and approve these details to complete the swap.</p>
         `
       });
-      
+
       // Send finalization request notification to guest
       await api.entities.Notification.create({
         user_email: swapRequest.requester_email,
@@ -102,13 +102,16 @@ export default function FinalizeSwapDialog({ open, onOpenChange, swapRequest, us
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <CheckCircle className="w-5 h-5 text-emerald-600" />
-            Finalize Your Swap
+        <DialogHeader className="p-10 border-b bg-slate-50">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-px bg-emerald-500/20" />
+            <p className="text-emerald-600 font-bold tracking-[0.4em] uppercase text-[9px]">Final Validation</p>
+          </div>
+          <DialogTitle className="text-3xl font-extralight text-slate-900 tracking-tighter leading-tight">
+            Approve <span className="italic font-serif">Stay.</span>
           </DialogTitle>
-          <DialogDescription>
-            Send finalization details to guest for approval
+          <DialogDescription className="text-slate-500 text-sm font-light mt-4 leading-relaxed">
+            Review the final details and confirm the stay dates. This action will formalize the swap agreement.
           </DialogDescription>
         </DialogHeader>
 
@@ -124,9 +127,8 @@ export default function FinalizeSwapDialog({ open, onOpenChange, swapRequest, us
                   { icon: Building, label: 'Insurance', done: false }
                 ].map((phase, i) => (
                   <div key={i} className="flex flex-col items-center">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      phase.done ? 'bg-emerald-500' : 'bg-blue-500'
-                    }`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${phase.done ? 'bg-emerald-500' : 'bg-blue-500'
+                      }`}>
                       <phase.icon className="w-5 h-5 text-white" />
                     </div>
                     <p className="text-xs mt-1 text-slate-700">{phase.label}</p>
@@ -140,7 +142,7 @@ export default function FinalizeSwapDialog({ open, onOpenChange, swapRequest, us
           <div>
             <Label className="text-base font-semibold">Key Handoff Method *</Label>
             <p className="text-sm text-slate-600 mb-3">How will your guest access the property?</p>
-            
+
             <div className="space-y-2">
               {[
                 { value: 'in_person', label: 'In Person', desc: 'Meet guest personally' },
@@ -151,9 +153,8 @@ export default function FinalizeSwapDialog({ open, onOpenChange, swapRequest, us
               ].map((method) => (
                 <label
                   key={method.value}
-                  className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-slate-50 transition ${
-                    keyHandoffMethod === method.value ? 'border-amber-500 bg-amber-50' : 'border-slate-200'
-                  }`}
+                  className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-slate-50 transition ${keyHandoffMethod === method.value ? 'border-amber-500 bg-amber-50' : 'border-slate-200'
+                    }`}
                 >
                   <input
                     type="radio"
@@ -282,24 +283,31 @@ export default function FinalizeSwapDialog({ open, onOpenChange, swapRequest, us
           </Card>
         </div>
 
-        <div className="flex gap-3 pt-4 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
-            Back
+        <div className="p-10 flex border-t border-slate-100 bg-slate-50/50 gap-6">
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            className="flex-1 rounded-none h-14 text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 hover:text-slate-900 transition-colors"
+          >
+            Return
           </Button>
-          <Button 
+          <Button
             onClick={() => finalizeSwapMutation.mutate()}
             disabled={!isComplete || finalizeSwapMutation.isPending}
-            className="flex-1 bg-emerald-500 hover:bg-emerald-600"
+            className={`flex-1 rounded-none h-14 text-[10px] font-bold uppercase tracking-[0.4em] transition-all shadow-xl ${!isComplete || finalizeSwapMutation.isPending
+                ? 'bg-slate-200 text-slate-400'
+                : 'bg-emerald-600 text-white hover:bg-slate-900'
+              }`}
           >
             {finalizeSwapMutation.isPending ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Sending...
+                <Loader2 className="w-3.5 h-3.5 mr-3 animate-spin" />
+                Finalizing...
               </>
             ) : (
               <>
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Send for Guest Approval
+                <CheckCircle className="w-3.5 h-3.5 mr-3 opacity-60" />
+                Authorize Stay
               </>
             )}
           </Button>

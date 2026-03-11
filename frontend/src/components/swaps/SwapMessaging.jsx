@@ -77,25 +77,36 @@ export default function SwapMessaging({ swapRequest, user, onClose }) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-50">
+    <div className="flex flex-col h-[80vh] bg-slate-50 overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-slate-200">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 border border-slate-200">
-            <User className="w-5 h-5" />
+      <div className="p-10 border-b bg-white flex items-center justify-between shadow-sm relative z-20">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-px bg-unswap-blue-deep/20" />
+            <p className="text-unswap-blue-deep/60 font-bold tracking-[0.4em] uppercase text-[9px]">Secure Protocol</p>
           </div>
-          <div>
-            <h4 className="font-semibold text-slate-900 leading-tight">{otherPartyName}</h4>
-            <p className="text-[11px] text-slate-500 font-medium truncate max-w-[200px]">{swapRequest.property_title}</p>
-          </div>
+          <h3 className="text-3xl font-extralight text-slate-900 tracking-tighter leading-tight">
+            Coordinator <span className="italic font-serif text-unswap-blue-deep/60">Dialogue.</span>
+          </h3>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-[10px] uppercase font-bold text-blue-600 bg-blue-50/50 border-blue-100">
-            {swapRequest.status.replace('_', ' ')}
-          </Badge>
-          <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full text-slate-400 hover:text-slate-600">
-            <X className="w-5 h-5" />
-          </Button>
+
+        <div className="flex items-center gap-8">
+          <div className="text-right border-r pr-8 border-slate-100 hidden md:block">
+            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-1.5">Stay Interval</p>
+            <p className="text-sm font-light tracking-tight text-slate-900">
+              {swapRequest?.check_in && format(new Date(swapRequest.check_in), 'MMM d')} — {swapRequest?.check_out && format(new Date(swapRequest.check_out), 'MMM d, yyyy')}
+            </p>
+          </div>
+          <div className="flex flex-col items-end gap-3">
+            <Badge className="rounded-none bg-unswap-blue-deep/5 text-unswap-blue-deep border-unswap-blue-deep/20 text-[9px] font-bold uppercase tracking-widest px-3 py-1">
+              {swapRequest.status.replace('_', ' ')}
+            </Badge>
+            {onClose && (
+              <Button variant="ghost" size="icon" onClick={onClose} className="rounded-none text-slate-300 hover:text-slate-900 transition-colors">
+                <X className="w-5 h-5" />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -146,6 +157,6 @@ export default function SwapMessaging({ swapRequest, user, onClose }) {
         <MessageInput onSend={handleSend} onTyping={setIsTyping} disabled={sendMessageMutation.isPending} />
         {isTyping && <div className="mt-2"><TypingIndicator name={otherPartyName} /></div>}
       </div>
-    </div>
+    </div >
   );
 }

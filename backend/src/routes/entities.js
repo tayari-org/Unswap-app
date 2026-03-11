@@ -30,24 +30,69 @@ const MODEL_PRISMA_MAP = {
     ActivityLog: 'activityLog',
     PlatformSettings: 'platformSettings',
     User: 'user',
+    TypingStatus: 'typingStatus',
+    PinnedConversation: 'pinnedConversation',
+    MessageReaction: 'messageReaction',
 };
 
 // Entities that can be read without auth
 const PUBLIC_ENTITIES = ['Property', 'SubscriptionPlan', 'PlatformSettings', 'ActivityLog', 'Review'];
 
 // Entities only admins can write to
-const ADMIN_WRITE_ENTITIES = ['SubscriptionPlan', 'PlatformSettings', 'ActivityLog'];
+const ADMIN_WRITE_ENTITIES = ['SubscriptionPlan', 'PlatformSettings'];
+
+// Mapping of entities and their JSON string fields for SQLite
+const JSON_FIELDS = {
+    Property: ['amenities', 'photos', 'images', 'swap_types_accepted', 'availability', 'mobility_tags', 'security_checklist'],
+    User: ['languages', 'notification_preferences', 'swap_preferences'],
+    Message: ['attachments'],
+    PaymentTransaction: ['metadata'],
+    GuestPointTransaction: ['metadata'],
+    Referral: ['reward_details'],
+    ActivityLog: ['metadata'],
+    PlatformSettings: ['institutional_email_domains', 'public_settings'],
+};
 
 /**
  * Transform Prisma record to match expected frontend keys (Base44 legacy)
  */
-function transformRecord(record) {
+function transformRecord(record, entity) {
     if (!record) return record;
-    return {
+    const result = {
         ...record,
         created_date: record.created_at,
         updated_date: record.updated_at,
     };
+
+    // Parse JSON fields if they exist for this entity
+    if (entity && JSON_FIELDS[entity]) {
+        JSON_FIELDS[entity].forEach(field => {
+            if (typeof result[field] === 'string') {
+                try {
+                    result[field] = JSON.parse(result[field]);
+                } catch (e) {
+                    console.warn(`[API] Failed to parse JSON field ${field} for ${entity}:`, e.message);
+                }
+            }
+        });
+    }
+
+    return result;
+}
+
+/**
+ * Preprocess data before sending to Prisma (stringifying arrays/objects for SQLite)
+ */
+function preprocessData(data, entity) {
+    if (!data || !entity || !JSON_FIELDS[entity]) return data;
+
+    const result = { ...data };
+    JSON_FIELDS[entity].forEach(field => {
+        if (result[field] !== undefined && result[field] !== null && typeof result[field] !== 'string') {
+            result[field] = JSON.stringify(result[field]);
+        }
+    });
+    return result;
 }
 
 /**
@@ -142,7 +187,13 @@ function buildSort(sortParam) {
     if (!sortParam) return { created_at: 'desc' };
     const field = sortParam.startsWith('-') ? sortParam.slice(1) : sortParam;
     const direction = sortParam.startsWith('-') ? 'desc' : 'asc';
-    const fieldMap = { created_date: 'created_at', updated_date: 'updated_at', createdAt: 'created_at', updatedAt: 'updated_at' };
+    const fieldMap = {
+        created_date: 'created_at',
+        updated_date: 'updated_at',
+        createdAt: 'created_at',
+        updatedAt: 'updated_at',
+        scheduled_time: 'scheduled_time' // Explicit mapping if needed, though name is identical now
+    };
     return { [fieldMap[field] || field]: direction };
 }
 
@@ -169,7 +220,7 @@ router.get('/:entity', optionalAuth, async (req, res) => {
             skip,
         });
 
-        res.json(records.map(transformRecord));
+        res.json(records.map(r => transformRecord(r, entity)));
     } catch (err) {
         console.error(`[API] GET entities/${req.params.entity} error:`, err);
         res.status(500).json({ error: err.message });
@@ -188,7 +239,7 @@ router.get('/:entity/:id', optionalAuth, async (req, res) => {
 
         const record = await prisma[prismaModel].findUnique({ where: { id } });
         if (!record) return res.status(404).json({ error: 'Not found' });
-        res.json(transformRecord(record));
+        res.json(transformRecord(record, entity));
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -210,10 +261,11 @@ router.post('/:entity', requireAuth, async (req, res) => {
         delete data.created_at;
         delete data.updated_at;
 
-        // Type conversion for certain fields if necessary (Prisma is stricter than Mongoose)
-        // For example, strings that should be JSON
-        const record = await prisma[prismaModel].create({ data });
-        res.status(201).json(transformRecord(record));
+        // stringify recognized arrays/objects for SQLite
+        const processedData = preprocessData(data, entity);
+
+        const record = await prisma[prismaModel].create({ data: processedData });
+        res.status(201).json(transformRecord(record, entity));
     } catch (err) {
         console.error(`POST entities/${req.params.entity} error:`, err);
         res.status(500).json({ error: err.message });
@@ -236,9 +288,11 @@ router.patch('/:entity/:id', requireAuth, async (req, res) => {
         delete data.created_at;
         delete data.updated_at;
 
+        const processedData = preprocessData(data, entity);
+
         const record = await prisma[prismaModel].update({
             where: { id },
-            data,
+            data: processedData,
         });
 
         // Referral Hook: If a user is being updated to 'verified'
@@ -247,7 +301,7 @@ router.patch('/:entity/:id', requireAuth, async (req, res) => {
             handleUserVerified(record.email);
         }
 
-        res.json(transformRecord(record));
+        res.json(transformRecord(record, entity));
     } catch (err) {
         console.error(`PATCH entities/${req.params.entity}/${req.params.id} error:`, err);
         res.status(500).json({ error: err.message });

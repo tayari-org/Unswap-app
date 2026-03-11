@@ -128,15 +128,15 @@ export default function EmailOtpVerification({ user, onVerified }) {
 
   if (isVerified) {
     return (
-      <Card className="border-emerald-200 bg-emerald-50">
-        <CardContent className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
-              <Check className="w-6 h-6 text-emerald-600" />
+      <Card className="border-blue-100 bg-blue-50/30 rounded-none shadow-sm transition-all hover:shadow-md">
+        <CardContent className="p-8">
+          <div className="flex items-center gap-6">
+            <div className="w-14 h-14 bg-white border border-blue-100 rounded-none flex items-center justify-center shadow-sm">
+              <Check className="w-6 h-6 text-unswap-blue-deep" />
             </div>
             <div>
-              <p className="font-semibold text-emerald-900">Email Verified</p>
-              <p className="text-sm text-emerald-700">{verifiedEmail}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-unswap-blue-deep mb-1">Email Verified</p>
+              <p className="text-lg font-light tracking-tight text-slate-900">{verifiedEmail}</p>
             </div>
           </div>
         </CardContent>
@@ -145,21 +145,21 @@ export default function EmailOtpVerification({ user, onVerified }) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Mail className="w-5 h-5 text-amber-600" />
-          Step 1: Verify Official Email
+    <Card className="rounded-none border-slate-200 shadow-xl overflow-hidden group">
+      <CardHeader className="p-8 border-b border-slate-50">
+        <CardTitle className="flex items-center gap-3">
+          <div className="w-8 h-px bg-unswap-blue-deep/20" />
+          <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-unswap-blue-deep">Step 1: Email Verification</span>
         </CardTitle>
-        <CardDescription>
-          Enter your official UN/International Organization email to receive a verification code
+        <CardDescription className="text-[10px] uppercase tracking-widest text-slate-400 mt-2 ml-11 leading-relaxed">
+          Verify your official institutional email address to unlock diplomatic features.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {!otpSent ? (
           <>
-            <div>
-              <Label>Official Email Address</Label>
+            <div className="space-y-4">
+              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Official Email Address</Label>
               <Input
                 type="email"
                 value={officialEmail}
@@ -167,79 +167,77 @@ export default function EmailOtpVerification({ user, onVerified }) {
                   setOfficialEmail(e.target.value);
                   setEmailError('');
                 }}
-                placeholder="your.name@un.org"
-                className={`mt-1 ${emailError ? 'border-red-500' : ''}`}
+                placeholder="name@un.org"
+                className={`h-12 rounded-none border-slate-200 focus-visible:ring-unswap-blue-deep bg-slate-50/30 transition-all font-mono text-sm ${emailError ? 'border-red-300 bg-red-50/20' : ''}`}
               />
               {emailError ? (
-                <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-700">{emailError}</p>
+                <div className="p-4 bg-red-50/50 border border-red-100 rounded-none animate-in fade-in slide-in-from-top-1">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-red-600 leading-relaxed">{emailError}</p>
                 </div>
               ) : (
-                <p className="text-xs text-slate-500 mt-2">
-                  Accepted domains: un.org, undp.org, unicef.org, who.int, worldbank.org, imf.org, and other official IO domains
+                <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-slate-300 mt-2">
+                  Protocols: un.org // undp.org // who.int // worldbank.org
                 </p>
               )}
             </div>
             <Button
               onClick={handleSendOtp}
               disabled={sendOtpMutation.isPending || !officialEmail}
-              className="w-full bg-amber-500 hover:bg-amber-600"
+              className="w-full h-14 bg-unswap-blue-deep hover:bg-slate-900 text-white rounded-none text-[10px] font-bold uppercase tracking-[0.3em] transition-all shadow-xl group border-none"
             >
               {sendOtpMutation.isPending ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sending...</>
               ) : (
-                <><Send className="w-4 h-4 mr-2" /> Send Verification Code</>
+                <><Send className="w-3 h-3 mr-2 transition-transform group-hover:translate-x-1" /> Send Verification Code</>
               )}
             </Button>
           </>
         ) : (
           <>
-            <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg mb-4">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Mail className="w-4 h-4 text-emerald-600" />
+            <div className="p-6 bg-blue-50/50 border border-blue-100 rounded-none mb-8 animate-in fade-in duration-700">
+              <div className="flex items-start gap-5">
+                <div className="w-12 h-12 bg-white border border-blue-100 rounded-none flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <Mail className="w-5 h-5 text-unswap-blue-deep" />
                 </div>
                 <div>
-                  <p className="font-medium text-emerald-900 mb-1">Check your email</p>
-                  <p className="text-sm text-emerald-700">
-                    We sent a 6-digit verification code to <span className="font-semibold">{officialEmail}</span>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-unswap-blue-deep mb-2">Check your email</p>
+                  <p className="text-sm text-slate-600 leading-relaxed">
+                    We've sent a 6-digit verification code to <span className="font-bold text-slate-900">{officialEmail}</span>. Please enter it below to verify your account.
                   </p>
-                  <p className="text-xs text-emerald-600 mt-1">Enter the code below to verify your email</p>
                 </div>
               </div>
             </div>
 
-            <div>
-              <Label className="text-center block mb-2">Enter Verification Code</Label>
-              <div className="flex justify-center mb-4">
-                <InputOTP
-                  maxLength={6}
-                  value={otpCode}
-                  onChange={setOtpCode}
-                >
-                  <InputOTPGroup>
-                    <InputOTPSlot index={0} />
-                    <InputOTPSlot index={1} />
-                    <InputOTPSlot index={2} />
-                    <InputOTPSlot index={3} />
-                    <InputOTPSlot index={4} />
-                    <InputOTPSlot index={5} />
-                  </InputOTPGroup>
-                </InputOTP>
+            <div className="space-y-8">
+              <div className="text-center space-y-4">
+                <Label className="text-[10px] font-bold uppercase tracking-[0.4em] text-slate-400">Enter Verification Code</Label>
+                <div className="flex justify-center">
+                  <InputOTP
+                    maxLength={6}
+                    value={otpCode}
+                    onChange={setOtpCode}
+                  >
+                    <InputOTPGroup className="gap-2">
+                      {[0, 1, 2, 3, 4, 5].map((i) => (
+                        <InputOTPSlot key={i} index={i} className="w-12 h-16 border-slate-200 rounded-none text-xl font-light focus:border-unswap-blue-deep bg-slate-50/30" />
+                      ))}
+                    </InputOTPGroup>
+                  </InputOTP>
+                </div>
               </div>
-            </div>
 
-            <Button
-              onClick={handleVerifyOtp}
-              disabled={verifyOtpMutation.isPending || otpCode.length !== 6}
-              className="w-full bg-emerald-500 hover:bg-emerald-600"
-            >
-              {verifyOtpMutation.isPending ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Verifying...</>
-              ) : (
-                <><Check className="w-4 h-4 mr-2" /> Verify Code</>
-              )}
-            </Button>
+              <Button
+                onClick={handleVerifyOtp}
+                disabled={verifyOtpMutation.isPending || otpCode.length !== 6}
+                className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-none text-[10px] font-bold uppercase tracking-[0.3em] transition-all shadow-xl"
+              >
+                {verifyOtpMutation.isPending ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Verifying...</>
+                ) : (
+                  <><Check className="w-4 h-4 mr-2" /> Verify Code</>
+                )}
+              </Button>
+            </div>
 
             <div className="text-center">
               <Button
@@ -252,7 +250,7 @@ export default function EmailOtpVerification({ user, onVerified }) {
                 className="text-slate-500"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
-                Use different email
+                <div className="text-[10px] font-bold uppercase tracking-widest">Resend Code</div>
               </Button>
             </div>
           </>

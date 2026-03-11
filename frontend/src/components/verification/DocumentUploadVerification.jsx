@@ -30,7 +30,7 @@ export default function DocumentUploadVerification({ user, emailVerified, existi
       setUploading(true);
 
       // Check if user already has a pending or approved verification
-      const existingVerifications = await api.entities.Verification.filter({ 
+      const existingVerifications = await api.entities.Verification.filter({
         user_email: user?.email,
         status: { $in: ['pending', 'approved'] }
       });
@@ -90,15 +90,15 @@ export default function DocumentUploadVerification({ user, emailVerified, existi
 
   if (isApproved) {
     return (
-      <Card className="border-emerald-200 bg-emerald-50">
-        <CardContent className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+      <Card className="border-emerald-100 bg-emerald-50/20 rounded-none shadow-sm transition-all hover:shadow-md">
+        <CardContent className="p-8">
+          <div className="flex items-center gap-6">
+            <div className="w-14 h-14 bg-white border border-emerald-100 rounded-none flex items-center justify-center shadow-sm">
               <Check className="w-6 h-6 text-emerald-600" />
             </div>
             <div>
-              <p className="font-semibold text-emerald-900">Fully Verified</p>
-              <p className="text-sm text-emerald-700">Your identity has been verified</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-emerald-600 mb-1">Documents Verified</p>
+              <p className="text-lg font-light tracking-tight text-slate-900 uppercase">Fully Verified</p>
             </div>
           </div>
         </CardContent>
@@ -108,22 +108,21 @@ export default function DocumentUploadVerification({ user, emailVerified, existi
 
   if (isPending) {
     return (
-      <Card className="border-amber-200 bg-amber-50">
-        <CardContent className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-              <Loader2 className="w-6 h-6 text-amber-600 animate-spin" />
+      <Card className="border-blue-100 bg-blue-50/30 rounded-none shadow-sm">
+        <CardContent className="p-8">
+          <div className="flex items-center gap-6">
+            <div className="w-14 h-14 bg-white border border-blue-100 rounded-none flex items-center justify-center shadow-sm">
+              <Loader2 className="w-6 h-6 text-unswap-blue-deep animate-spin" />
             </div>
             <div>
-              <p className="font-semibold text-amber-900">Verification Pending</p>
-              <p className="text-sm text-amber-700">Your documents are being reviewed. This usually takes 24-48 hours.</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-unswap-blue-deep mb-1">Verification Pending</p>
+              <p className="text-sm text-slate-500 font-light leading-relaxed">Your documents are currently being reviewed. This usually takes <span className="font-bold">24-48 hours</span>.</p>
             </div>
           </div>
           {existingVerification?.reviewer_notes && (
-            <div className="mt-4 p-3 bg-white rounded-lg border border-amber-200">
-              <p className="text-sm text-slate-700">
-                <span className="font-medium">Note:</span> {existingVerification.reviewer_notes}
-              </p>
+            <div className="mt-6 p-5 bg-white border border-blue-100 rounded-none">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-blue-900 mb-2">Reviewer Notes:</p>
+              <p className="text-xs text-slate-600 font-light leading-relaxed italic">{existingVerification.reviewer_notes}</p>
             </div>
           )}
         </CardContent>
@@ -132,33 +131,33 @@ export default function DocumentUploadVerification({ user, emailVerified, existi
   }
 
   return (
-    <Card className={!emailVerified ? 'opacity-60' : ''}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="w-5 h-5 text-amber-600" />
-          Step 2: Upload Official Documents
+    <Card className={`rounded-none border-slate-200 shadow-xl overflow-hidden group transition-all duration-700 ${!emailVerified ? 'grayscale opacity-40 select-none' : ''}`}>
+      <CardHeader className="p-8 border-b border-slate-50">
+        <CardTitle className="flex items-center gap-3">
+          <div className="w-8 h-px bg-unswap-blue-deep/20" />
+          <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-unswap-blue-deep">Step 2: Identity Verification</span>
         </CardTitle>
-        <CardDescription>
-          Upload your official ID or employment document for manual verification
+        <CardDescription className="text-[10px] uppercase tracking-widest text-slate-400 mt-2 ml-11 leading-relaxed">
+          Please upload a copy of your UN/Organization ID or diplomatic passport.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {!emailVerified && (
-          <div className="flex items-center gap-2 p-3 bg-slate-100 rounded-lg text-sm text-slate-600">
-            <AlertCircle className="w-4 h-4" />
-            Please complete email verification first
+          <div className="flex items-center gap-4 p-5 bg-slate-50 border border-slate-100 rounded-none mb-4">
+            <AlertCircle className="w-4 h-4 text-unswap-blue-deep/40" />
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Please complete email verification first</p>
           </div>
         )}
 
-        <div>
-          <Label>Document Type</Label>
+        <div className="space-y-4">
+          <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Document Type</Label>
           <Select value={documentType} onValueChange={setDocumentType} disabled={!emailVerified}>
-            <SelectTrigger className="mt-1">
-              <SelectValue placeholder="Select document type" />
+            <SelectTrigger className="h-12 rounded-none border-slate-200 bg-slate-50/30 focus-visible:ring-unswap-blue-deep text-[10px] font-bold uppercase tracking-widest">
+              <SelectValue placeholder="Select document type..." />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-none border-slate-200">
               {DOCUMENT_TYPES.map(type => (
-                <SelectItem key={type.value} value={type.value}>
+                <SelectItem key={type.value} value={type.value} className="text-[10px] font-bold uppercase tracking-widest hover:bg-slate-50">
                   {type.label}
                 </SelectItem>
               ))}
@@ -166,24 +165,25 @@ export default function DocumentUploadVerification({ user, emailVerified, existi
           </Select>
         </div>
 
-        <div>
-          <Label>Upload Document</Label>
-          <label className={`flex items-center justify-center w-full h-32 mt-1 border-2 border-dashed rounded-lg transition-colors ${
-            emailVerified 
-              ? 'border-slate-300 cursor-pointer hover:border-amber-500' 
-              : 'border-slate-200 cursor-not-allowed'
-          }`}>
+        <div className="space-y-4">
+          <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Upload Document</Label>
+          <label className={`flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-none transition-all duration-500 ${emailVerified
+            ? 'border-slate-200 cursor-pointer hover:border-unswap-blue-deep hover:bg-slate-50/50'
+            : 'border-slate-100 cursor-not-allowed'
+            }`}>
             {documentFile ? (
-              <div className="text-center">
-                <Check className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
-                <span className="text-sm text-emerald-600 font-medium">{documentFile.name}</span>
-                <p className="text-xs text-slate-500 mt-1">Click to change</p>
+              <div className="text-center animate-in zoom-in duration-500">
+                <div className="w-16 h-16 bg-emerald-50 border border-emerald-100 rounded-none flex items-center justify-center mx-auto mb-4 shadow-sm">
+                  <Check className="w-6 h-6 text-emerald-600" />
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-700">{documentFile.name}</span>
+                <p className="text-[9px] font-medium uppercase tracking-widest text-slate-400 mt-2 italic">Key registered. Click to re-upload.</p>
               </div>
             ) : (
-              <div className="text-center">
-                <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                <span className="text-sm text-slate-500">Click to upload document</span>
-                <p className="text-xs text-slate-400 mt-1">PDF, JPG, or PNG up to 10MB</p>
+              <div className="text-center group-hover:scale-105 transition-transform">
+                <Upload className="w-8 h-8 text-slate-300 mx-auto mb-4" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">Select File</span>
+                <p className="text-[9px] font-medium uppercase tracking-widest text-slate-300 mt-2">Accepted formats: PDF, JPG, PNG</p>
               </div>
             )}
             <input
@@ -196,20 +196,20 @@ export default function DocumentUploadVerification({ user, emailVerified, existi
           </label>
         </div>
 
-        <Button 
+        <Button
           onClick={handleSubmit}
           disabled={!emailVerified || !documentType || !documentFile || uploading}
-          className="w-full bg-amber-500 hover:bg-amber-600"
+          className="w-full h-14 bg-unswap-blue-deep hover:bg-slate-900 text-white rounded-none text-[10px] font-bold uppercase tracking-[0.3em] transition-all shadow-xl border-none outline-none"
         >
           {uploading ? (
-            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading...</>
+            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</>
           ) : (
-            <><Upload className="w-4 h-4 mr-2" /> Submit for Verification</>
+            <><Upload className="w-3 h-3 mr-2" /> Submit for Verification</>
           )}
         </Button>
 
-        <p className="text-xs text-slate-500 text-center">
-          Your documents are encrypted and securely stored. We only use them for identity verification.
+        <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-slate-300 text-center leading-relaxed">
+          Your documents are stored securely and won't be shared with third parties.
         </p>
       </CardContent>
     </Card>

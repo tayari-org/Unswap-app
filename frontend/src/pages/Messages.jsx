@@ -32,7 +32,6 @@ export default function Messages() {
   const [showReactions, setShowReactions] = useState(null);
 
   const [showUserProfile, setShowUserProfile] = useState(false);
-  const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
   const { data: user } = useQuery({
@@ -61,6 +60,7 @@ export default function Messages() {
       $or: [{ sender_email: user?.email }, { recipient_email: user?.email }]
     }, '-created_date', 500),
     enabled: !!user?.email,
+    refetchInterval: 5000, // Check every 5 seconds
   });
 
   // Fetch all users to get usernames
@@ -70,16 +70,15 @@ export default function Messages() {
     staleTime: 60000, // Cache for 1 minute
   });
 
-  // Fetch typing status for selected conversation
+  // Fetch typing statuses for all conversations
   const { data: typingStatuses = [] } = useQuery({
-    queryKey: ['typing-status', user?.email, selectedConversation],
+    queryKey: ['typing-status', user?.email],
     queryFn: () => api.entities.TypingStatus.filter({
       recipient_email: user?.email,
-      user_email: selectedConversation,
       is_typing: true
     }),
-    enabled: !!user?.email && !!selectedConversation,
-    refetchInterval: 1000, // Check every second
+    enabled: !!user?.email,
+    refetchInterval: 5000, // Check every 5 seconds
   });
 
   // Fetch pinned conversations
@@ -107,27 +106,27 @@ export default function Messages() {
         const msg = event.data;
         if (msg.sender_email === user.email || msg.recipient_email === user.email) {
           queryClient.invalidateQueries(['all-messages']);
-          
+
           // Show toast notification for incoming messages
           if (msg.recipient_email === user.email) {
             const hasAttachments = msg.attachments && msg.attachments.length > 0;
             const senderUser = allUsers.find(u => u.email === msg.sender_email);
             const senderName = senderUser?.username || senderUser?.full_name || msg.sender_name || msg.sender_email;
-            
+
             toast.success(
               `New message from ${senderName}`,
               {
-                description: hasAttachments && !msg.content 
-                  ? '📷 Sent a photo' 
+                description: hasAttachments && !msg.content
+                  ? '📷 Sent a photo'
                   : msg.content?.substring(0, 60) + (msg.content?.length > 60 ? '...' : ''),
                 duration: 5000,
               }
             );
           }
-          
+
           // Auto-mark as read if conversation is open
-          if (selectedConversation && msg.recipient_email === user.email && 
-              msg.sender_email === selectedConversation && !msg.is_read) {
+          if (selectedConversation && msg.recipient_email === user.email &&
+            msg.sender_email === selectedConversation && !msg.is_read) {
             markAsReadMutation.mutate(msg.id);
           }
         }
@@ -138,7 +137,7 @@ export default function Messages() {
     });
 
     return unsubscribe;
-  }, [user?.email, selectedConversation]);
+  }, [user?.email, selectedConversation, allUsers, queryClient]);
 
   // Real-time typing status subscriptions
   useEffect(() => {
@@ -154,20 +153,20 @@ export default function Messages() {
     });
 
     return unsubscribe;
-  }, [user?.email, selectedConversation]);
+  }, [user?.email, selectedConversation, queryClient]);
 
   // Group messages by conversation
   const conversations = React.useMemo(() => {
     const convMap = new Map();
-    
+
     messages.forEach(msg => {
       const otherEmail = msg.sender_email === user?.email ? msg.recipient_email : msg.sender_email;
-      
+
       if (!convMap.has(otherEmail)) {
         // Find the user in allUsers to get their username
         const otherUser = allUsers.find(u => u.email === otherEmail);
         const otherName = otherUser?.username || otherUser?.full_name || otherEmail.split('@')[0];
-        
+
         convMap.set(otherEmail, {
           email: otherEmail,
           name: otherName,
@@ -177,17 +176,17 @@ export default function Messages() {
           isPinned: pinnedConversations.some(p => p.conversation_with === otherEmail),
         });
       }
-      
+
       const conv = convMap.get(otherEmail);
       conv.messages.push(msg);
-      
+
       if (msg.recipient_email === user?.email && !msg.is_read) {
         conv.unreadCount++;
       }
     });
 
     const allConvs = Array.from(convMap.values());
-    
+
     // Sort: pinned first, then by last message date
     return allConvs.sort((a, b) => {
       if (a.isPinned && !b.isPinned) return -1;
@@ -200,33 +199,33 @@ export default function Messages() {
     if (!selectedConversation) return [];
     const conv = conversations.find(c => c.email === selectedConversation);
     const allMessages = conv?.messages || [];
-    
+
     // Filter out deleted messages for current user
     let visibleMessages = allMessages.filter(msg => {
       if (msg.sender_email === user?.email && msg.deleted_by_sender) return false;
       if (msg.recipient_email === user?.email && msg.deleted_by_recipient) return false;
       return true;
     });
-    
+
     // Apply search filter if active
     if (messageSearchQuery.trim()) {
       const query = messageSearchQuery.toLowerCase();
       visibleMessages = visibleMessages.filter(msg => {
         // Search in message content
         const contentMatch = msg.content?.toLowerCase().includes(query);
-        
+
         // Search in attachment names
-        const attachmentMatch = msg.attachments?.some(att => 
+        const attachmentMatch = msg.attachments?.some(att =>
           att.name?.toLowerCase().includes(query)
         );
-        
+
         // Search in date
         const dateMatch = format(new Date(msg.created_date), 'MMM d, yyyy').toLowerCase().includes(query);
-        
+
         return contentMatch || attachmentMatch || dateMatch;
       });
     }
-    
+
     // Only show top-level messages (not in a thread)
     return visibleMessages
       .filter(msg => !msg.parent_message_id)
@@ -276,8 +275,6 @@ export default function Messages() {
     return groups;
   }, [selectedMessages]);
 
-
-
   const sendMessageMutation = useMutation({
     mutationFn: async (data) => {
       const msg = await api.entities.Message.create(data);
@@ -289,7 +286,7 @@ export default function Messages() {
   });
 
   const markAsReadMutation = useMutation({
-    mutationFn: (messageId) => api.entities.Message.update(messageId, { 
+    mutationFn: (messageId) => api.entities.Message.update(messageId, {
       is_read: true,
       read_at: new Date().toISOString()
     }),
@@ -298,16 +295,16 @@ export default function Messages() {
 
   const deleteMessageMutation = useMutation({
     mutationFn: async ({ messageId, userEmail }) => {
-      const message = await api.entities.Message.list();
-      const msg = message.find(m => m.id === messageId);
-      
+      const messages = await api.entities.Message.list();
+      const msg = messages.find(m => m.id === messageId);
+
       if (msg.sender_email === userEmail) {
-        await api.entities.Message.update(messageId, { 
+        await api.entities.Message.update(messageId, {
           deleted_by_sender: true,
           deleted_at: new Date().toISOString()
         });
       } else {
-        await api.entities.Message.update(messageId, { 
+        await api.entities.Message.update(messageId, {
           deleted_by_recipient: true,
           deleted_at: new Date().toISOString()
         });
@@ -371,7 +368,7 @@ export default function Messages() {
 
   const handleTyping = async (isTyping) => {
     if (!selectedConversation || !user?.email) return;
-    
+
     try {
       // Find existing typing status
       const existingStatuses = await api.entities.TypingStatus.filter({
@@ -422,6 +419,8 @@ export default function Messages() {
     }
   };
 
+  const scrollContainerRef = useRef(null);
+
   // Mark messages as read when selecting conversation
   useEffect(() => {
     if (selectedConversation) {
@@ -430,19 +429,26 @@ export default function Messages() {
       );
       unreadMessages.forEach(m => markAsReadMutation.mutate(m.id));
     }
-  }, [selectedConversation, selectedMessages]);
+  }, [selectedConversation, selectedMessages, user?.email]);
 
-  // Scroll to bottom when new messages
+  // Scroll to bottom when messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [selectedMessages]);
+    if (scrollContainerRef.current) {
+      // Use requestAnimationFrame to ensure DOM has updated
+      requestAnimationFrame(() => {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+        }
+      });
+    }
+  }, [selectedMessages, selectedConversation]);
 
   const handleSendMessage = (content, attachments = []) => {
     if ((!content.trim() && attachments.length === 0) || !selectedConversation) return;
 
     const hasDocuments = attachments.some(a => a.type === 'document');
     const hasImages = attachments.some(a => a.type === 'image');
-    
+
     let messageType = 'text';
     if (hasDocuments && !content.trim()) messageType = 'document';
     else if (hasImages && !content.trim()) messageType = 'image';
@@ -484,186 +490,204 @@ export default function Messages() {
     // Search in contact name, email, and message content
     const nameMatch = conv.name.toLowerCase().includes(query);
     const emailMatch = conv.email.toLowerCase().includes(query);
-    const messageMatch = conv.messages.some(msg => 
+    const messageMatch = conv.messages.some(msg =>
       msg.content?.toLowerCase().includes(query)
     );
     return nameMatch || emailMatch || messageMatch;
   });
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-6">Messages</h1>
+    <div className="h-[100dvh] flex flex-col bg-[#F8FAFC]">
+      <div className="max-w-7xl w-full mx-auto px-4 md:px-6 py-4 md:py-6 flex flex-col flex-1 min-h-0">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4 flex-shrink-0">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-px bg-unswap-blue-deep/20" />
+              <p className="text-unswap-blue-deep/60 font-bold tracking-[0.4em] uppercase text-[10px]">Messages</p>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-extralight tracking-tighter text-slate-900 mb-1">Message <span className="italic font-serif">Center</span></h1>
+            <p className="text-slate-500 text-sm font-light">Message your swap partners safely</p>
+          </div>
+        </div>
 
-        <div className="grid lg:grid-cols-3 gap-4 h-[calc(100vh-180px)]">
-          {/* Conversations List */}
-          <Card className="lg:col-span-1 overflow-hidden flex flex-col shadow-lg border-0">
-            <div className="p-4 bg-white border-b border-slate-100">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        {/* Responsive Grid Layout */}
+        <div className="flex-1 flex flex-col lg:grid lg:grid-cols-3 gap-0 border border-slate-200 shadow-2xl bg-white overflow-hidden min-h-0 rounded-xl">
+
+          {/* Conversations List - Architectural Sidebar */}
+          <div className={`lg:col-span-1 flex flex-col min-h-0 border-r border-slate-200 bg-slate-50/30 w-full h-full lg:w-auto ${selectedConversation ? 'hidden lg:flex' : 'flex'}`}>
+            <div className="p-6 bg-white border-b border-slate-100">
+              <div className="relative group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 transition-colors group-focus-within:text-unswap-blue-deep" />
                 <Input
-                  placeholder="Search conversations..."
-                  className="pl-9 bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-amber-500"
+                  placeholder="SEARCH MESSAGES..."
+                  className="pl-11 h-12 bg-slate-50/50 border-0 rounded-none text-[10px] font-bold uppercase tracking-widest placeholder:text-slate-300 focus-visible:ring-1 focus-visible:ring-unswap-blue-deep/20 transition-all"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
             </div>
 
-            <div className="overflow-y-auto flex-1 bg-white">
+            <div className="overflow-y-auto flex-1 custom-scrollbar">
               {filteredConversations.length === 0 ? (
-                <div className="text-center py-16 text-slate-500">
-                  <MessageSquare className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-                  <p className="text-sm">No conversations yet</p>
-                  <p className="text-xs text-slate-400 mt-1">Start messaging colleagues</p>
+                <div className="text-center py-20 px-6">
+                  <div className="w-12 h-12 bg-slate-50 border border-slate-100 rounded-none flex items-center justify-center mx-auto mb-6">
+                    <MessageSquare className="w-5 h-5 text-slate-200" />
+                  </div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">No messages</p>
                 </div>
               ) : (
                 filteredConversations.map((conv) => (
                   <motion.button
                     key={conv.email}
                     onClick={() => setSelectedConversation(conv.email)}
-                    whileHover={{ scale: 0.99 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`w-full p-4 flex items-center gap-3 border-b border-slate-50 hover:bg-slate-50/80 transition-all text-left relative group ${
-                      selectedConversation === conv.email ? 'bg-gradient-to-r from-amber-50 to-amber-50/50 border-l-4 border-l-amber-500' : ''
-                    }`}
+                    className={`w-full p-6 flex items-center gap-4 border-b border-slate-100 hover:bg-white transition-all text-left relative group ${selectedConversation === conv.email ? 'bg-white border-l-4 border-l-unswap-blue-deep' : 'border-l-4 border-l-transparent'
+                      }`}
                   >
-                    {/* Pin Button */}
+                    {/* Pin Button - Minimalist */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         pinConversationMutation.mutate(conv.email);
                       }}
-                      className={`absolute top-2 right-2 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity ${
-                        conv.isPinned ? 'text-amber-500' : 'text-slate-400 hover:text-slate-600'
-                      }`}
+                      className={`absolute top-4 right-4 p-1 transition-all ${conv.isPinned ? 'text-unswap-blue-deep' : 'opacity-0 group-hover:opacity-100 text-slate-300'
+                        }`}
                     >
                       <Pin className={`w-3 h-3 ${conv.isPinned ? 'fill-current' : ''}`} />
                     </button>
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 relative ${
-                      selectedConversation === conv.email ? 'bg-amber-100 ring-2 ring-amber-200' : 'bg-slate-100'
-                    }`}>
-                      <User className={`w-5 h-5 ${selectedConversation === conv.email ? 'text-amber-700' : 'text-slate-500'}`} />
+
+                    <div className={`w-12 h-12 rounded-none flex items-center justify-center flex-shrink-0 relative transition-transform duration-500 group-hover:scale-105 ${selectedConversation === conv.email ? 'bg-unswap-blue-deep text-white shadow-lg' : 'bg-slate-100 text-slate-400 border border-slate-200'
+                      }`}>
+                      <User className="w-5 h-5" />
                       {conv.unreadCount > 0 && (
-                        <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-amber-500 text-white text-xs rounded-full flex items-center justify-center font-semibold shadow-md">
-                          {conv.unreadCount > 9 ? '9+' : conv.unreadCount}
+                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[9px] font-bold flex items-center justify-center shadow-lg uppercase tracking-tighter">
+                          {conv.unreadCount}
                         </div>
                       )}
                     </div>
+
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className={`font-semibold truncate ${
-                          conv.unreadCount > 0 ? 'text-slate-900' : 'text-slate-700'
-                        }`}>{conv.name}</p>
-                        <span className={`text-xs ${
-                          conv.unreadCount > 0 ? 'text-amber-600 font-medium' : 'text-slate-400'
-                        }`}>
+                      <div className="flex items-center justify-between mb-1.5 break-all">
+                        <p className={`text-[11px] font-bold uppercase tracking-widest truncate mr-2 ${conv.unreadCount > 0 ? 'text-slate-900' : 'text-slate-600'
+                          }`}>{conv.name}</p>
+                        <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest whitespace-nowrap hidden sm:block">
                           {format(new Date(conv.lastMessage.created_date), 'MMM d')}
                         </span>
                       </div>
-                      <p className={`text-sm truncate ${
-                        conv.unreadCount > 0 ? 'text-slate-700 font-medium' : 'text-slate-500'
-                      }`}>
-                        {conv.lastMessage.content || '📎 Attachment'}
+                      <p className={`text-xs font-light truncate tracking-tight ${conv.unreadCount > 0 ? 'text-slate-600' : 'text-slate-400'
+                        }`}>
+                        {typingStatuses.some(ts => ts.user_email === conv.email && ts.is_typing) ? (
+                          <span className="text-unswap-blue-deep font-bold text-[10px] tracking-widest uppercase">Typing...</span>
+                        ) : (
+                          conv.lastMessage.content || 'Sent an attachment'
+                        )}
                       </p>
                     </div>
                   </motion.button>
                 ))
               )}
             </div>
-          </Card>
+          </div>
 
-          {/* Chat Area */}
-          <Card className="lg:col-span-2 flex flex-col overflow-hidden shadow-lg border-0">
+          {/* Chat Area - Minimalist Architecture */}
+          <div className={`lg:col-span-2 flex flex-col min-h-0 bg-white w-full h-full lg:w-auto ${selectedConversation ? 'flex' : 'hidden lg:flex'}`}>
             {selectedConversation ? (
               <>
-                {/* Chat Header */}
-                <div className="p-4 bg-white border-b border-slate-100">
-                  <div className="flex items-center justify-between gap-3 mb-3">
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="w-11 h-11 rounded-full bg-gradient-to-br from-amber-100 to-amber-50 flex items-center justify-center ring-2 ring-amber-100 flex-shrink-0">
-                        <User className="w-5 h-5 text-amber-700" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-slate-900 truncate">
-                          {conversations.find(c => c.email === selectedConversation)?.name}
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowUserProfile(true)}
-                      className="flex-shrink-0"
+                {/* Chat Header - High Contrast */}
+                <div className="p-4 md:p-6 bg-white border-b border-slate-200 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
+                    {/* Back Button for Mobile */}
+                    <button
+                      onClick={() => setSelectedConversation(null)}
+                      className="lg:hidden p-2 text-slate-400 hover:text-slate-900 transition-colors"
                     >
-                      <User className="w-4 h-4 sm:mr-2" />
-                      <span className="hidden sm:inline">View Profile</span>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5">
+                        <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-none bg-unswap-blue-deep/5 flex items-center justify-center border border-unswap-blue-deep/10 flex-shrink-0">
+                      <User className="w-5 h-5 md:w-6 md:h-6 text-unswap-blue-deep" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-lg md:text-xl font-extralight tracking-tight text-slate-900 truncate break-all">
+                        {conversations.find(c => c.email === selectedConversation)?.name}
+                      </p>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-0.5">Connected</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
+                    <div className="relative group hidden sm:block">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-300 group-focus-within:text-unswap-blue-deep" />
+                      <Input
+                        placeholder="SEARCH MESSAGE..."
+                        className="pl-9 pr-9 h-10 w-32 md:w-48 bg-slate-50/50 border-0 rounded-none text-[9px] font-bold uppercase tracking-widest focus-visible:ring-1 focus-visible:ring-unswap-blue-deep/20"
+                        value={messageSearchQuery}
+                        onChange={(e) => setMessageSearchQuery(e.target.value)}
+                      />
+                      {messageSearchQuery && (
+                        <button onClick={() => setMessageSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-red-500 transition-colors">
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                    <Button variant="ghost" onClick={() => setShowUserProfile(true)} className="rounded-none h-10 px-3 md:px-4 text-[9px] font-bold uppercase tracking-widest hover:bg-slate-50 hover:text-unswap-blue-deep border border-transparent hover:border-slate-100 flex items-center justify-center">
+                      <User className="w-4 h-4 md:w-3.5 md:h-3.5 md:mr-2.5" />
+                      <span className="hidden md:inline">User Profile</span>
                     </Button>
                   </div>
-                  
-                  {/* Message Search */}
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <Input
-                      placeholder="Search messages, dates, attachments..."
-                      className="pl-9 pr-9 bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-amber-500"
-                      value={messageSearchQuery}
-                      onChange={(e) => setMessageSearchQuery(e.target.value)}
-                    />
-                    {messageSearchQuery && (
-                      <button
-                        onClick={() => setMessageSearchQuery('')}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
+                </div>
+
+                {/* Messages - Architectural Grid Background */}
+                <div
+                  ref={scrollContainerRef}
+                  className="flex-1 overflow-y-auto p-4 md:p-10 space-y-1 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTSA0MCAwIEwgMCAwIDAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgwLDAsMCwwLjAxNSkiIHN0cm9rZS13aWR0aD0iMSIvPjwvc3ZnPg==')] bg-slate-50/50 flex flex-col min-h-0"
+                >
+                  {/* Message Items Wrap Container */}
+                  <div className="flex-1 flex flex-col justify-end">
+                    <AnimatePresence>
+                      {messageGroups.map((group, index) => {
+                        if (group.type === 'date') {
+                          return <DateSeparator key={`date-${index}`} date={group.date} />;
+                        }
+
+                        const isMe = group.sender === user?.email;
+                        return (
+                          <MessageGroup
+                            key={`group-${index}`}
+                            messages={group.messages}
+                            isMe={isMe}
+                            user={user}
+                            onReply={setReplyingTo}
+                            onDelete={handleDeleteMessage}
+                            reactions={allReactions}
+                            onReact={(messageId, reaction) => addReactionMutation.mutate({ messageId, reaction })}
+                          />
+                        );
+                      })}
+                    </AnimatePresence>
+
+                    {/* Typing Indicator - Minimalist Overlay */}
+                    <AnimatePresence>
+                      {(() => {
+                        const typingUser = typingStatuses.find(
+                          ts => ts.user_email === selectedConversation &&
+                            ts.recipient_email === user?.email &&
+                            ts.is_typing
+                        );
+                        return typingUser && (
+                          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="pt-4">
+                            <TypingIndicator name={conversations.find(c => c.email === selectedConversation)?.name || 'Someone'} />
+                          </motion.div>
+                        );
+                      })()}
+                    </AnimatePresence>
+                    <div className="h-4" />
                   </div>
                 </div>
 
-                {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgwLDAsMCwwLjAyKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] bg-slate-50">
-                  <AnimatePresence>
-                    {messageGroups.map((group, index) => {
-                      if (group.type === 'date') {
-                        return <DateSeparator key={`date-${index}`} date={group.date} />;
-                      }
-
-                      const isMe = group.sender === user?.email;
-                      return (
-                        <MessageGroup
-                          key={`group-${index}`}
-                          messages={group.messages}
-                          isMe={isMe}
-                          user={user}
-                          onReply={setReplyingTo}
-                          onDelete={handleDeleteMessage}
-                          reactions={allReactions}
-                          onReact={(messageId, reaction) => addReactionMutation.mutate({ messageId, reaction })}
-                        />
-                      );
-                    })}
-                  </AnimatePresence>
-                  
-                  {/* Typing Indicator */}
-                  {(() => {
-                    const typingUser = typingStatuses.find(
-                      ts => ts.user_email === selectedConversation && 
-                            ts.recipient_email === user?.email &&
-                            ts.is_typing
-                    );
-                    return typingUser && (
-                      <TypingIndicator 
-                        name={conversations.find(c => c.email === selectedConversation)?.name || 'Someone'} 
-                      />
-                    );
-                  })()}
-                  
-                  <div ref={messagesEndRef} />
-                </div>
-
-                {/* Message Input with Emoji & Attachments */}
-                <MessageInput 
+                {/* Message Input - Unified Component */}
+                <MessageInput
                   onSend={handleSendMessage}
                   onTyping={handleTyping}
                   disabled={sendMessageMutation.isPending}
@@ -673,22 +697,22 @@ export default function Messages() {
                 />
               </>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-slate-500 bg-gradient-to-br from-slate-50 to-white">
-                <div className="text-center p-8">
-                  <div className="w-20 h-20 bg-gradient-to-br from-amber-100 to-amber-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <MessageSquare className="w-10 h-10 text-amber-600" />
+              <div className="flex-1 hidden lg:flex items-center justify-center bg-slate-50/20">
+                <div className="text-center p-12 max-w-sm">
+                  <div className="w-24 h-24 bg-slate-50 border border-slate-100 rounded-none flex items-center justify-center mx-auto mb-8 shadow-inner">
+                    <MessageSquare className="w-10 h-10 text-slate-200" />
                   </div>
-                  <p className="text-lg font-semibold text-slate-700 mb-1">Your Messages</p>
-                  <p className="text-sm text-slate-500">Select a conversation to start chatting</p>
+                  <h2 className="text-2xl font-extralight text-slate-900 tracking-tight mb-3 italic font-serif">Select Conversation</h2>
+                  <p className="text-xs font-light text-slate-400 leading-relaxed uppercase tracking-[0.2em]">Select a conversation to start messaging</p>
                 </div>
               </div>
             )}
-          </Card>
+          </div>
         </div>
       </div>
 
-      {/* User Profile Dialog */}
-      <UserProfileDialog 
+      {/* User Profile Dialog - Architectural Refinement */}
+      <UserProfileDialog
         open={showUserProfile}
         onOpenChange={setShowUserProfile}
         userEmail={selectedConversation}

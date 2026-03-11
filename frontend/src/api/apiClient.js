@@ -220,6 +220,9 @@ const entities = {
     Referral: buildEntity('Referral'),
     ActivityLog: buildEntity('ActivityLog'),
     PlatformSettings: buildEntity('PlatformSettings'),
+    TypingStatus: buildEntity('TypingStatus'),
+    PinnedConversation: buildEntity('PinnedConversation'),
+    MessageReaction: buildEntity('MessageReaction'),
 };
 
 // ─── Functions ────────────────────────────────────────────────────────────────
@@ -254,7 +257,13 @@ const referrals = {
     },
     async getColleagues() {
         return get('/api/referrals/colleagues');
-    }
+    },
+    async getLeaderboard() {
+        return get('/api/referrals/leaderboard');
+    },
+    async resolveCode(code) {
+        return get(`/api/referrals/resolve-code/${code}`);
+    },
 };
 
 // ─── Main export ───────────────────────────────────────────────────────────────

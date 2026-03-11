@@ -120,11 +120,11 @@ const STATIC_PLANS = [
 ];
 
 const COLOR_MAP = {
-  indigo: { icon: 'text-indigo-400', ring: 'ring-indigo-500/40', btn: 'bg-indigo-600 hover:bg-indigo-500', badge: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30' },
-  sky: { icon: 'text-sky-400', ring: 'ring-sky-500/40', btn: 'bg-sky-600 hover:bg-sky-500', badge: 'bg-sky-500/20 text-sky-300 border-sky-500/30' },
-  violet: { icon: 'text-violet-400', ring: 'ring-violet-500/60', btn: 'bg-violet-600 hover:bg-violet-500', badge: 'bg-violet-500/20 text-violet-300 border-violet-500/30' },
-  amber: { icon: 'text-amber-400', ring: 'ring-amber-500/40', btn: 'bg-amber-600 hover:bg-amber-500', badge: 'bg-amber-500/20 text-amber-300 border-amber-500/30' },
-  gold: { icon: 'text-yellow-400', ring: 'ring-yellow-500/50', btn: 'bg-gradient-to-r from-yellow-600 to-amber-600 hover:from-yellow-500 hover:to-amber-500', badge: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' },
+  indigo: { icon: 'text-indigo-600', ring: 'ring-indigo-100', btn: 'bg-indigo-600 hover:bg-indigo-700', badge: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+  sky: { icon: 'text-sky-600', ring: 'ring-sky-100', btn: 'bg-sky-600 hover:bg-sky-700', badge: 'bg-sky-50 text-sky-700 border-sky-200' },
+  violet: { icon: 'text-violet-600', ring: 'ring-violet-200', btn: 'bg-violet-600 hover:bg-violet-700', badge: 'bg-violet-50 text-violet-700 border-violet-200' },
+  amber: { icon: 'text-amber-600', ring: 'ring-amber-100', btn: 'bg-amber-600 hover:bg-amber-700', badge: 'bg-amber-50 text-amber-700 border-amber-200' },
+  gold: { icon: 'text-amber-600', ring: 'ring-amber-200', btn: 'bg-amber-500 hover:bg-amber-600', badge: 'bg-amber-50 text-amber-700 border-amber-200' },
 };
 
 const PLAN_ICONS = {
@@ -135,7 +135,18 @@ const PLAN_ICONS = {
   gold: Crown,
 };
 
-export default function SubscriptionPlans() {
+const thisColor = (color, c, isLifetime) => c.icon || 'text-slate-600';
+const thisBtn = (color, c, isLifetime) => c.btn || 'bg-slate-900 hover:bg-slate-800';
+const getLightBadgeClasses = (color) => {
+  if (color === 'gold') return 'bg-amber-50 text-amber-700 border-amber-200';
+  if (color === 'violet') return 'bg-violet-50 text-violet-700 border-violet-200';
+  if (color === 'sky') return 'bg-sky-50 text-sky-700 border-sky-200';
+  if (color === 'indigo') return 'bg-indigo-50 text-indigo-700 border-indigo-200';
+  if (color === 'amber') return 'bg-amber-50 text-amber-700 border-amber-200';
+  return 'bg-slate-100 text-slate-700 border-slate-200';
+}
+
+export default function SubscriptionPlans({ isTab = false }) {
   const [selectedPlan, setSelectedPlan] = useState(null);
 
   const { data: user } = useQuery({
@@ -186,32 +197,26 @@ export default function SubscriptionPlans() {
   const waiverUnlocked = verifiedReferrals >= requiredReferrals;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 py-16 px-6">
-      {/* Ambient background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-60 right-0 w-[600px] h-[600px] bg-indigo-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-violet-500/5 rounded-full blur-3xl" />
-      </div>
-
+    <div className={isTab ? "w-full" : "min-h-screen bg-slate-50 py-16 px-6"}>
       <div className="max-w-7xl mx-auto relative">
 
         {/* ── Header ──────────────────────────────────────────────────────────── */}
         <div className="text-center mb-14">
-          <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold px-4 py-2 rounded-full mb-6 tracking-wider uppercase">
+          <div className="inline-flex items-center gap-2 bg-unswap-blue-deep text-white text-[10px] font-bold px-4 py-2 rounded-none mb-6 tracking-[0.3em] uppercase">
             <Shield className="w-3.5 h-3.5" /> Institutional Membership
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-extralight tracking-tighter text-slate-900 mb-6">
             Choose Your Access Tier
           </h1>
-          <p className="text-lg text-slate-400 max-w-2xl mx-auto">
+          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
             Annual plans tailored to your diplomatic rotation frequency.
             Your fee funds world-class legal, insurance, and trust infrastructure.
           </p>
           {user?.subscription_status && (
             <div className="mt-5">
               <Badge className={`text-sm px-4 py-1.5 ${user.subscription_status === 'active' || user.subscription_status === 'lifetime'
-                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                  : 'bg-slate-500/20 text-slate-400 border-slate-500/30'
+                ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                : 'bg-slate-100 text-slate-700 border-slate-200'
                 } border`}>
                 {user.subscription_status === 'lifetime'
                   ? '🏛 Lifetime Member'
@@ -221,53 +226,8 @@ export default function SubscriptionPlans() {
           )}
         </div>
 
-        {/* ── Founders' Waiver Banner ──────────────────────────────────────────── */}
-        {isPreLaunch && platformSettings?.founders_waiver_enabled && !waiverUnlocked && (
-          <div className="mb-10 p-6 rounded-2xl bg-gradient-to-r from-amber-500/10 via-yellow-500/10 to-amber-500/10 border border-amber-500/25 flex flex-col md:flex-row items-start md:items-center gap-5">
-            <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
-              <Crown className="w-6 h-6 text-amber-400" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-amber-300 font-bold text-lg mb-1">
-                Founders' Lifetime Waiver — Pre-Launch Exclusive
-              </h3>
-              <p className="text-amber-200/70 text-sm">
-                Refer <strong className="text-amber-300">{requiredReferrals} verified colleagues</strong> from
-                the UN, World Bank, IMF or affiliated organisations to unlock
-                <strong className="text-amber-300"> lifetime membership, completely free.</strong>
-              </p>
-              <div className="mt-3 flex items-center gap-3">
-                <div className="flex-1 h-2 bg-amber-900/50 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all"
-                    style={{ width: `${Math.min(100, (verifiedReferrals / requiredReferrals) * 100)}%` }}
-                  />
-                </div>
-                <span className="text-amber-300 font-semibold text-sm whitespace-nowrap">
-                  {verifiedReferrals} / {requiredReferrals} referrals
-                </span>
-              </div>
-              {user?.referral_code && (
-                <p className="mt-2 text-xs text-amber-400/70">
-                  Your code: <code className="bg-amber-900/40 px-2 py-0.5 rounded text-amber-300">{user.referral_code}</code>
-                </p>
-              )}
-            </div>
-          </div>
-        )}
-
-        {waiverUnlocked && (
-          <div className="mb-10 p-5 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/25 flex items-center gap-4">
-            <Gift className="w-8 h-8 text-emerald-400 shrink-0" />
-            <div>
-              <p className="text-emerald-300 font-bold">🎉 Founders' Lifetime Waiver Unlocked!</p>
-              <p className="text-emerald-200/70 text-sm">Your annual membership fee is permanently waived. Welcome, Delegate.</p>
-            </div>
-          </div>
-        )}
-
         {/* ── Plans Grid ──────────────────────────────────────────────────────── */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 mb-14">
+        <div className={`grid gap-5 mb-14 items-start ${isTab ? 'md:grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'}`}>
           {plans.map((plan) => {
             const color = plan.color || (plan.type === 'lifetime' ? 'gold' : 'indigo');
             const c = COLOR_MAP[color] || COLOR_MAP.indigo;
@@ -279,40 +239,40 @@ export default function SubscriptionPlans() {
             return (
               <div
                 key={plan.id}
-                className={`relative rounded-2xl border bg-slate-900/70 backdrop-blur-sm flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${plan.highlight
-                    ? 'border-violet-500/50 shadow-violet-500/20 shadow-lg ring-2 ring-violet-500/30'
-                    : 'border-slate-700/50'
+                className={`relative rounded-none border bg-white flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${plan.highlight
+                  ? 'border-unswap-blue-deep shadow-2xl ring-1 ring-unswap-blue-deep'
+                  : 'border-unswap-border shadow-sm'
                   }`}
               >
                 {plan.highlight && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-bold px-4 py-1 rounded-full tracking-wider uppercase shadow-lg">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-unswap-blue-deep text-white text-[10px] font-bold px-4 py-1 rounded-none tracking-[0.2em] uppercase shadow-md whitespace-nowrap">
                     Most Popular
                   </div>
                 )}
                 {isLifetime && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-600 to-amber-600 text-white text-xs font-bold px-4 py-1 rounded-full tracking-wider uppercase shadow-lg">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-[10px] font-bold px-4 py-1 rounded-none tracking-[0.2em] uppercase shadow-md whitespace-nowrap">
                     Best Value
                   </div>
                 )}
 
-                <div className="p-6 flex-1">
+                <div className="p-6">
                   {/* Icon + Badge */}
                   <div className="flex items-start justify-between mb-5">
-                    <div className={`w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center ${c.icon}`}>
+                    <div className={`w-11 h-11 rounded-none bg-slate-50 border border-slate-100 flex items-center justify-center ${thisColor(color, c, isLifetime)}`}>
                       <Icon className="w-5 h-5" />
                     </div>
-                    <Badge className={`text-[10px] font-semibold border px-2.5 py-0.5 ${c.badge}`}>
+                    <Badge className={`text-[10px] font-bold uppercase tracking-[0.2em] border px-2.5 py-1 rounded-none ${getLightBadgeClasses(color)}`}>
                       {plan.badge || (plan.type === 'lifetime' ? 'One-Time' : `$${plan.price}/yr`)}
                     </Badge>
                   </div>
 
                   {/* Name + Price */}
-                  <h3 className="text-white font-bold text-lg leading-tight mb-1">{plan.name}</h3>
-                  <p className="text-slate-400 text-xs mb-4 leading-relaxed">{plan.description}</p>
+                  <h3 className="text-slate-900 font-bold text-lg leading-tight mb-1">{plan.name}</h3>
+                  <p className="text-slate-600 text-[10px] tracking-wide mb-6 leading-relaxed uppercase">{plan.description}</p>
 
-                  <div className="mb-5">
-                    <span className="text-4xl font-black text-white">${(plan.price || 0).toLocaleString()}</span>
-                    <span className="text-slate-500 text-sm ml-1.5">
+                  <div className="mb-5 pb-5 border-b border-unswap-border">
+                    <span className="text-4xl font-extralight text-slate-900 italic font-serif">${(plan.price || 0).toLocaleString()}</span>
+                    <span className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em] ml-2">
                       {isLifetime ? 'one-time' : '/ year'}
                     </span>
                   </div>
@@ -321,14 +281,14 @@ export default function SubscriptionPlans() {
                   <ul className="space-y-2.5 mb-6">
                     {(plan.features || []).map((feature, idx) => (
                       <li key={idx} className="flex items-start gap-2.5">
-                        <Check className={`w-4 h-4 shrink-0 mt-0.5 ${c.icon}`} />
-                        <span className="text-slate-300 text-xs leading-relaxed">{feature}</span>
+                        <Check className={`w-4 h-4 shrink-0 mt-0.5 ${thisColor(color, c, isLifetime)}`} />
+                        <span className="text-slate-600 text-xs leading-relaxed">{feature}</span>
                       </li>
                     ))}
                     {!plan.features?.some(f => f.toString().includes('exchange')) && plan.exchanges_per_year && (
                       <li className="flex items-start gap-2.5">
-                        <Check className={`w-4 h-4 shrink-0 mt-0.5 ${c.icon}`} />
-                        <span className="text-slate-300 text-xs">
+                        <Check className={`w-4 h-4 shrink-0 mt-0.5 ${thisColor(color, c, isLifetime)}`} />
+                        <span className="text-slate-600 text-xs">
                           {plan.exchanges_per_year >= 999
                             ? 'Unlimited exchanges per year'
                             : `${plan.exchanges_per_year} exchange${plan.exchanges_per_year > 1 ? 's' : ''} per year`}
@@ -337,8 +297,8 @@ export default function SubscriptionPlans() {
                     )}
                     {!plan.features?.some(f => f.toString().includes('guarantee') || f.toString().includes('insurance')) && plan.property_guarantee_amount && (
                       <li className="flex items-start gap-2.5">
-                        <Check className={`w-4 h-4 shrink-0 mt-0.5 ${c.icon}`} />
-                        <span className="text-slate-300 text-xs">
+                        <Check className={`w-4 h-4 shrink-0 mt-0.5 ${thisColor(color, c, isLifetime)}`} />
+                        <span className="text-slate-600 text-xs">
                           ${plan.property_guarantee_amount.toLocaleString()} property shield
                         </span>
                       </li>
@@ -349,14 +309,17 @@ export default function SubscriptionPlans() {
                 {/* CTA */}
                 <div className="p-6 pt-0">
                   {isCurrentPlan ? (
-                    <div className="w-full rounded-xl py-2.5 text-center text-sm font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    <div className="w-full rounded-none py-4 text-center text-[10px] uppercase font-bold tracking-[0.2em] bg-emerald-50 text-emerald-700 border border-emerald-200">
                       ✓ Current Plan
                     </div>
                   ) : (
                     <Button
                       onClick={() => handleSelectPlan(plan.id)}
                       disabled={!!selectedPlan}
-                      className={`w-full h-11 text-sm font-semibold rounded-xl text-white transition-all ${c.btn}`}
+                      className={`w-full h-12 text-[10px] tracking-[0.2em] uppercase font-bold rounded-none transition-all ${plan.highlight
+                        ? 'bg-unswap-blue-deep hover:bg-slate-800 text-white'
+                        : 'bg-slate-100 hover:bg-slate-200 text-slate-900 hover:text-slate-900'
+                        }`}
                     >
                       {isProcessing ? (
                         <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing…</>
@@ -371,86 +334,132 @@ export default function SubscriptionPlans() {
           })}
         </div>
 
+        {/* ── Founders' Waiver Banner ──────────────────────────────────────────── */}
+        {isPreLaunch && platformSettings?.founders_waiver_enabled && !waiverUnlocked && (
+          <div className="mb-10 p-6 rounded-none bg-amber-50 border border-amber-200 flex flex-col md:flex-row items-start md:items-center gap-5">
+            <div className="w-12 h-12 rounded-none bg-amber-100 flex items-center justify-center shrink-0">
+              <Crown className="w-6 h-6 text-amber-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-amber-900 font-bold text-lg mb-1">
+                Founders' Lifetime Waiver — Pre-Launch Exclusive
+              </h3>
+              <p className="text-amber-800 text-sm">
+                Refer <strong className="text-amber-900">{requiredReferrals} verified colleagues</strong> from
+                the UN, World Bank, IMF or affiliated organisations to unlock
+                <strong className="text-amber-900"> lifetime membership, completely free.</strong>
+              </p>
+              <div className="mt-3 flex items-center gap-3">
+                <div className="flex-1 h-2 bg-amber-200 rounded-none overflow-hidden">
+                  <div
+                    className="h-full bg-amber-500 transition-all"
+                    style={{ width: `${Math.min(100, (verifiedReferrals / requiredReferrals) * 100)}%` }}
+                  />
+                </div>
+                <span className="text-amber-700 font-semibold text-sm whitespace-nowrap">
+                  {verifiedReferrals} / {requiredReferrals} referrals
+                </span>
+              </div>
+              {user?.referral_code && (
+                <div className="mt-3">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-700 mb-1">Your Referral Code</p>
+                  <code className="bg-amber-200 px-3 py-1.5 rounded-none text-amber-900 text-xs font-mono block break-all">{`${window.location.origin}?ref=${user.referral_code}`}</code>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {waiverUnlocked && (
+          <div className="mb-10 p-5 rounded-none bg-emerald-50 border border-emerald-200 flex items-center gap-4">
+            <Gift className="w-8 h-8 text-emerald-600 shrink-0" />
+            <div>
+              <p className="text-emerald-900 font-bold">🎉 Founders' Lifetime Waiver Unlocked!</p>
+              <p className="text-emerald-800 text-sm">Your annual membership fee is permanently waived. Welcome, Delegate.</p>
+            </div>
+          </div>
+        )}
+
         {/* ── Payment Methods ──────────────────────────────────────────────────── */}
         <div className="text-center mb-14">
           <p className="text-slate-500 text-sm">
-            Payments processed via <span className="text-slate-400 font-medium">Stripe</span> ·
+            Payments processed via <span className="text-slate-700 font-medium">Stripe</span> ·
             Accepts Credit/Debit Cards, Apple Pay, Google Pay, PayPal & Venmo
           </p>
         </div>
 
         {/* ── Policies Grid ─────────────────────────────────────────────────────── */}
         <div className="mb-14">
-          <h2 className="text-center text-xl font-bold text-white mb-8">
+          <h2 className="text-center text-xl font-bold text-slate-900 mb-8">
             Member Guarantees & Policies
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
             {[
               {
                 icon: CalendarCheck,
-                color: 'text-emerald-400',
-                bg: 'bg-emerald-500/10 border-emerald-500/20',
+                color: 'text-emerald-600',
+                bg: 'bg-emerald-50 border-emerald-100',
                 title: 'First Year Swap Guarantee',
                 desc: 'Can\'t find a match in year one? Your second year is completely free of charge.',
               },
               {
                 icon: RefreshCcw,
-                color: 'text-sky-400',
-                bg: 'bg-sky-500/10 border-sky-500/20',
+                color: 'text-sky-600',
+                bg: 'bg-sky-50 border-sky-100',
                 title: '"Trust First" Refund Policy',
                 desc: '100% refund within 30 days if your property fails vetting or your institutional status changes.',
               },
               {
                 icon: Gift,
-                color: 'text-amber-400',
-                bg: 'bg-amber-500/10 border-amber-500/20',
+                color: 'text-amber-600',
+                bg: 'bg-amber-50 border-amber-100',
                 title: 'Early Bird 50% Off',
                 desc: 'The first 500 verified waitlist members receive 50% off their first year of membership.',
               },
               {
                 icon: Infinity,
-                color: 'text-violet-400',
-                bg: 'bg-violet-500/10 border-violet-500/20',
+                color: 'text-violet-600',
+                bg: 'bg-violet-50 border-violet-100',
                 title: 'Founders\' Lifetime Waiver',
                 desc: 'Refer 5 verified colleagues during pre-launch and your annual fee is waived permanently.',
               },
             ].map((item, i) => (
-              <div key={i} className={`rounded-2xl border p-5 ${item.bg}`}>
+              <div key={i} className={`rounded-none border p-5 ${item.bg}`}>
                 <item.icon className={`w-7 h-7 mb-3 ${item.color}`} />
-                <h4 className="text-white font-semibold text-sm mb-1.5">{item.title}</h4>
-                <p className="text-slate-400 text-xs leading-relaxed">{item.desc}</p>
+                <h4 className="text-slate-900 font-bold text-xs uppercase tracking-widest mb-1.5">{item.title}</h4>
+                <p className="text-slate-600 text-xs leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* ── Subscription Expiry Warning ────────────────────────────────────── */}
-        <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 flex gap-4 mb-14">
-          <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+        <div className="rounded-none border border-red-200 bg-red-50 p-6 flex gap-4 mb-14">
+          <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
           <div>
-            <h4 className="text-red-300 font-semibold text-sm mb-1">
+            <h4 className="text-red-900 font-semibold text-sm mb-1">
               What happens if your subscription expires
             </h4>
-            <p className="text-red-300/60 text-xs leading-relaxed">
+            <p className="text-red-800 text-xs leading-relaxed">
               Unswap subscriptions fund the extensive legal and trust infrastructure of the closed-loop network.
-              If your subscription lapses, you revert to <strong className="text-red-300/80">inactive status</strong> and
+              If your subscription lapses, you revert to <strong className="text-red-700">inactive status</strong> and
               immediately lose access to swap request capabilities, the
-              <strong className="text-red-300/80"> Clements Worldwide insurance shield</strong>, and
-              the <strong className="text-red-300/80">automated Concierge Loop</strong>.
+              <strong className="text-red-700"> Clements Worldwide insurance shield</strong>, and
+              the <strong className="text-red-700">automated Concierge Loop</strong>.
               Your profile and property listings are preserved for 90 days pending renewal.
             </p>
           </div>
         </div>
 
         {/* ── When do I pay? ───────────────────────────────────────────────────── */}
-        <div className="rounded-2xl border border-slate-700/50 bg-slate-900/50 p-6 flex gap-4">
-          <Users className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
+        <div className="rounded-none border border-indigo-100 bg-indigo-50/50 p-6 flex gap-4">
+          <Users className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
           <div>
-            <h4 className="text-slate-200 font-semibold text-sm mb-1">
+            <h4 className="text-indigo-900 font-semibold text-sm mb-1">
               When does billing start?
             </h4>
-            <p className="text-slate-400 text-xs leading-relaxed">
-              Your first payment is deducted on <strong className="text-slate-300">Launch Day</strong> when you
+            <p className="text-indigo-800/80 text-xs leading-relaxed">
+              Your first payment is deducted on <strong className="text-indigo-900">Launch Day</strong> when you
               convert your waitlist spot into an active, paid membership. Subsequent annual deductions happen on
               your membership anniversary date. Engaged early adopters can bypass costs entirely through referrals
               or rely on the First Year Swap Guarantee.

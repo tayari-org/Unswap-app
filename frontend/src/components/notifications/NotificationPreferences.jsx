@@ -88,52 +88,54 @@ export default function NotificationPreferences({ user }) {
   ];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Bell className="w-5 h-5" />
-          Notification Preferences
+    <Card className="rounded-none border-slate-200 shadow-xl overflow-hidden group">
+      <CardHeader className="p-8 border-b border-slate-50">
+        <CardTitle className="flex items-center gap-3">
+          <div className="w-8 h-px bg-unswap-blue-deep/20" />
+          <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-unswap-blue-deep">Notification Preferences</span>
         </CardTitle>
-        <CardDescription>
-          Choose how you want to be notified about activity on your account
+        <CardDescription className="text-[10px] uppercase tracking-widest text-slate-400 mt-2 ml-11">
+          Manage how you receive updates and alerts
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {notificationTypes.map((type, index) => (
           <div key={index}>
             {index > 0 && <Separator className="mb-6" />}
-            <div className="flex items-start gap-4 mb-4">
-              <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <type.icon className="w-5 h-5 text-slate-600" />
+            <div className="flex items-start gap-6 mb-6">
+              <div className="w-12 h-12 bg-slate-50 border border-slate-100 rounded-none flex items-center justify-center flex-shrink-0 transition-all group-hover:bg-unswap-blue-deep group-hover:text-white group-hover:border-unswap-blue-deep group-hover:shadow-lg">
+                <type.icon className="w-4 h-4" />
               </div>
               <div className="flex-1">
-                <h4 className="font-semibold text-slate-900 mb-1">{type.title}</h4>
-                <p className="text-sm text-slate-500">{type.description}</p>
+                <h4 className="text-sm font-light text-slate-900 tracking-tight mb-1 uppercase">{type.title}</h4>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{type.description}</p>
               </div>
             </div>
-            
-            <div className="ml-14 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-slate-400" />
-                  <Label htmlFor={`${type.emailKey}`} className="text-sm">Email notifications</Label>
+
+            <div className="ml-18 space-y-4">
+              <div className="flex items-center justify-between p-4 bg-slate-50/50 border border-transparent hover:border-slate-100 hover:bg-white transition-all">
+                <div className="flex items-center gap-3">
+                  <Mail className="w-3.5 h-3.5 text-slate-300" />
+                  <Label htmlFor={`${type.emailKey}`} className="text-[10px] font-bold uppercase tracking-widest text-slate-600 cursor-pointer">Email notifications</Label>
                 </div>
                 <Switch
                   id={`${type.emailKey}`}
                   checked={settings[type.emailKey]}
                   onCheckedChange={() => handleToggle(type.emailKey)}
+                  className="data-[state=checked]:bg-unswap-blue-deep"
                 />
               </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Bell className="w-4 h-4 text-slate-400" />
-                  <Label htmlFor={`${type.inAppKey}`} className="text-sm">In-app notifications</Label>
+
+              <div className="flex items-center justify-between p-4 bg-slate-50/50 border border-transparent hover:border-slate-100 hover:bg-white transition-all">
+                <div className="flex items-center gap-3">
+                  <Bell className="w-3.5 h-3.5 text-slate-300" />
+                  <Label htmlFor={`${type.inAppKey}`} className="text-[10px] font-bold uppercase tracking-widest text-slate-600 cursor-pointer">In-app notifications</Label>
                 </div>
                 <Switch
                   id={`${type.inAppKey}`}
                   checked={settings[type.inAppKey]}
                   onCheckedChange={() => handleToggle(type.inAppKey)}
+                  className="data-[state=checked]:bg-unswap-blue-deep"
                 />
               </div>
             </div>

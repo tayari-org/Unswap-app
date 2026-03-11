@@ -154,6 +154,46 @@ async function createStripeCheckoutSession(req, res) {
     return res.json({ url: session.url, session_id: session.id });
 }
 
+// ─── createGuestPointsCheckoutSession ──────────────────────────────────────────
+async function createGuestPointsCheckoutSession(req, res) {
+    const user = req.user;
+    const { points_amount, price_usd } = req.body;
+    if (!points_amount || !price_usd) return res.status(400).json({ error: 'points_amount and price_usd are required' });
+
+    const origin = req.headers.origin || process.env.FRONTEND_URL;
+    const session = await stripe.checkout.sessions.create({
+        customer_email: user.email,
+        payment_method_types: ['card'],
+        line_items: [{
+            price_data: {
+                currency: 'usd',
+                product_data: {
+                    name: `${points_amount} GuestPoints`,
+                    description: `Purchase of ${points_amount} Unswap GuestPoints`
+                },
+                unit_amount: Math.round(price_usd * 100),
+            },
+            quantity: 1
+        }],
+        mode: 'payment',
+        success_url: `${origin}/settings?session_id={CHECKOUT_SESSION_ID}&success=true`,
+        cancel_url: `${origin}/settings?canceled=true`,
+        metadata: { user_email: user.email, plan_type: 'guest_points', points_amount: points_amount.toString() },
+    });
+
+    await prisma.paymentTransaction.create({
+        data: {
+            user_email: user.email,
+            amount: price_usd,
+            currency: 'USD',
+            status: 'pending',
+            payment_gateway_id: session.id,
+            transaction_type: 'guest_points_purchase'
+        }
+    });
+    return res.json({ url: session.url, session_id: session.id });
+}
+
 // ─── markVideoCallCompleted ────────────────────────────────────────────────────
 async function markVideoCallCompleted(req, res) {
     const user = req.user;
@@ -416,6 +456,7 @@ const FUNCTION_MAP = {
     completeSwap,
     createDailyRoom,
     createStripeCheckoutSession,
+    createGuestPointsCheckoutSession,
     markVideoCallCompleted,
     processReferralRewards,
     assignDefaultGuestPoints,

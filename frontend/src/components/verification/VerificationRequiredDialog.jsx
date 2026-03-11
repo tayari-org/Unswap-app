@@ -15,50 +15,49 @@ import {
 export default function VerificationRequiredDialog({ open, onOpenChange, action = 'access this feature' }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Shield className="w-6 h-6 text-amber-600" />
+      <DialogContent className="max-w-xl p-0 overflow-hidden rounded-none border-0 shadow-2xl">
+        <DialogHeader className="p-10 border-b bg-slate-50">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-px bg-amber-500/20" />
+            <p className="text-amber-600 font-bold tracking-[0.4em] uppercase text-[9px]">Security Protocol</p>
           </div>
-          <DialogTitle className="text-center">Verification Required</DialogTitle>
-          <DialogDescription className="text-center">
-            To {action}, you need to complete your professional verification first.
+          <DialogTitle className="text-3xl font-extralight text-slate-900 tracking-tighter leading-tight">
+            Accreditation <span className="italic font-serif">Required.</span>
+          </DialogTitle>
+          <DialogDescription className="text-slate-500 text-sm font-light mt-4 leading-relaxed">
+            To {action}, complete your institutional verification. This ensures the integrity and security of the UNswap global network.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3 py-4">
-          <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
-            <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-medium text-slate-900 text-sm">Diplomatic Shield Protection</p>
-              <p className="text-slate-500 text-xs">Access $2M insurance coverage</p>
+        <div className="p-10 space-y-4">
+          {[
+            { title: "Diplomatic Shield Protection", desc: "Access $2M institutional insurance coverage" },
+            { title: "Trusted Network Access", desc: "Connect with verified global colleagues" },
+            { title: "Full Platform Privilege", desc: "List properties and authorize secure exchanges" }
+          ].map((item, i) => (
+            <div key={i} className="flex items-start gap-4 p-5 bg-white border border-slate-100 shadow-sm leading-6">
+              <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+              <div>
+                <p className="font-bold text-slate-900 text-[10px] uppercase tracking-widest">{item.title}</p>
+                <p className="text-slate-500 text-xs font-light tracking-tight mt-1">{item.desc}</p>
+              </div>
             </div>
-          </div>
-          <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
-            <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-medium text-slate-900 text-sm">Trusted Network Access</p>
-              <p className="text-slate-500 text-xs">Connect with verified UN/IO colleagues</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
-            <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-medium text-slate-900 text-sm">Full Platform Features</p>
-              <p className="text-slate-500 text-xs">List properties, send requests, earn credits</p>
-            </div>
-          </div>
+          ))}
         </div>
 
-        <DialogFooter className="flex-col gap-2 sm:flex-col">
+        <DialogFooter className="p-10 border-t bg-slate-50/50 flex flex-col gap-4 sm:flex-col">
           <Link to={createPageUrl('Settings') + '?tab=verification'} className="w-full">
-            <Button className="w-full bg-amber-500 hover:bg-amber-600">
-              Complete Verification
-              <ArrowRight className="w-4 h-4 ml-2" />
+            <Button className="w-full h-14 rounded-none bg-unswap-blue-deep hover:bg-slate-900 text-white shadow-xl text-[10px] font-bold uppercase tracking-[0.4em] transition-all">
+              Initialize Professional Accreditation
+              <ArrowRight className="w-4 h-4 ml-3" />
             </Button>
           </Link>
-          <Button variant="ghost" onClick={() => onOpenChange(false)} className="w-full">
-            Maybe Later
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            className="w-full h-14 rounded-none text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 hover:text-slate-900 transition-colors"
+          >
+            Acknowledge & Dismiss
           </Button>
         </DialogFooter>
       </DialogContent>

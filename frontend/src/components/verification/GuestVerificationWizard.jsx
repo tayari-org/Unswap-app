@@ -34,12 +34,12 @@ export default function GuestVerificationWizard({ onComplete }) {
   const createVerificationMutation = useMutation({
     mutationFn: async (data) => {
       const verification = await api.entities.Verification.create(data);
-      
+
       // Award points for verification (will be credited upon approval)
       if (data.status === 'pending') {
         await awardVerificationPoints(data.user_email);
       }
-      
+
       return verification;
     },
     onSuccess: () => {
@@ -101,38 +101,46 @@ export default function GuestVerificationWizard({ onComplete }) {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      {/* Progress */}
-      <div className="space-y-2">
-        <div className="flex justify-between text-sm text-slate-600">
-          <span>Step {step} of 3</span>
-          <span>{Math.round(progress)}% Complete</span>
+      {/* Step Header */}
+      <div className="p-10 border border-slate-100 bg-white mb-8 shadow-sm relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 -mr-16 -mt-16 rounded-full opacity-50" />
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-10 h-px bg-unswap-blue-deep/20" />
+          <p className="text-unswap-blue-deep/60 font-bold tracking-[0.4em] uppercase text-[9px]">Identity Verification</p>
         </div>
-        <Progress value={progress} />
+        <div className="flex justify-between items-end mb-8">
+          <div>
+            <h3 className="text-3xl font-extralight text-slate-900 tracking-tighter leading-tight">Verify Your <span className="italic font-serif">Identity.</span></h3>
+            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-2">Stage {step} of 3 — Verification Progress</p>
+          </div>
+          <div className="text-right">
+            <p className="text-[20px] font-extralight text-slate-900 tracking-tighter">{Math.round(progress)}%</p>
+            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Compliance</p>
+          </div>
+        </div>
+        <Progress value={progress} className="h-1 rounded-none bg-slate-100" indicatorClassName="bg-unswap-blue-deep transition-all duration-1000" />
       </div>
 
       {/* Step 1: Document Upload */}
       {step === 1 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-blue-500" />
-              Identity Verification
-            </CardTitle>
-            <CardDescription>
-              Upload a government-issued ID for verification
+        <Card className="rounded-none border-slate-100 shadow-xl p-4">
+          <CardHeader className="p-8">
+            <CardTitle className="text-xl font-extralight tracking-tight text-slate-900">Document <span className="italic font-serif">Verification.</span></CardTitle>
+            <CardDescription className="text-xs font-light text-slate-500 mt-2">
+              Submit your institutional identification for secure cross-referencing.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div>
-              <Label>Document Type</Label>
-              <Select 
+            <div className="space-y-4">
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Credential Type</Label>
+              <Select
                 value={verificationData.document_type}
                 onValueChange={(value) => setVerificationData(prev => ({ ...prev, document_type: value }))}
               >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
+                <SelectTrigger className="mt-1 h-14 rounded-none border-slate-100 focus:ring-unswap-blue-deep focus:ring-opacity-20 shadow-sm px-6">
+                  <SelectValue className="font-light tracking-tight text-slate-900" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-none border-slate-100">
                   <SelectItem value="passport">Passport</SelectItem>
                   <SelectItem value="national_id">National ID</SelectItem>
                   <SelectItem value="drivers_license">Driver's License</SelectItem>
@@ -188,61 +196,74 @@ export default function GuestVerificationWizard({ onComplete }) {
 
       {/* Step 2: Selfie Verification */}
       {step === 2 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Take a Selfie</CardTitle>
-            <CardDescription>
-              Upload a clear photo of yourself to verify your identity
+        <Card className="rounded-none border-slate-100 shadow-xl p-4">
+          <CardHeader className="p-8">
+            <CardTitle className="text-xl font-extralight tracking-tight text-slate-900">Photo <span className="italic font-serif">Validation.</span></CardTitle>
+            <CardDescription className="text-xs font-light text-slate-500 mt-2">
+              Upload a high-fidelity visual for identity synchronization.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-slate-400 transition-colors">
+            <div className="border-2 border-dashed border-slate-100 rounded-none p-12 text-center hover:border-unswap-blue-deep/30 transition-all duration-700 bg-slate-50/30">
               {verificationData.selfie_url ? (
-                <div className="space-y-3">
-                  <img 
-                    src={verificationData.selfie_url} 
-                    alt="Selfie" 
-                    className="w-32 h-32 rounded-full object-cover mx-auto"
-                  />
-                  <p className="text-sm text-slate-600">Selfie uploaded</p>
+                <div className="space-y-6">
+                  <div className="w-32 h-32 rounded-none border border-slate-100 shadow-xl mx-auto overflow-hidden relative group">
+                    <img
+                      src={verificationData.selfie_url}
+                      alt="Selfie"
+                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                    />
+                  </div>
+                  <p className="text-[10px] font-bold text-unswap-blue-deep uppercase tracking-[0.3em]">Validation Active</p>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
                     onClick={() => setVerificationData(prev => ({ ...prev, selfie_url: '' }))}
+                    className="text-[9px] font-bold uppercase tracking-widest text-slate-400 hover:text-slate-900"
                   >
-                    Retake
+                    Reset Visual
                   </Button>
                 </div>
               ) : (
-                <div>
-                  <Upload className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-                  <p className="text-sm text-slate-600 mb-3">Upload a clear selfie</p>
+                <div className="space-y-4">
+                  <div className="w-16 h-16 bg-white border border-slate-100 shadow-sm flex items-center justify-center mx-auto transition-transform hover:scale-110 duration-700">
+                    <Camera className="w-6 h-6 text-slate-200" />
+                  </div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Protocol: Direct Photo Capture</p>
                   <Input
                     type="file"
                     accept="image/*"
                     onChange={(e) => handleFileUpload(e.target.files[0], 'selfie_url')}
                     disabled={uploading}
+                    className="max-w-xs mx-auto h-12 rounded-none border-slate-100 bg-white"
                   />
                 </div>
               )}
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-blue-800">
-                <strong>Tips for a good selfie:</strong> Face the camera directly, ensure good lighting, 
-                remove glasses or hats, and match the expression in your ID photo.
-              </p>
+            <div className="bg-slate-50 border border-slate-100 p-6 rounded-none">
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Submission Standards</p>
+              <ul className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] space-y-2">
+                <li className="flex items-center gap-2"><div className="w-1 h-1 bg-unswap-blue-deep/30" /> Direct frontal alignment</li>
+                <li className="flex items-center gap-2"><div className="w-1 h-1 bg-unswap-blue-deep/30" /> Institutional lighting conditions</li>
+                <li className="flex items-center gap-2"><div className="w-1 h-1 bg-unswap-blue-deep/30" /> Unobstructed facial features</li>
+              </ul>
             </div>
 
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep(1)}>
-                Back
+            <div className="flex justify-between pt-4 border-t border-slate-50">
+              <Button
+                variant="ghost"
+                onClick={() => setStep(1)}
+                className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-slate-900"
+              >
+                Previous Stage
               </Button>
               <Button
                 onClick={() => setStep(3)}
                 disabled={!verificationData.selfie_url || uploading}
+                className="rounded-none h-12 px-10 bg-unswap-blue-deep hover:bg-slate-900 text-[10px] font-bold uppercase tracking-[0.3em] shadow-xl text-white transition-all"
               >
-                Continue
+                Proceed to Next Step
               </Button>
             </div>
           </CardContent>
@@ -251,87 +272,89 @@ export default function GuestVerificationWizard({ onComplete }) {
 
       {/* Step 3: Additional Verification */}
       {step === 3 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Additional Verification (Optional)</CardTitle>
-            <CardDescription>
-              Add more verification methods to increase trust
+        <Card className="rounded-none border-slate-100 shadow-xl p-4">
+          <CardHeader className="p-8">
+            <CardTitle className="text-xl font-extralight tracking-tight text-slate-900">Additional <span className="italic font-serif">Verification.</span></CardTitle>
+            <CardDescription className="text-xs font-light text-slate-500 mt-2">
+              Enhance your institutional footprint with additional verification vectors.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-10">
             {/* Phone Number */}
-            <div>
-              <Label className="flex items-center gap-2">
-                <Phone className="w-4 h-4" />
-                Phone Number
+            <div className="space-y-4">
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-3">
+                <Phone className="w-3.5 h-3.5 text-unswap-blue-deep/30" />
+                Communication Vector
               </Label>
               <Input
                 type="tel"
                 placeholder="+1 (555) 123-4567"
                 value={verificationData.phone_number}
                 onChange={(e) => setVerificationData(prev => ({ ...prev, phone_number: e.target.value }))}
-                className="mt-1"
+                className="h-14 rounded-none border-slate-100 focus:ring-unswap-blue-deep shadow-sm px-6 font-light tracking-tight"
               />
-              <p className="text-xs text-slate-500 mt-1">
-                We'll send a verification code to confirm
-              </p>
             </div>
 
-            <Separator />
+            <div className="h-px bg-slate-100 w-full" />
 
             {/* Social Profiles */}
-            <div className="space-y-4">
-              <h4 className="font-medium text-slate-900">Connect Social Profiles</h4>
-              
-              <div>
-                <Label className="flex items-center gap-2">
-                  <Linkedin className="w-4 h-4 text-blue-600" />
-                  LinkedIn Profile
+            <div className="space-y-6">
+              <h4 className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-900">Additional Info</h4>
+
+              <div className="space-y-4">
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-3">
+                  <Linkedin className="w-3.5 h-3.5 text-unswap-blue-deep/30" />
+                  Professional Network
                 </Label>
                 <Input
                   type="url"
-                  placeholder="https://linkedin.com/in/yourprofile"
+                  placeholder="https://linkedin.com/in/..."
                   value={verificationData.linkedin_url}
                   onChange={(e) => setVerificationData(prev => ({ ...prev, linkedin_url: e.target.value }))}
-                  className="mt-1"
+                  className="h-14 rounded-none border-slate-100 focus:ring-unswap-blue-deep shadow-sm px-6 font-light tracking-tight"
                 />
               </div>
 
-              <div>
-                <Label className="flex items-center gap-2">
-                  <Facebook className="w-4 h-4 text-blue-500" />
-                  Facebook Profile
+              <div className="space-y-4">
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-3">
+                  <Shield className="w-3.5 h-3.5 text-unswap-blue-deep/30" />
+                  Secondary Authentication
                 </Label>
                 <Input
                   type="url"
-                  placeholder="https://facebook.com/yourprofile"
+                  placeholder="Institutional profile URL..."
                   value={verificationData.facebook_url}
                   onChange={(e) => setVerificationData(prev => ({ ...prev, facebook_url: e.target.value }))}
-                  className="mt-1"
+                  className="h-14 rounded-none border-slate-100 focus:ring-unswap-blue-deep shadow-sm px-6 font-light tracking-tight"
                 />
               </div>
+            </div>
 
-              <p className="text-xs text-slate-500">
-                Linking social profiles is optional but helps build trust with hosts
+            <div className="bg-emerald-50/50 border border-emerald-100 p-8 rounded-none">
+              <p className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest mb-2 flex items-center gap-2">
+                <CheckCircle className="w-3.5 h-3.5" />
+                Submission Ready
+              </p>
+              <p className="text-[9px] font-bold text-emerald-700/60 uppercase tracking-[0.2em] leading-relaxed">
+                Your verification will be reviewed within the next 24-48 hours.
+                You will be notified once you are verified.
               </p>
             </div>
 
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-sm text-green-800">
-                <strong>Almost done!</strong> Your verification will be reviewed within 24-48 hours.
-                You'll receive an email once approved.
-              </p>
-            </div>
-
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep(2)}>
-                Back
+            <div className="flex justify-between pt-4 border-t border-slate-50">
+              <Button
+                variant="ghost"
+                onClick={() => setStep(2)}
+                className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-slate-900"
+              >
+                Previous Stage
               </Button>
               <Button
                 onClick={handleSubmit}
                 disabled={createVerificationMutation.isPending || uploading}
+                className="rounded-none h-12 px-12 bg-emerald-600 hover:bg-slate-900 text-[10px] font-bold uppercase tracking-[0.3em] shadow-xl text-white transition-all"
               >
-                Submit for Review
+                {createVerificationMutation.isPending ? 'Processing...' : 'Submit Verification'}
               </Button>
             </div>
           </CardContent>

@@ -37,12 +37,11 @@ const verificationMethods = [
   'Diplomatic ID',
 ];
 
-export default function TrustSectionLight() {
+export default function TrustSection() {
   return (
     <section className="py-24 px-6 bg-white text-slate-900 overflow-hidden relative">
-      {/* Subtle background element for texture */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
-      
+
       <div className="max-w-7xl mx-auto relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -57,7 +56,7 @@ export default function TrustSectionLight() {
             Institutional-Grade <span className="italic font-serif text-slate-700">Protection</span>
           </h2>
           <p className="text-slate-500 max-w-2xl mx-auto text-base font-light">
-            Security protocols designed specifically for the international civil service. 
+            Security protocols designed specifically for the international civil service.
             Because trust is our most valuable asset.
           </p>
         </motion.div>
@@ -92,13 +91,12 @@ export default function TrustSectionLight() {
           viewport={{ once: true }}
           className="bg-indigo-900 rounded-[2.5rem] p-10 md:p-14 text-white relative overflow-hidden shadow-2xl"
         >
-          {/* Decorative background circle */}
           <div className="absolute -right-20 -top-20 w-64 h-64 bg-white/5 rounded-full blur-3xl" />
-          
+
           <h3 className="text-2xl font-light mb-10 text-center tracking-tight">
             Accepted <span className="italic font-serif opacity-80">Verification</span> Methods
           </h3>
-          
+
           <div className="flex flex-wrap justify-center gap-3">
             {verificationMethods.map((method, index) => (
               <motion.div

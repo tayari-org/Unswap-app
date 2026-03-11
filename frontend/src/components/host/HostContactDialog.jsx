@@ -36,8 +36,10 @@ export default function HostContactDialog({ open, onOpenChange, host, currentUse
     mutationFn: async (content) => {
       return api.entities.Message.create({
         conversation_id: conversationId,
+        sender_id: currentUser?.id,
         sender_email: currentUser?.email,
         sender_name: currentUser?.full_name || currentUser?.email,
+        recipient_id: host?.id,
         recipient_email: host?.email,
         content,
         message_type: 'text',
@@ -86,7 +88,7 @@ export default function HostContactDialog({ open, onOpenChange, host, currentUse
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button 
+          <Button
             onClick={handleSend}
             disabled={!message.trim() || sendMessageMutation.isPending}
             className="bg-amber-500 hover:bg-amber-600"

@@ -7,9 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { 
-  Gift, Copy, Users, TrendingUp, CheckCircle2, Clock, 
-  Share2, Mail, MessageSquare, ExternalLink, Coins 
+import {
+  Gift, Copy, Users, TrendingUp, CheckCircle2, Clock,
+  Share2, Mail, MessageSquare, ExternalLink, Coins
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -17,6 +17,8 @@ export default function ReferralProgram({ user }) {
   const queryClient = useQueryClient();
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   // Generate referral code if user doesn't have one
   const generateCodeMutation = useMutation({
@@ -47,8 +49,15 @@ export default function ReferralProgram({ user }) {
     earnings: user.referral_earnings || 0,
   };
 
-  const copyToClipboard = (text) => {
+  const copyToClipboard = (text, type) => {
     navigator.clipboard.writeText(text);
+    if (type === 'code') {
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2000);
+    } else {
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    }
     toast.success('Copied to clipboard!');
   };
 
@@ -159,8 +168,8 @@ export default function ReferralProgram({ user }) {
                     readOnly
                     className="bg-slate-50 font-mono font-semibold text-lg"
                   />
-                  <Button variant="outline" onClick={() => copyToClipboard(referralCode)}>
-                    <Copy className="w-4 h-4" />
+                  <Button variant="outline" onClick={() => copyToClipboard(referralCode, 'code')}>
+                    {copiedCode ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
                   </Button>
                 </div>
               </div>
@@ -173,8 +182,8 @@ export default function ReferralProgram({ user }) {
                     readOnly
                     className="bg-slate-50 font-mono text-sm"
                   />
-                  <Button variant="outline" onClick={() => copyToClipboard(referralLink)}>
-                    <Copy className="w-4 h-4" />
+                  <Button variant="outline" onClick={() => copyToClipboard(referralLink, 'link')}>
+                    {copiedLink ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
                   </Button>
                 </div>
               </div>
@@ -186,9 +195,9 @@ export default function ReferralProgram({ user }) {
                   <Mail className="w-4 h-4 mr-2" />
                   Share via Email
                 </Button>
-                <Button variant="outline" onClick={() => copyToClipboard(referralLink)}>
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Copy Link
+                <Button variant="outline" onClick={() => copyToClipboard(referralLink, 'link')}>
+                  {copiedLink ? <CheckCircle2 className="w-4 h-4 text-emerald-500 mr-2" /> : <Share2 className="w-4 h-4 mr-2" />}
+                  {copiedLink ? 'Copied Link' : 'Copy Link'}
                 </Button>
               </div>
 
@@ -220,7 +229,7 @@ export default function ReferralProgram({ user }) {
                 .map((referral) => {
                   const statusInfo = statusConfig[referral.status];
                   const StatusIcon = statusInfo.icon;
-                  
+
                   return (
                     <div key={referral.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50">
                       <div className="flex-1">

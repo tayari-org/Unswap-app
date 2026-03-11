@@ -57,7 +57,7 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
 
   // Determine available swap types based on property preference
   const availableSwapTypes = selectedProp?.swap_preference || 'both';
-  
+
   const nights = checkIn && checkOut ? differenceInDays(new Date(checkOut), new Date(checkIn)) : 0;
   const basePoints = nights * (selectedProp?.smart_credit_value || 200);
   const totalPoints = swapType === 'guestpoints' ? basePoints : 0;
@@ -73,7 +73,7 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
       }
 
       const result = await api.entities.SwapRequest.create(data);
-      
+
       // Create initial message in conversation
       if (data.message && data.message.trim()) {
         const conversationId = `swap_${result.id}`;
@@ -88,7 +88,7 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
           is_read: false
         });
       }
-      
+
       // Send notification to host
       await notifySwapRequest({
         hostEmail: data.host_email,
@@ -133,7 +133,7 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
       toast.error('Please select your property for reciprocal swap');
       return;
     }
-    
+
     // Check if user has enough points for guestpoints swap
     if (swapType === 'guestpoints') {
       const userPoints = user?.guest_points || 500;
@@ -166,15 +166,23 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Request to Swap</DialogTitle>
-          <p className="text-sm text-slate-600 mt-1">Send a swap request to the host. You'll need to complete a video call before the swap is confirmed.</p>
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto rounded-none border-0 shadow-[0_100px_150px_-30px_rgba(0,0,0,0.2)] p-0">
+        <DialogHeader className="p-10 border-b bg-slate-50">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-px bg-unswap-blue-deep/20" />
+            <p className="text-unswap-blue-deep/60 font-bold tracking-[0.4em] uppercase text-[9px]">Swap Request</p>
+          </div>
+          <DialogTitle className="text-4xl font-extralight text-slate-900 tracking-tighter leading-tight">
+            Institutional <span className="italic font-serif">Exchange.</span>
+          </DialogTitle>
+          <p className="text-sm text-slate-500 font-light mt-4 max-w-xl leading-relaxed">
+            Initiate a secure swap protocol with a verified host. Note that all stays require a preliminary video coordination call.
+          </p>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-8 py-4">
-          {/* LEFT: Calendar and Property Selection */}
-          <div className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 border-b border-slate-100">
+          {/* LEFT: Parameters & Selection */}
+          <div className="p-10 space-y-10 border-r border-slate-100">
             {/* Property Selection */}
             <div>
               <Label>Select Property</Label>
@@ -197,8 +205,8 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
 
             {/* Calendar */}
             <div>
-              <Label className="block mb-3">Select Dates</Label>
-              <div className="border rounded-lg p-4 bg-white">
+              <Label className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 mb-6 block">Stay Window</Label>
+              <div className="border border-slate-100 bg-white shadow-sm overflow-hidden rounded-none p-4">
                 <Calendar
                   mode="range"
                   selected={{ from: checkIn, to: checkOut }}
@@ -207,13 +215,14 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
                     setCheckOut(range?.to);
                   }}
                   disabled={(date) => date < new Date()}
+                  className="rounded-none border-0 px-0"
                 />
               </div>
             </div>
           </div>
 
-          {/* RIGHT: Form and Summary */}
-          <div className="space-y-6">
+          {/* RIGHT: Protocol Details */}
+          <div className="p-10 space-y-10 bg-slate-50/30">
             {/* Swap Type */}
             <div>
               <Label>Swap Type</Label>
@@ -311,11 +320,11 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
                   <HelpCircle className="w-4 h-4 text-slate-400" />
                 </div>
                 <div className="space-y-2 text-sm">
-                   <div className="flex justify-between text-lg font-bold">
-                     <span>{selectedProp.smart_credit_value || 200} PTS × {nights} nights</span>
-                     <span className="text-amber-600">{totalPoints} PTS</span>
-                   </div>
-                 </div>
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>{selectedProp.smart_credit_value || 200} PTS × {nights} nights</span>
+                    <span className="text-amber-600">{totalPoints} PTS</span>
+                  </div>
+                </div>
 
                 {/* Balance Section */}
                 <div className={`mt-4 pt-4 border-t ${(user?.guest_points || 500) < totalPoints ? 'bg-red-50 p-3 rounded' : 'bg-green-50 p-3 rounded'}`}>
@@ -338,17 +347,24 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
           </div>
         </div>
 
-        <div className="flex justify-between pt-4 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+        <div className="p-10 flex justify-between items-center bg-white border-t border-slate-100">
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            className="rounded-none text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 hover:text-slate-900 transition-colors"
+          >
+            Abort Protocol
           </Button>
-          <Button 
+          <Button
             onClick={handleSubmit}
             disabled={createSwapMutation.isPending || (swapType === 'guestpoints' && (user?.guest_points || 500) < totalPoints) || !checkIn || !checkOut}
-            className={createSwapMutation.isPending || (swapType === 'guestpoints' && (user?.guest_points || 500) < totalPoints) || !checkIn || !checkOut ? 'bg-slate-400 hover:bg-slate-400' : 'bg-slate-900 hover:bg-slate-800'}
+            className={`rounded-none h-16 px-12 text-[10px] font-bold uppercase tracking-[0.4em] transition-all shadow-xl ${createSwapMutation.isPending || (swapType === 'guestpoints' && (user?.guest_points || 500) < totalPoints) || !checkIn || !checkOut
+                ? 'bg-slate-200 text-slate-400'
+                : 'bg-unswap-blue-deep text-white hover:bg-slate-900'
+              }`}
           >
-            {createSwapMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            Send Request
+            {createSwapMutation.isPending && <Loader2 className="w-4 h-4 mr-3 animate-spin" />}
+            Initiate Request
           </Button>
         </div>
       </DialogContent>

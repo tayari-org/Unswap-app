@@ -6,7 +6,7 @@ import { Sparkles, Loader2, TrendingUp, MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PropertyCard from '../properties/PropertyCard';
 
-export default function PropertyRecommendations({ user, onFavorite, favoriteIds }) {
+export default function PropertyRecommendations({ user }) {
   const [recommendations, setRecommendations] = useState([]);
 
   const { data: savedProperties = [] } = useQuery({
@@ -14,7 +14,7 @@ export default function PropertyRecommendations({ user, onFavorite, favoriteIds 
     queryFn: async () => {
       if (!user?.saved_properties?.length) return [];
       const props = await Promise.all(
-        user.saved_properties.slice(0, 5).map(id => 
+        user.saved_properties.slice(0, 5).map(id =>
           api.entities.Property.filter({ id }).then(res => res[0])
         )
       );
@@ -146,8 +146,6 @@ Return ONLY a JSON array of property IDs (up to 6), nothing else.`,
               >
                 <PropertyCard
                   property={property}
-                  onFavorite={onFavorite}
-                  isFavorite={favoriteIds?.includes(property.id)}
                 />
               </motion.div>
             ))}

@@ -49,25 +49,54 @@ router.post('/', async (req, res) => {
 
                 const user = await prisma.user.findUnique({ where: { email: user_email } });
                 if (user) {
-                    await prisma.user.update({
-                        where: { email: user_email },
-                        data: {
-                            subscription_plan_id: subscription_plan_id || undefined,
-                            subscription_status: plan_type === 'lifetime' ? 'lifetime' : 'active',
-                            ...(plan_type === 'annual' && { subscription_renewal_date: renewalDate }),
-                            has_first_year_guarantee: plan_type === 'annual',
+                    if (plan_type === 'guest_points') {
+                        const pointsAmount = parseInt(session.metadata?.points_amount || '0', 10);
+                        if (pointsAmount > 0) {
+                            const newBalance = (user.guest_points || 0) + pointsAmount;
+                            await prisma.user.update({
+                                where: { email: user_email },
+                                data: { guest_points: newBalance }
+                            });
+                            await prisma.guestPointTransaction.create({
+                                data: {
+                                    user_email: user_email,
+                                    transaction_type: 'earned_purchase',
+                                    points: pointsAmount,
+                                    balance_after: newBalance,
+                                    description: `Purchased ${pointsAmount} GuestPoints`
+                                }
+                            });
+                            await prisma.notification.create({
+                                data: {
+                                    user_email,
+                                    type: 'system',
+                                    title: 'GuestPoints Purchased',
+                                    message: `You have successfully purchased ${pointsAmount} GuestPoints.`,
+                                    link: '/settings'
+                                }
+                            });
                         }
-                    });
-                    await prisma.notification.create({
-                        data: {
-                            user_email,
-                            type: 'system',
-                            title: 'Subscription Activated',
-                            message: `Your ${plan?.name || 'Unswap'} subscription is now active. Welcome!`,
-                            link: '/dashboard'
-                        }
-                    });
-                    await sendEmail({ to: user_email, subject: 'Welcome to Unswap — Subscription Activated', body: `Your ${plan?.name || 'subscription'} is now active. You can access all platform features!` });
+                    } else {
+                        await prisma.user.update({
+                            where: { email: user_email },
+                            data: {
+                                subscription_plan_id: subscription_plan_id || undefined,
+                                subscription_status: plan_type === 'lifetime' ? 'lifetime' : 'active',
+                                ...(plan_type === 'annual' && { subscription_renewal_date: renewalDate }),
+                                has_first_year_guarantee: plan_type === 'annual',
+                            }
+                        });
+                        await prisma.notification.create({
+                            data: {
+                                user_email,
+                                type: 'system',
+                                title: 'Subscription Activated',
+                                message: `Your ${plan?.name || 'Unswap'} subscription is now active. Welcome!`,
+                                link: '/dashboard'
+                            }
+                        });
+                        await sendEmail({ to: user_email, subject: 'Welcome to Unswap — Subscription Activated', body: `Your ${plan?.name || 'subscription'} is now active. You can access all platform features!` });
+                    }
                 }
                 break;
             }

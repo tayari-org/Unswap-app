@@ -77,122 +77,131 @@ export default function Notifications() {
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'message':
-        return <MessageSquare className="w-5 h-5 text-blue-500" />;
+        return <MessageSquare className="w-5 h-5 text-unswap-blue-deep" />;
       case 'swap_pending':
       case 'swap_approved':
       case 'swap_rejected':
       case 'swap_counter':
-        return <ArrowLeftRight className="w-5 h-5 text-purple-500" />;
+        return <ArrowLeftRight className="w-5 h-5 text-unswap-blue-deep" />;
       case 'property_match':
-        return <Home className="w-5 h-5 text-emerald-500" />;
+        return <Home className="w-5 h-5 text-unswap-blue-deep" />;
       case 'system':
-        return <Shield className="w-5 h-5 text-amber-500" />;
+        return <Shield className="w-5 h-5 text-unswap-blue-deep" />;
       default:
-        return <Bell className="w-5 h-5 text-slate-500" />;
+        return <Bell className="w-5 h-5 text-unswap-blue-deep" />;
     }
   };
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
-  if (!user) {
+  if (!user && !isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Please Log In</h1>
-          <p className="text-slate-600 mb-4">You need to be logged in to view notifications.</p>
-          <Button onClick={() => api.auth.redirectToLogin()}>Log In</Button>
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+        <div className="text-center p-12 bg-white border border-slate-200 rounded-none shadow-2xl max-w-md">
+          <div className="w-20 h-20 bg-slate-50 border border-slate-100 rounded-none flex items-center justify-center mx-auto mb-8 shadow-inner">
+            <AlertCircle className="w-10 h-10 text-slate-200" />
+          </div>
+          <h1 className="text-2xl font-extralight tracking-tighter text-slate-900 mb-2">Access <span className="italic font-serif">Restricted</span></h1>
+          <p className="text-slate-400 text-sm font-light uppercase tracking-widest mb-8">Please log in to view notifications</p>
+          <Button onClick={() => api.auth.redirectToLogin()} className="bg-unswap-blue-deep hover:bg-slate-900 text-white rounded-none h-14 px-8 text-[10px] font-bold uppercase tracking-[0.3em] transition-all shadow-xl">Log In</Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-3xl mx-auto px-6 py-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-                <Bell className="w-6 h-6 text-amber-600" />
+    <div className="min-h-screen bg-[#F8FAFC]">
+      {/* Structural Header */}
+      <div className="bg-white border-b border-slate-200 sticky top-0 z-10 backdrop-blur-md bg-white/80">
+        <div className="max-w-3xl mx-auto px-6 py-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-px bg-unswap-blue-deep/20" />
+                <p className="text-unswap-blue-deep/60 font-bold tracking-[0.4em] uppercase text-[10px]">Notifications</p>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-slate-900">Notifications</h1>
-                {unreadCount > 0 && (
-                  <p className="text-slate-600 text-sm">{unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}</p>
-                )}
-              </div>
+              <h1 className="text-4xl font-extralight tracking-tighter text-slate-900 mb-2">Notifi<span className="italic font-serif">cations</span></h1>
+              {unreadCount > 0 ? (
+                <p className="text-unswap-blue-deep text-[10px] font-bold uppercase tracking-widest">{unreadCount} UNREAD ALERTS ACTIVE</p>
+              ) : (
+                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">No new notifications</p>
+              )}
             </div>
             {notifications.length > 0 && (
               <Button
                 variant="outline"
                 onClick={() => setShowDeleteAllDialog(true)}
-                className="text-red-600 border-red-300 hover:bg-red-50"
+                className="rounded-none h-12 px-6 text-[10px] font-bold uppercase tracking-widest border-slate-200 hover:bg-rose-50 hover:text-red-600 hover:border-red-100 transition-all"
               >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete All
+                <Trash2 className="w-3.5 h-3.5 mr-2.5" />
+                Clear All
               </Button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Notifications List */}
-      <div className="max-w-3xl mx-auto px-6 py-8">
+      {/* Notifications List - Architectural Precision */}
+      <div className="max-w-3xl mx-auto px-6 py-12">
         {isLoading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full mx-auto"></div>
-            <p className="text-slate-500 mt-4">Loading notifications...</p>
+          <div className="text-center py-20">
+            <div className="inline-block w-8 h-8 border-2 border-unswap-blue-deep/20 border-t-unswap-blue-deep rounded-full animate-spin" />
+            <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Loading...</p>
           </div>
         ) : notifications.length === 0 ? (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center py-16"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-32 border-2 border-dashed border-slate-200"
           >
-            <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Bell className="w-10 h-10 text-slate-400" />
+            <div className="w-20 h-20 bg-slate-50 border border-slate-100 rounded-none flex items-center justify-center mx-auto mb-8 shadow-inner">
+              <Bell className="w-8 h-8 text-slate-200" />
             </div>
-            <h2 className="text-xl font-semibold text-slate-900 mb-2">No notifications yet</h2>
-            <p className="text-slate-600">You'll see notifications here when you get new activity</p>
+            <h2 className="text-2xl font-extralight text-slate-900 tracking-tight mb-2 italic font-serif">No notifications yet</h2>
+            <p className="text-slate-400 text-xs font-light uppercase tracking-widest">You'll see notifications here as they arrive</p>
           </motion.div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             <AnimatePresence>
-              {notifications.map((notification) => (
+              {notifications.map((notification, index) => (
                 <motion.div
                   key={notification.id}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, x: -100 }}
-                  transition={{ duration: 0.2 }}
+                  exit={{ opacity: 0, x: -50 }}
+                  transition={{ duration: 0.4, delay: index * 0.03 }}
                 >
                   <Card
-                    className={`p-4 cursor-pointer transition-all hover:shadow-md ${
-                      !notification.is_read ? 'bg-blue-50 border-blue-200' : 'bg-white'
-                    }`}
+                    className={`rounded-none border-slate-200 shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-500 cursor-pointer ${!notification.is_read ? 'border-l-4 border-l-unswap-blue-deep' : 'border-l-4 border-l-transparent'
+                      }`}
                     onClick={() => handleNotificationClick(notification)}
                   >
-                    <div className="flex items-start gap-4">
-                      <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-                        !notification.is_read ? 'bg-white' : 'bg-slate-100'
-                      }`}>
+                    <div className="p-6 flex items-start gap-6">
+                      <div className={`flex-shrink-0 w-12 h-12 rounded-none flex items-center justify-center transition-all duration-500 ${!notification.is_read ? 'bg-unswap-blue-deep/5 border border-unswap-blue-deep/10' : 'bg-slate-50 border border-slate-100'
+                        } group-hover:scale-110`}>
                         {getNotificationIcon(notification.type)}
                       </div>
-                      
+
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2 mb-1">
-                          <h3 className="font-semibold text-slate-900">{notification.title}</h3>
+                        <div className="flex items-center justify-between gap-4 mb-2">
+                          <h3 className={`text-sm font-bold uppercase tracking-widest ${!notification.is_read ? 'text-slate-900' : 'text-slate-500'}`}>
+                            {notification.title}
+                          </h3>
                           {!notification.is_read && (
-                            <Badge className="bg-blue-500 text-white text-xs px-2">New</Badge>
+                            <Badge className="bg-unswap-blue-deep/10 text-unswap-blue-deep text-[9px] font-bold rounded-none border-unswap-blue-deep/20 border uppercase tracking-widest shadow-none">New</Badge>
                           )}
                         </div>
-                        <p className="text-slate-600 text-sm mb-2">{notification.message}</p>
-                        <div className="flex items-center gap-4 text-xs text-slate-500">
-                          <span>{format(new Date(notification.created_date), 'MMM d, yyyy • h:mm a')}</span>
+                        <p className="text-slate-500 text-sm font-light leading-relaxed tracking-tight mb-4">{notification.message}</p>
+                        <div className="flex items-center gap-6 text-[9px] font-bold uppercase tracking-[0.15em] text-slate-400">
+                          <span className="flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 bg-slate-300 rounded-full" />
+                            {format(new Date(notification.created_date), 'MMM d, yyyy • h:mm a')}
+                          </span>
                           {notification.sender_name && (
-                            <span>From: {notification.sender_name}</span>
+                            <span className="flex items-center gap-2">
+                              <div className="w-1.5 h-1.5 bg-slate-300 rounded-full" />
+                              FROM: {notification.sender_name}
+                            </span>
                           )}
                         </div>
                       </div>
@@ -204,7 +213,7 @@ export default function Notifications() {
                           e.stopPropagation();
                           setDeleteNotificationId(notification.id);
                         }}
-                        className="flex-shrink-0 text-slate-400 hover:text-red-600"
+                        className="flex-shrink-0 h-10 w-10 p-0 rounded-none text-slate-300 hover:text-red-600 hover:bg-rose-50 opacity-0 group-hover:opacity-100 transition-all"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -217,23 +226,23 @@ export default function Notifications() {
         )}
       </div>
 
-      {/* Delete Single Notification Dialog */}
+      {/* Delete Single Notification Dialog - High Contrast */}
       <AlertDialog open={!!deleteNotificationId} onOpenChange={() => setDeleteNotificationId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-none border-slate-200 shadow-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Notification</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-xl font-light tracking-tight">Remove Notification</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-500 font-light pt-2 leading-relaxed">
               Are you sure you want to delete this notification? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="mt-8">
+            <AlertDialogCancel className="rounded-none font-bold text-[10px] uppercase tracking-widest border-slate-200">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 deleteNotificationMutation.mutate(deleteNotificationId);
                 setDeleteNotificationId(null);
               }}
-              className="bg-red-500 hover:bg-red-600"
+              className="bg-red-500 hover:bg-red-600 rounded-none font-bold text-[10px] uppercase tracking-widest text-white shadow-lg h-12 px-8"
             >
               Delete
             </AlertDialogAction>
@@ -241,20 +250,20 @@ export default function Notifications() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Delete All Notifications Dialog */}
+      {/* Delete All Notifications Dialog - High Contrast */}
       <AlertDialog open={showDeleteAllDialog} onOpenChange={setShowDeleteAllDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-none border-slate-200 shadow-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete All Notifications</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete all {notifications.length} notification{notifications.length !== 1 ? 's' : ''}? This action cannot be undone.
+            <AlertDialogTitle className="text-xl font-light tracking-tight">Clear All Notifications</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-500 font-light pt-2 leading-relaxed">
+              Are you sure you want to delete all {notifications.length} notifications? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="mt-8">
+            <AlertDialogCancel className="rounded-none font-bold text-[10px] uppercase tracking-widest border-slate-200">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteAllNotificationsMutation.mutate()}
-              className="bg-red-500 hover:bg-red-600"
+              className="bg-red-600 hover:bg-red-700 rounded-none font-bold text-[10px] uppercase tracking-widest text-white shadow-lg h-12 px-8"
             >
               Delete All
             </AlertDialogAction>
