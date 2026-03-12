@@ -91,7 +91,7 @@ export default function PropertyDetails() {
   const { data: hostReviews = [] } = useQuery({
     queryKey: ['host-reviews', property?.owner_email],
     queryFn: () => api.entities.Review.filter({
-      host_email: property?.owner_email,
+      target_email: property?.owner_email,
       status: 'approved'
     }),
     enabled: !!property?.owner_email,
@@ -165,7 +165,7 @@ export default function PropertyDetails() {
     const checkIn = new Date(swapData.check_in);
     const checkOut = new Date(swapData.check_out);
     const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
-    const totalPoints = nights * (property?.smart_credit_value || 200);
+    const totalPoints = nights * (property?.nightly_points || 200);
 
     await createSwapMutation.mutateAsync({
       property_id: propertyId,
@@ -316,7 +316,7 @@ export default function PropertyDetails() {
                   )}
                 </div>
                 <div className="text-right">
-                  <div className="text-3xl md:text-4xl font-extralight italic font-serif text-unswap-blue-deep">{property.smart_credit_value || 200}</div>
+                  <div className="text-3xl md:text-4xl font-extralight italic font-serif text-unswap-blue-deep">{property.nightly_points || 200}</div>
                   <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 mt-1">pts <span className="text-slate-300 mx-1">/</span> night</div>
                 </div>
               </div>
@@ -485,7 +485,7 @@ export default function PropertyDetails() {
               <CardContent className="p-8">
                 <div className="flex items-center justify-between mb-8 border-b border-unswap-border pb-6">
                   <div>
-                    <span className="text-4xl font-extralight text-slate-900 italic font-serif tracking-tighter">{property.smart_credit_value || 200}</span>
+                    <span className="text-4xl font-extralight text-slate-900 italic font-serif tracking-tighter">{property.nightly_points || 200}</span>
                     <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 ml-2">pts/night</span>
                   </div>
                   {property.swap_preference !== 'guestpoints_only' && (

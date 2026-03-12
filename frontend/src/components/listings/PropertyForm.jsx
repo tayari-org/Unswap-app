@@ -43,7 +43,7 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
     bedrooms: property?.bedrooms || 1,
     bathrooms: property?.bathrooms || 1,
     max_guests: property?.max_guests || 2,
-    smart_credit_value: property?.smart_credit_value || 200,
+    nightly_points: property?.nightly_points || 200,
     amenities: property?.amenities || [],
     mobility_tags: property?.mobility_tags || [],
     security_checklist: property?.security_checklist || {
@@ -60,7 +60,7 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
     available_to: property?.available_to || '',
     swap_preference: property?.swap_preference || 'both',
     swap_types_accepted: property?.swap_types_accepted || [],
-    nightly_points: property?.nightly_points || property?.smart_credit_value || 200,
+    nightly_points: property?.nightly_points || 200,
     status: property?.status || 'draft',
   });
 

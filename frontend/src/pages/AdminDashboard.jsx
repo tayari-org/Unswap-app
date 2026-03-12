@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import {
   Users, Home, ArrowLeftRight, Shield, TrendingUp, Eye, CheckCircle,
-  XCircle, Clock, Search, Filter, MoreVertical, UserCheck, AlertTriangle, Star, Flag, FileText, Trash2, Rocket
+  XCircle, Clock, Search, Filter, MoreVertical, UserCheck, AlertTriangle, Star, Flag, FileText, Trash2, Rocket,
+  LayoutDashboard, LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Table,
@@ -33,6 +34,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -276,7 +278,7 @@ export default function AdminDashboard() {
 
   if (currentUser?.role !== 'admin') {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
         <div className="text-center">
           <AlertTriangle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-slate-900 mb-2">Access Denied</h1>
@@ -286,15 +288,129 @@ export default function AdminDashboard() {
     );
   }
 
+  const navItems = [
+    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+    {
+      id: 'users', label: 'Users', icon: Users,
+      count: users.length,
+    },
+    {
+      id: 'verifications', label: 'Verifications', icon: Shield,
+      count: stats.pendingVerifications > 0 ? stats.pendingVerifications : 0,
+      countColor: 'bg-amber-500',
+    },
+    { id: 'properties', label: 'Properties', icon: Home },
+    {
+      id: 'reviews', label: 'Reviews', icon: Star,
+      count: stats.flaggedReviews > 0 ? stats.flaggedReviews : 0,
+      countColor: 'bg-red-500',
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <div className="bg-slate-900 text-white">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen flex bg-[#FDF8F4]">
+      {/* SIDEBAR NAVIGATION (Desktop) */}
+      <aside className="hidden lg:flex w-60 flex-col bg-unswap-blue-deep border-r border-[#001733] shadow-2xl z-20">
+        {/* Sidebar Header / Brand */}
+        <div className="px-6 pt-8 pb-6">
+          <h1 className="text-lg font-bold text-white tracking-tight font-display">Admin Panel</h1>
+          <Badge variant="outline" className={`mt-2 flex items-center gap-1.5 px-2.5 py-0.5 w-fit rounded-full text-[9px] border-amber-500/50 bg-amber-500/20 text-amber-500`}>
+             <span className={`w-1.5 h-1.5 rounded-full bg-amber-500`} />
+             ADMINISTRATOR
+          </Badge>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 px-3">
+          <div className="px-3 pt-4 pb-3">
+            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Menu</span>
+          </div>
+
+          <div className="space-y-0.5">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`w-full group flex items-center gap-3 px-3 py-2.5 transition-all text-left rounded-sm border-l-[3px] ${activeTab === item.id
+                  ? 'border-unswap-silver-light bg-white/10 text-white'
+                  : 'border-transparent text-white/60 hover:text-white hover:bg-white/5'
+                  }`}
+              >
+                <item.icon className={`w-4 h-4 flex-shrink-0 transition-colors ${activeTab === item.id ? 'text-white' : 'text-white/40 group-hover:text-white/70'}`} />
+                <span className={`flex-1 text-[13px] tracking-wide ${activeTab === item.id ? 'font-semibold' : 'font-medium'}`}>{item.label}</span>
+                {item.count > 0 && (
+                  <span className={`text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center ${activeTab === item.id ? 'bg-white text-unswap-blue-deep' : 'bg-white/10 text-white'}`}>
+                    {item.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </nav>
+
+        {/* User Info & Sign Out at bottom */}
+        <div className="px-3 pb-6 mt-auto border-t border-white/10 pt-4 space-y-2">
+            <div className="px-3 flex items-center gap-3 mb-4">
+              {currentUser?.avatar_url ? (
+                  <img src={currentUser.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover border border-white/20" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center text-white font-bold text-xs">
+                    {(currentUser?.full_name || currentUser?.email || 'A')[0].toUpperCase()}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-medium text-white truncate">
+                    {currentUser?.full_name || currentUser?.email?.split('@')[0] || '—'}
+                  </p>
+                  <p className="text-[10px] font-medium text-white/40 truncate">
+                    {currentUser?.email || '—'}
+                  </p>
+                </div>
+            </div>
+
+          <Button variant="ghost" size="sm" onClick={() => api.auth.logout()} className="w-full justify-start text-white/50 hover:text-red-300 hover:bg-white/5 transition-all font-semibold text-[11px] tracking-wide gap-2 h-9 rounded-sm">
+            <LogOut className="w-3.5 h-3.5" />
+            Sign Out
+          </Button>
+        </div>
+      </aside>
+
+      {/* MOBILE HEADER (shown only on small screens) */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-white border-b border-stone-200 px-4 py-3 shadow-sm">
+        <div className="flex items-center justify-between mb-3">
+          <h1 className="text-lg font-bold text-unswap-blue-deep font-display">Admin Panel</h1>
+          <Button variant="ghost" size="sm" onClick={() => api.auth.logout()} className="text-stone-400 hover:text-red-600 text-[10px] font-bold uppercase tracking-widest">
+            <LogOut className="w-3 h-3 mr-1.5" />
+            Sign Out
+          </Button>
+        </div>
+        <div className="flex gap-1 overflow-x-auto pb-1 no-scrollbar">
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold whitespace-nowrap rounded-sm transition-all ${activeTab === item.id
+                ? 'bg-unswap-blue-deep text-white'
+                : 'text-stone-500 hover:bg-stone-100'
+                }`}
+            >
+              <item.icon className="w-3.5 h-3.5" />
+              {item.label}
+              {item.count > 0 && <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[9px] ${activeTab === item.id ? 'bg-white/20' : 'bg-stone-200'}`}>{item.count}</span>}
+            </button>
+          ))}
+        </div>
+      </div>
+
+       {/* MAIN CONTENT AREA */}
+      <main className="flex-1 min-w-0 overflow-y-auto lg:pt-0 pt-28">
+        <div className="max-w-6xl mx-auto px-6 lg:px-10 py-10">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-              <p className="text-slate-400">Manage users, properties, and verifications</p>
+              <h2 className="text-3xl font-light text-slate-900 tracking-tight">
+                Admin <span className="font-medium">Dashboard</span>
+              </h2>
+              <p className="text-stone-500 text-sm mt-1">Manage users, properties, and verifications</p>
             </div>
             <div className="flex items-center gap-3">
               {platformSettings[0]?.platform_status === 'pre_launch' && (
@@ -307,490 +423,470 @@ export default function AdminDashboard() {
                   {launchPlatformMutation.isPending ? 'Launching...' : 'Launch Now'}
                 </Button>
               )}
-              <Badge className="bg-amber-500 text-slate-900">Admin</Badge>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Stats Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {[
-            { label: 'Total Users', value: stats.totalUsers, sub: `${stats.verifiedUsers} verified`, icon: Users, color: 'bg-blue-500' },
-            { label: 'Properties', value: stats.totalProperties, sub: `${stats.activeProperties} active`, icon: Home, color: 'bg-emerald-500' },
-            { label: 'Swaps', value: stats.totalSwaps, sub: `${stats.completedSwaps} completed`, icon: ArrowLeftRight, color: 'bg-purple-500' },
-            { label: 'Pending Reviews', value: stats.pendingVerifications, sub: 'verifications', icon: Shield, color: 'bg-amber-500' },
-          ].map((stat, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-slate-500">{stat.label}</p>
-                      <p className="text-3xl font-bold text-slate-900 mt-1">{stat.value}</p>
-                      <p className="text-sm text-slate-500">{stat.sub}</p>
-                    </div>
-                    <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center`}>
-                      <stat.icon className="w-6 h-6 text-white" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="bg-white border border-slate-200 p-1 mb-6">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="users">
-              Users
-              <Badge className="ml-2 bg-slate-200">{users.length}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="verifications">
-              Verifications
-              {stats.pendingVerifications > 0 && (
-                <Badge className="ml-2 bg-amber-500 text-white">{stats.pendingVerifications}</Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="properties">Properties</TabsTrigger>
-            <TabsTrigger value="reviews">
-              Reviews
-              <Badge className="ml-2 bg-slate-200">{stats.totalReviews}</Badge>
-              {stats.flaggedReviews > 0 && (
-                <Badge className="ml-2 bg-red-500 text-white">{stats.flaggedReviews}</Badge>
-              )}
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Overview Tab */}
-          <TabsContent value="overview">
-            <div className="grid lg:grid-cols-2 gap-8">
-              {/* Recent Users */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Users</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {users.slice(0, 5).map(user => (
-                      <div key={user.id} className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center">
-                            {user.avatar_url ? (
-                              <img src={user.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
-                            ) : (
-                              <Users className="w-5 h-5 text-slate-500" />
-                            )}
-                          </div>
-                          <div>
-                            <p className="font-medium text-slate-900">{user.full_name}</p>
-                            <p className="text-sm text-slate-500">{user.email}</p>
-                          </div>
-                        </div>
-                        <Badge variant="outline">{user.role}</Badge>
+          {/* Stats Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {[
+              { label: 'Total Users', value: stats.totalUsers, sub: `${stats.verifiedUsers} verified`, icon: Users, color: 'bg-blue-500' },
+              { label: 'Properties', value: stats.totalProperties, sub: `${stats.activeProperties} active`, icon: Home, color: 'bg-emerald-500' },
+              { label: 'Swaps', value: stats.totalSwaps, sub: `${stats.completedSwaps} completed`, icon: ArrowLeftRight, color: 'bg-purple-500' },
+              { label: 'Pending Reviews', value: stats.pendingVerifications, sub: 'verifications', icon: Shield, color: 'bg-amber-500' },
+            ].map((stat, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Card className="bg-white border border-stone-100 shadow-sm rounded-2xl overflow-hidden">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-stone-500">{stat.label}</p>
+                        <p className="text-3xl font-bold text-slate-900 mt-1">{stat.value}</p>
+                        <p className="text-sm text-stone-500">{stat.sub}</p>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                      <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center`}>
+                        <stat.icon className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
 
-              {/* Pending Verifications */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Pending Verifications</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {pendingVerifications.length === 0 ? (
-                    <p className="text-slate-500 text-center py-8">No pending verifications</p>
-                  ) : (
+          <div className="space-y-8">
+
+            {/* Overview Tab */}
+            {activeTab === 'overview' && (
+              <div className="grid lg:grid-cols-2 gap-8">
+                {/* Recent Users */}
+                <Card className="bg-white border border-stone-100 shadow-sm rounded-2xl overflow-hidden">
+                  <CardHeader>
+                    <CardTitle>Recent Users</CardTitle>
+                  </CardHeader>
+                  <CardContent>
                     <div className="space-y-4">
-                      {pendingVerifications.slice(0, 5).map(verification => (
-                        <div key={verification.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                          <div>
-                            <p className="font-medium text-slate-900">{verification.user_name}</p>
-                            <p className="text-sm text-slate-500">{verification.verification_type}</p>
+                      {users.slice(0, 5).map(user => (
+                        <div key={user.id} className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-stone-200 rounded-full flex items-center justify-center">
+                              {user.avatar_url ? (
+                                <img src={user.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+                              ) : (
+                                <Users className="w-5 h-5 text-stone-500" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-medium text-slate-900">{user.full_name}</p>
+                              <p className="text-sm text-stone-500">{user.email}</p>
+                            </div>
                           </div>
-                          <Button size="sm" onClick={() => setSelectedVerification(verification)}>
-                            Review
-                          </Button>
+                          <Badge variant="outline">{user.role}</Badge>
                         </div>
                       ))}
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
+                  </CardContent>
+                </Card>
 
-          {/* Users Tab */}
-          <TabsContent value="users">
-            <Card>
-              <CardHeader>
-                <div className="flex flex-col md:flex-row gap-4 justify-between">
-                  <CardTitle>User Management</CardTitle>
-                  <div className="flex gap-2">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <Input
-                        placeholder="Search users..."
-                        className="pl-9 w-64"
-                        value={userSearch}
-                        onChange={(e) => setUserSearch(e.target.value)}
-                      />
-                    </div>
-                    <Select value={roleFilter} onValueChange={setRoleFilter}>
-                      <SelectTrigger className="w-32">
-                        <SelectValue placeholder="Role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Roles</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="user">User</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Select value={verificationFilter} onValueChange={setVerificationFilter}>
-                      <SelectTrigger className="w-40">
-                        <SelectValue placeholder="Verification" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Status</SelectItem>
-                        <SelectItem value="verified">Verified</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="unverified">Unverified</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead>Organization</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Verification</TableHead>
-                      <TableHead>Points</TableHead>
-                      <TableHead>Joined</TableHead>
-                      <TableHead></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredUsers.map(user => (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center overflow-hidden">
-                              {user.avatar_url ? (
-                                <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
-                              ) : (
-                                <Users className="w-4 h-4 text-slate-500" />
-                              )}
-                            </div>
+                {/* Pending Verifications */}
+                <Card className="bg-white border border-stone-100 shadow-sm rounded-2xl overflow-hidden">
+                  <CardHeader>
+                    <CardTitle>Pending Verifications</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {pendingVerifications.length === 0 ? (
+                      <p className="text-stone-500 text-center py-8">No pending verifications</p>
+                    ) : (
+                      <div className="space-y-4">
+                        {pendingVerifications.slice(0, 5).map(verification => (
+                          <div key={verification.id} className="flex items-center justify-between p-3 bg-stone-50 rounded-lg">
                             <div>
-                              <p className="font-medium">{user.full_name}</p>
-                              <p className="text-sm text-slate-500">{user.email}</p>
+                              <p className="font-medium text-slate-900">{verification.user_name}</p>
+                              <p className="text-sm text-stone-500">{verification.verification_type}</p>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>{user.organization || '-'}</TableCell>
-                        <TableCell>
-                          <Badge variant={user.role === 'admin' ? 'default' : 'outline'}>
-                            {user.role}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={
-                            user.verification_status === 'verified' ? 'bg-emerald-100 text-emerald-700' :
-                              user.verification_status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                                'bg-slate-100 text-slate-700'
-                          }>
-                            {user.verification_status || 'unverified'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{user.guest_points || 500}</TableCell>
-                        <TableCell>{format(new Date(user.created_date), 'MMM d, yyyy')}</TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreVertical className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => updateUserMutation.mutate({
-                                  id: user.id,
-                                  data: { role: user.role === 'admin' ? 'user' : 'admin' }
-                                })}
-                              >
-                                {user.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => updateUserMutation.mutate({
-                                  id: user.id,
-                                  data: { verification_status: 'verified' }
-                                })}
-                              >
-                                <UserCheck className="w-4 h-4 mr-2" />
-                                Verify User
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => setDeleteUserDialog(user)}
-                                className="text-red-600"
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Delete User
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Verifications Tab */}
-          <TabsContent value="verifications">
-            <Card>
-              <CardHeader>
-                <CardTitle>Verification Requests</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Organization</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Submitted</TableHead>
-                      <TableHead></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {verifications.map(verification => (
-                      <TableRow key={verification.id}>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">{verification.user_name}</p>
-                            <p className="text-sm text-slate-500">{verification.user_email}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>{verification.verification_type}</TableCell>
-                        <TableCell>{verification.organization || '-'}</TableCell>
-                        <TableCell>
-                          <Badge className={
-                            verification.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
-                              verification.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                                'bg-amber-100 text-amber-700'
-                          }>
-                            {verification.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{format(new Date(verification.created_date), 'MMM d, yyyy')}</TableCell>
-                        <TableCell>
-                          {verification.status === 'pending' && (
                             <Button size="sm" onClick={() => setSelectedVerification(verification)}>
                               Review
                             </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Properties Tab */}
-          <TabsContent value="properties">
-            <Card>
-              <CardHeader>
-                <CardTitle>Property Management</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Property</TableHead>
-                      <TableHead>Owner</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Points</TableHead>
-                      <TableHead>Views</TableHead>
-                      <TableHead></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {properties.map(property => (
-                      <TableRow key={property.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-200">
-                              {property.images?.[0] && (
-                                <img src={property.images[0]} alt="" className="w-full h-full object-cover" />
-                              )}
-                            </div>
-                            <div>
-                              <p className="font-medium">{property.title}</p>
-                              <p className="text-sm text-slate-500">{property.property_type}</p>
-                            </div>
                           </div>
-                        </TableCell>
-                        <TableCell>{property.owner_email}</TableCell>
-                        <TableCell>{property.location}</TableCell>
-                        <TableCell>
-                          <Badge className={
-                            property.status === 'active' ? 'bg-emerald-100 text-emerald-700' :
-                              property.status === 'paused' ? 'bg-amber-100 text-amber-700' :
-                                'bg-slate-100 text-slate-700'
-                          }>
-                            {property.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{property.smart_credit_value || 200}</TableCell>
-                        <TableCell>{property.views_count || 0}</TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreVertical className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => updatePropertyMutation.mutate({
-                                  id: property.id,
-                                  data: { is_verified: !property.is_verified }
-                                })}
-                              >
-                                {property.is_verified ? 'Remove Verification' : 'Verify Property'}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => updatePropertyMutation.mutate({
-                                  id: property.id,
-                                  data: { is_featured: !property.is_featured }
-                                })}
-                              >
-                                {property.is_featured ? 'Remove Featured' : 'Make Featured'}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Reviews Tab */}
-          <TabsContent value="reviews">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Review Moderation</CardTitle>
-                  <div className="flex gap-2 text-sm">
-                    <Badge variant="outline">
-                      Total: {stats.totalReviews}
-                    </Badge>
-                    {stats.flaggedReviews > 0 && (
-                      <Badge className="bg-red-100 text-red-700">
-                        <Flag className="w-3 h-3 mr-1" />
-                        Flagged: {stats.flaggedReviews}
-                      </Badge>
+                        ))}
+                      </div>
                     )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Users Tab */}
+            {activeTab === 'users' && (
+              <Card className="bg-white border border-stone-100 shadow-sm rounded-2xl overflow-hidden">
+                <CardHeader>
+                  <div className="flex flex-col md:flex-row gap-4 justify-between">
+                    <CardTitle>User Management</CardTitle>
+                    <div className="flex gap-2">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+                        <Input
+                          placeholder="Search users..."
+                          className="pl-9 w-64"
+                          value={userSearch}
+                          onChange={(e) => setUserSearch(e.target.value)}
+                        />
+                      </div>
+                      <Select value={roleFilter} onValueChange={setRoleFilter}>
+                        <SelectTrigger className="w-32">
+                          <SelectValue placeholder="Role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Roles</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="user">User</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select value={verificationFilter} onValueChange={setVerificationFilter}>
+                        <SelectTrigger className="w-40">
+                          <SelectValue placeholder="Verification" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Status</SelectItem>
+                          <SelectItem value="verified">Verified</SelectItem>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="unverified">Unverified</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ReviewList showModeration={true} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>User</TableHead>
+                        <TableHead>Organization</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Verification</TableHead>
+                        <TableHead>Points</TableHead>
+                        <TableHead>Joined</TableHead>
+                        <TableHead></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredUsers.map(user => (
+                        <TableRow key={user.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-stone-200 rounded-full flex items-center justify-center overflow-hidden">
+                                {user.avatar_url ? (
+                                  <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                  <Users className="w-4 h-4 text-stone-500" />
+                                )}
+                              </div>
+                              <div>
+                                <p className="font-medium">{user.full_name}</p>
+                                <p className="text-sm text-stone-500">{user.email}</p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>{user.organization || '-'}</TableCell>
+                          <TableCell>
+                            <Badge variant={user.role === 'admin' ? 'default' : 'outline'}>
+                              {user.role}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={
+                              user.verification_status === 'verified' ? 'bg-emerald-100 text-emerald-700' :
+                                user.verification_status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                                  'bg-stone-100 text-slate-700'
+                            }>
+                              {user.verification_status || 'unverified'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{user.guest_points || 500}</TableCell>
+                          <TableCell>{format(new Date(user.created_date), 'MMM d, yyyy')}</TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreVertical className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => updateUserMutation.mutate({
+                                    id: user.id,
+                                    data: { role: user.role === 'admin' ? 'user' : 'admin' }
+                                  })}
+                                >
+                                  {user.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => updateUserMutation.mutate({
+                                    id: user.id,
+                                    data: { verification_status: 'verified' }
+                                  })}
+                                >
+                                  <UserCheck className="w-4 h-4 mr-2" />
+                                  Verify User
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => setDeleteUserDialog(user)}
+                                  className="text-red-600"
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Delete User
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Verifications Tab */}
+            {activeTab === 'verifications' && (
+              <Card className="bg-white border border-stone-100 shadow-sm rounded-2xl overflow-hidden">
+                <CardHeader>
+                  <CardTitle>Verification Requests</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>User</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Organization</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Submitted</TableHead>
+                        <TableHead></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {verifications.map(verification => (
+                        <TableRow key={verification.id}>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{verification.user_name}</p>
+                              <p className="text-sm text-stone-500">{verification.user_email}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>{verification.verification_type}</TableCell>
+                          <TableCell>{verification.organization || '-'}</TableCell>
+                          <TableCell>
+                            <Badge className={
+                              verification.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                                verification.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                                  'bg-amber-100 text-amber-700'
+                            }>
+                              {verification.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{format(new Date(verification.created_date), 'MMM d, yyyy')}</TableCell>
+                          <TableCell>
+                            {verification.status === 'pending' && (
+                              <Button size="sm" onClick={() => setSelectedVerification(verification)}>
+                                Review
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Properties Tab */}
+            {activeTab === 'properties' && (
+              <Card className="bg-white border border-stone-100 shadow-sm rounded-2xl overflow-hidden">
+                <CardHeader>
+                  <CardTitle>Property Management</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Property</TableHead>
+                        <TableHead>Owner</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Points</TableHead>
+                        <TableHead>Views</TableHead>
+                        <TableHead></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {properties.map(property => (
+                        <TableRow key={property.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 rounded-lg overflow-hidden bg-stone-200">
+                                {property.images?.[0] && (
+                                  <img src={property.images[0]} alt="" className="w-full h-full object-cover" />
+                                )}
+                              </div>
+                              <div>
+                                <p className="font-medium">{property.title}</p>
+                                <p className="text-sm text-stone-500">{property.property_type}</p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>{property.owner_email}</TableCell>
+                          <TableCell>{property.location}</TableCell>
+                          <TableCell>
+                            <Badge className={
+                              property.status === 'active' ? 'bg-emerald-100 text-emerald-700' :
+                                property.status === 'paused' ? 'bg-amber-100 text-amber-700' :
+                                  'bg-stone-100 text-slate-700'
+                            }>
+                              {property.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{property.nightly_points || 200}</TableCell>
+                          <TableCell>{property.views_count || 0}</TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreVertical className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => updatePropertyMutation.mutate({
+                                    id: property.id,
+                                    data: { is_verified: !property.is_verified }
+                                  })}
+                                >
+                                  {property.is_verified ? 'Remove Verification' : 'Verify Property'}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => updatePropertyMutation.mutate({
+                                    id: property.id,
+                                    data: { is_featured: !property.is_featured }
+                                  })}
+                                >
+                                  {property.is_featured ? 'Remove Featured' : 'Make Featured'}
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Reviews Tab */}
+            {activeTab === 'reviews' && (
+              <Card className="bg-white border border-stone-100 shadow-sm rounded-2xl overflow-hidden">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Review Moderation</CardTitle>
+                    <div className="flex gap-2 text-sm">
+                      <Badge variant="outline">
+                        Total: {stats.totalReviews}
+                      </Badge>
+                      {stats.flaggedReviews > 0 && (
+                        <Badge className="bg-red-100 text-red-700">
+                          <Flag className="w-3 h-3 mr-1" />
+                          Flagged: {stats.flaggedReviews}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ReviewList showModeration={true} />
+                </CardContent>
+              </Card>
+            )}
+
+          </div>
+        </div>
+      </main>
 
       {/* Verification Review Dialog */}
       <Dialog open={!!selectedVerification} onOpenChange={() => setSelectedVerification(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg flex flex-col max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Review Verification</DialogTitle>
+            <DialogDescription>Review the submitted documentation and approve or reject verification.</DialogDescription>
           </DialogHeader>
 
-          {selectedVerification && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-slate-500">User</Label>
-                  <p className="font-medium">{selectedVerification.user_name}</p>
-                </div>
-                <div>
-                  <Label className="text-slate-500">Email</Label>
-                  <p className="font-medium">{selectedVerification.user_email}</p>
-                </div>
-                <div>
-                  <Label className="text-slate-500">Type</Label>
-                  <p className="font-medium">{selectedVerification.verification_type}</p>
-                </div>
-                <div>
-                  <Label className="text-slate-500">Organization</Label>
-                  <p className="font-medium">{selectedVerification.organization || '-'}</p>
-                </div>
-              </div>
-
-              {selectedVerification.document_url && (
-                <div>
-                  <Label className="text-slate-500 block mb-2">Uploaded Document</Label>
-                  <div className="border border-slate-200 rounded-lg overflow-hidden">
-                    {selectedVerification.document_url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
-                      <img
-                        src={selectedVerification.document_url}
-                        alt="Verification document"
-                        className="w-full h-auto max-h-96 object-contain bg-slate-50"
-                      />
-                    ) : (
-                      <div className="p-8 text-center bg-slate-50">
-                        <FileText className="w-12 h-12 text-slate-400 mx-auto mb-2" />
-                        <p className="text-sm text-slate-600 mb-3">PDF Document</p>
-                      </div>
-                    )}
+          <div className="overflow-y-auto flex-1 min-h-0">
+            {selectedVerification && (
+              <div className="space-y-4 p-1">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-stone-500">User</Label>
+                    <p className="font-medium">{selectedVerification.user_name}</p>
                   </div>
-                  <a
-                    href={selectedVerification.document_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline text-sm mt-2 inline-block"
-                  >
-                    Open in new tab →
-                  </a>
+                  <div>
+                    <Label className="text-stone-500">Email</Label>
+                    <p className="font-medium">{selectedVerification.user_email}</p>
+                  </div>
+                  <div>
+                    <Label className="text-stone-500">Type</Label>
+                    <p className="font-medium">{selectedVerification.verification_type}</p>
+                  </div>
+                  <div>
+                    <Label className="text-stone-500">Organization</Label>
+                    <p className="font-medium">{selectedVerification.organization || '-'}</p>
+                  </div>
                 </div>
-              )}
 
-              <div>
-                <Label>Review Notes</Label>
-                <Textarea
-                  value={reviewNotes}
-                  onChange={(e) => setReviewNotes(e.target.value)}
-                  placeholder="Add notes for this verification..."
-                  className="mt-1"
-                />
+                {selectedVerification.document_url && (
+                  <div>
+                    <Label className="text-stone-500 block mb-2">Uploaded Document</Label>
+                    <div className="border border-stone-200 rounded-lg overflow-hidden">
+                      {selectedVerification.document_url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                        <img
+                          src={selectedVerification.document_url}
+                          alt="Verification document"
+                          className="w-full h-auto max-h-96 object-contain bg-stone-50"
+                        />
+                      ) : (
+                        <div className="p-8 text-center bg-stone-50">
+                          <FileText className="w-12 h-12 text-stone-400 mx-auto mb-2" />
+                          <p className="text-sm text-slate-600 mb-3">PDF Document</p>
+                        </div>
+                      )}
+                    </div>
+                    <a
+                      href={selectedVerification.document_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline text-sm mt-2 inline-block"
+                    >
+                      Open in new tab →
+                    </a>
+                  </div>
+                )}
+
+                <div>
+                  <Label>Review Notes</Label>
+                  <Textarea
+                    value={reviewNotes}
+                    onChange={(e) => setReviewNotes(e.target.value)}
+                    placeholder="Add notes for this verification..."
+                    className="mt-1"
+                  />
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setSelectedVerification(null)}>
@@ -817,11 +913,12 @@ export default function AdminDashboard() {
 
       {/* Delete User Dialog */}
       <Dialog open={!!deleteUserDialog} onOpenChange={() => setDeleteUserDialog(null)}>
-        <DialogContent>
+        <DialogContent className="flex flex-col max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Delete User and All Data</DialogTitle>
+            <DialogDescription>Permanently remove this user and all their associated records from the system.</DialogDescription>
           </DialogHeader>
-          <div className="py-4">
+          <div className="overflow-y-auto flex-1 min-h-0 py-4 px-1">
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
               <p className="text-red-800 font-medium mb-2">⚠️ Warning: This action is irreversible!</p>
               <p className="text-sm text-red-700">
@@ -837,9 +934,9 @@ export default function AdminDashboard() {
               </ul>
             </div>
             {deleteUserDialog && (
-              <div className="p-3 bg-slate-50 rounded-lg">
+              <div className="p-3 bg-stone-50 rounded-lg">
                 <p className="text-sm font-medium text-slate-900">{deleteUserDialog.full_name}</p>
-                <p className="text-sm text-slate-500">{deleteUserDialog.email}</p>
+                <p className="text-sm text-stone-500">{deleteUserDialog.email}</p>
               </div>
             )}
           </div>

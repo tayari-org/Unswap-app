@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { format, differenceInDays } from 'date-fns';
@@ -21,6 +23,7 @@ import VerificationRequiredDialog from '../verification/VerificationRequiredDial
 
 export default function CreateSwapRequestDialog({ open, onOpenChange, user, preselectedProperty, isVerified = false }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [selectedProperty, setSelectedProperty] = useState(preselectedProperty?.id || '');
   const [swapType, setSwapType] = useState('guestpoints');
   const [reciprocalPropertyId, setReciprocalPropertyId] = useState('');
@@ -59,7 +62,7 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
   const availableSwapTypes = selectedProp?.swap_preference || 'both';
 
   const nights = checkIn && checkOut ? differenceInDays(new Date(checkOut), new Date(checkIn)) : 0;
-  const basePoints = nights * (selectedProp?.smart_credit_value || 200);
+  const basePoints = nights * (selectedProp?.nightly_points || 200);
   const totalPoints = swapType === 'guestpoints' ? basePoints : 0;
 
   const createSwapMutation = useMutation({
@@ -72,7 +75,9 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
         }
       }
 
-      const result = await api.entities.SwapRequest.create(data);
+      // Remove message from swapData before sending to API
+      const { message, ...swapDataCopy } = data;
+      const result = await api.entities.SwapRequest.create(swapDataCopy);
 
       // Create initial message in conversation
       if (data.message && data.message.trim()) {
@@ -104,6 +109,7 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
       toast.success('Swap request sent successfully!');
       onOpenChange(false);
       resetForm();
+      navigate(createPageUrl('MySwaps') + '?tab=outgoing');
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to create swap request');
@@ -145,22 +151,24 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
 
     const property = availableProperties.find(p => p.id === selectedProperty);
 
-    createSwapMutation.mutate({
+    const swapRequestPayload = {
       property_id: selectedProperty,
       property_title: property?.title,
-      requester_id: user?.id,
       requester_email: user?.email,
-      requester_name: user?.full_name,
-      host_id: property?.owner_id,
       host_email: property?.owner_email,
       swap_type: swapType,
-      reciprocal_property_id: swapType === 'reciprocal' ? reciprocalPropertyId : null,
-      check_in: format(checkIn, 'yyyy-MM-dd'),
-      check_out: format(checkOut, 'yyyy-MM-dd'),
-      guests_count: guestsCount,
+      requester_property_id: swapType === 'reciprocal' ? reciprocalPropertyId : null,
+      check_in: checkIn ? checkIn.toISOString() : null,
+      check_out: checkOut ? checkOut.toISOString() : null,
+      duration_nights: nights,
+      party_size: guestsCount,
       total_points: swapType === 'guestpoints' ? totalPoints : 0,
-      message,
       status: 'pending'
+    };
+
+    createSwapMutation.mutate({
+      ...swapRequestPayload,
+      message, // Passed separately for mutationFn
     });
   };
 
@@ -321,7 +329,7 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
                 </div>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between text-lg font-bold">
-                    <span>{selectedProp.smart_credit_value || 200} PTS × {nights} nights</span>
+                    <span>{selectedProp.nightly_points || 200} PTS × {nights} nights</span>
                     <span className="text-amber-600">{totalPoints} PTS</span>
                   </div>
                 </div>
@@ -359,8 +367,8 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
             onClick={handleSubmit}
             disabled={createSwapMutation.isPending || (swapType === 'guestpoints' && (user?.guest_points || 500) < totalPoints) || !checkIn || !checkOut}
             className={`rounded-none h-16 px-12 text-[10px] font-bold uppercase tracking-[0.4em] transition-all shadow-xl ${createSwapMutation.isPending || (swapType === 'guestpoints' && (user?.guest_points || 500) < totalPoints) || !checkIn || !checkOut
-                ? 'bg-slate-200 text-slate-400'
-                : 'bg-unswap-blue-deep text-white hover:bg-slate-900'
+              ? 'bg-slate-200 text-slate-400'
+              : 'bg-unswap-blue-deep text-white hover:bg-slate-900'
               }`}
           >
             {createSwapMutation.isPending && <Loader2 className="w-4 h-4 mr-3 animate-spin" />}

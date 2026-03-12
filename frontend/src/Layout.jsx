@@ -103,6 +103,22 @@ export default function Layout({ children, currentPageName }) {
                   {item.name}
                 </Link>
               ))}
+              {user && (
+                <Link
+                  to={createPageUrl('Dashboard')}
+                  className={`px-4 py-1.5 rounded-lg text-[11px] font-semibold uppercase tracking-[0.15em] flex items-center gap-2 transition-all duration-300 ${currentPageName === 'Dashboard'
+                    ? scrolled || !isHomePage
+                      ? 'text-unswap-blue-deep bg-blue-50'
+                      : 'text-white bg-white/10'
+                    : scrolled || !isHomePage
+                      ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                      : 'text-white/60 hover:text-white hover:bg-white/5'
+                    }`}
+                >
+                  <LayoutDashboard className="w-3.5 h-3.5" />
+                  Dashboard
+                </Link>
+              )}
               {showVerifiedUI && (
                 <>
                   <Link
@@ -132,20 +148,6 @@ export default function Layout({ children, currentPageName }) {
                     My Swaps
                   </Link>
                 </>
-              )}
-              {isAdmin && (
-                <Link
-                  to={createPageUrl('AdminDashboard')}
-                  className={`px-4 py-1.5 rounded-lg text-[11px] font-semibold uppercase tracking-[0.15em] flex items-center gap-2 transition-all duration-300 ${currentPageName === 'AdminDashboard'
-                    ? 'bg-amber-500/10 text-amber-600'
-                    : scrolled || !isHomePage
-                      ? 'text-amber-500/60 hover:text-amber-600 hover:bg-amber-50'
-                      : 'text-amber-300/60 hover:text-amber-300 hover:bg-amber-400/5'
-                    }`}
-                >
-                  <Shield className="w-3.5 h-3.5" />
-                  Admin
-                </Link>
               )}
             </nav>
 
@@ -177,11 +179,14 @@ export default function Layout({ children, currentPageName }) {
                   </Link>
 
                   {/* Points - Institutional Credit */}
-                  <div className={`hidden md:flex items-center gap-2.5 px-3 py-1.5 rounded-lg border transition-all duration-500 ${scrolled || !isHomePage ? 'bg-slate-50 border-slate-200 text-slate-900' : 'bg-white/5 border-white/10 text-white'
-                    }`}>
-                    <Coins className={`w-3.5 h-3.5 ${scrolled || !isHomePage ? 'text-unswap-blue-deep' : 'text-amber-300'}`} />
+                  <Link 
+                    to={createPageUrl('Dashboard') + '?tab=guest-points'}
+                    className={`hidden md:flex items-center gap-2.5 px-3 py-1.5 rounded-lg border transition-all duration-500 hover:shadow-md ${scrolled || !isHomePage ? 'bg-slate-50 border-slate-200 text-slate-900 group/points hover:border-unswap-blue-deep/30' : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <Coins className={`w-3.5 h-3.5 transition-transform duration-500 group-hover/points:scale-110 ${scrolled || !isHomePage ? 'text-unswap-blue-deep' : 'text-amber-300'}`} />
                     <span className="text-[10px] font-bold uppercase tracking-widest leading-none">{user.guest_points || 500} PTS</span>
-                  </div>
+                  </Link>
 
                   {/* User Menu - Prestigious Profile Trigger */}
                   <DropdownMenu>
@@ -214,12 +219,6 @@ export default function Layout({ children, currentPageName }) {
                         </div>
                       </div>
                       <div className="p-2 bg-white">
-                        <DropdownMenuItem asChild className="rounded-none focus:bg-slate-50 py-3 cursor-pointer">
-                          <Link to={createPageUrl('Dashboard')} className="flex items-center gap-3">
-                            <LayoutDashboard className="w-3.5 h-3.5 text-slate-400" />
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Dashboard</span>
-                          </Link>
-                        </DropdownMenuItem>
                         {showVerifiedUI && (
                           <DropdownMenuItem asChild className="rounded-none focus:bg-slate-50 py-3 cursor-pointer">
                             <Link to={createPageUrl('MyListings')} className="flex items-center gap-3">
@@ -234,6 +233,14 @@ export default function Layout({ children, currentPageName }) {
                             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Settings</span>
                           </Link>
                         </DropdownMenuItem>
+                        {isAdmin && (
+                          <DropdownMenuItem asChild className="rounded-none focus:bg-amber-50 py-3 cursor-pointer">
+                            <Link to={createPageUrl('AdminDashboard')} className="flex items-center gap-3">
+                              <Shield className="w-3.5 h-3.5 text-amber-400" />
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-amber-600">Admin Dashboard</span>
+                            </Link>
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator className="bg-slate-100" />
                         <DropdownMenuItem
                           onClick={() => api.auth.logout()}
@@ -304,6 +311,19 @@ export default function Layout({ children, currentPageName }) {
                     <span className="text-[11px] font-bold uppercase tracking-widest">{item.name}</span>
                   </Link>
                 ))}
+                {user && (
+                  <Link
+                    to={createPageUrl('Dashboard')}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center gap-4 px-5 py-4 transition-all duration-300 ${currentPageName === 'Dashboard'
+                      ? 'bg-slate-50 border-l-4 border-unswap-blue-deep text-unswap-blue-deep'
+                      : 'text-slate-500 hover:bg-slate-50'
+                      }`}
+                  >
+                    <LayoutDashboard className="w-4 h-4" />
+                    <span className="text-[11px] font-bold uppercase tracking-widest">Dashboard</span>
+                  </Link>
+                )}
                 {showVerifiedUI && (
                   <>
                     <Link

@@ -30,6 +30,11 @@ export default function Dashboard() {
       toast.success('🎉 Subscription activated! Welcome to UNswap Premium.', { duration: 6000 });
       window.history.replaceState({}, '', window.location.pathname);
     }
+    
+    const tabParam = params.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
   }, []);
 
   const { data: user } = useQuery({
@@ -106,7 +111,7 @@ export default function Dashboard() {
   ];
 
   const copyReferralLink = () => {
-    const link = `${window.location.origin}?ref=${user?.referral_code || user?.id}`;
+    const link = `${window.location.origin}/login?ref=${user?.referral_code || user?.id}`;
     navigator.clipboard.writeText(link);
     setCopied(true);
     toast.success('Referral link copied!');
@@ -114,83 +119,110 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-
-        {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-light text-slate-900 tracking-tight">
-              Welcome back, <span className="font-medium">{user?.username || user?.full_name || 'Colleague'}</span>
-            </h1>
-            <p className="text-slate-500 text-sm mt-1">Manage your listings, swaps, and account settings</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Badge className={`rounded-full px-3 py-1 text-xs font-medium ${verificationStatus === 'verified'
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                : 'bg-amber-50 text-amber-700 border-amber-200'
-              } border`}>
-              <span className={`w-1.5 h-1.5 rounded-full mr-2 inline-block ${verificationStatus === 'verified' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-              {verificationStatus === 'verified' ? 'Verified' : 'Pending Verification'}
-            </Badge>
-          </div>
+    <div className="min-h-screen flex bg-[#FDF8F4]">
+      {/* SIDEBAR NAVIGATION (Desktop) */}
+      <aside className="hidden lg:flex w-60 flex-col bg-unswap-blue-deep border-r border-[#001733] shadow-2xl z-20">
+        {/* Sidebar Header / Brand */}
+        <div className="px-6 pt-8 pb-6">
+          <h1 className="text-lg font-bold text-white tracking-tight font-display">Dashboard</h1>
+          <Badge variant="outline" className={`mt-2 flex items-center gap-1.5 px-2.5 py-0.5 w-fit rounded-full text-[9px] border-white/20 bg-white/10 text-white/80`}>
+             <span className={`w-1.5 h-1.5 rounded-full ${verificationStatus === 'verified' ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+             {verificationStatus === 'verified' ? 'VERIFIED' : 'PENDING'}
+          </Badge>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
+        {/* Navigation */}
+        <nav className="flex-1 px-3">
+          <div className="px-3 pt-4 pb-3">
+            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Menu</span>
+          </div>
 
-          {/* SIDEBAR NAVIGATION */}
-          <aside className="w-full lg:w-56 flex-shrink-0">
-            <nav className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-              {navItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all duration-200 ${activeTab === item.id
-                    ? 'bg-blue-50 text-blue-700 border-l-[3px] border-blue-600'
-                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700 border-l-[3px] border-transparent'
-                    }`}
-                >
-                  <item.icon className={`w-4 h-4 flex-shrink-0 ${activeTab === item.id ? 'text-blue-600' : 'text-slate-400'}`} />
-                  <span className="text-sm font-medium">{item.label}</span>
-                  {item.count > 0 && (
-                    <span className="ml-auto text-[10px] font-bold bg-blue-600 text-white w-5 h-5 rounded-full flex items-center justify-center">{item.count}</span>
-                  )}
-                </button>
-              ))}
-            </nav>
+          <div className="space-y-0.5">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`w-full group flex items-center gap-3 px-3 py-2.5 transition-all text-left rounded-sm border-l-[3px] ${activeTab === item.id
+                  ? 'border-unswap-silver-light bg-white/10 text-white'
+                  : 'border-transparent text-white/60 hover:text-white hover:bg-white/5'
+                  }`}
+              >
+                <item.icon className={`w-4 h-4 flex-shrink-0 transition-colors ${activeTab === item.id ? 'text-white' : 'text-white/40 group-hover:text-white/70'}`} />
+                <span className={`flex-1 text-[13px] tracking-wide ${activeTab === item.id ? 'font-semibold' : 'font-medium'}`}>{item.label}</span>
+                {item.count > 0 && (
+                  <span className={`text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center ${activeTab === item.id ? 'bg-white text-unswap-blue-deep' : 'bg-white/10 text-white'}`}>{item.count}</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </nav>
 
-            {/* User Info Card */}
-            <div className="mt-4 bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-              <div className="flex items-center gap-3">
-                {user?.avatar_url ? (
-                  <img src={user.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover border-2 border-slate-100" />
+        {/* User Info & Points at bottom */}
+        <div className="px-3 pb-6 mt-auto border-t border-white/10 pt-4 space-y-2">
+            <div className="px-3 flex items-center gap-3 mb-4">
+              {user?.avatar_url ? (
+                  <img src={user.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover border border-white/20" />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-blue-600/20">
+                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white font-bold text-xs">
                     {(user?.full_name || user?.username || user?.email || 'U')[0].toUpperCase()}
                   </div>
                 )}
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 truncate">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-medium text-white truncate">
                     {user?.full_name || user?.username || user?.email?.split('@')[0] || '—'}
                   </p>
-                  <p className="text-xs text-slate-400 truncate">{user?.email || '—'}</p>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <Coins className="w-3 h-3 text-amber-400" />
+                    <span className="text-[10px] font-bold text-white/70">{(user?.guest_points ?? 0).toLocaleString()} <span className="uppercase text-[9px] font-normal">pts</span></span>
+                  </div>
                 </div>
-              </div>
-              <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <Coins className="w-3.5 h-3.5 text-amber-500" />
-                  <span className="text-sm font-bold text-slate-900">{(user?.guest_points ?? 0).toLocaleString()}</span>
-                  <span className="text-[10px] text-slate-400 uppercase font-medium">pts</span>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => api.auth.logout()} className="text-slate-400 hover:text-rose-600 h-8 px-2">
-                  <LogOut className="w-3.5 h-3.5" />
-                </Button>
-              </div>
             </div>
-          </aside>
 
-          {/* MAIN CONTENT AREA */}
-          <main className="flex-1 min-w-0 space-y-8">
+          <Button variant="ghost" size="sm" onClick={() => api.auth.logout()} className="w-full justify-start text-white/50 hover:text-red-300 hover:bg-white/5 transition-all font-semibold text-[11px] tracking-wide gap-2 h-9 rounded-sm">
+            <LogOut className="w-3.5 h-3.5" />
+            Sign Out
+          </Button>
+        </div>
+      </aside>
+
+      {/* MOBILE HEADER (shown only on small screens) */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-white border-b border-stone-200 px-4 py-3 shadow-sm">
+        <div className="flex items-center justify-between mb-3">
+          <h1 className="text-lg font-bold text-unswap-blue-deep font-display">Dashboard</h1>
+          <Button variant="ghost" size="sm" onClick={() => api.auth.logout()} className="text-stone-400 hover:text-red-600 text-[10px] font-bold uppercase tracking-widest">
+            <LogOut className="w-3 h-3 mr-1.5" />
+            Sign Out
+          </Button>
+        </div>
+        <div className="flex gap-1 overflow-x-auto pb-1 no-scrollbar">
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold whitespace-nowrap rounded-sm transition-all ${activeTab === item.id
+                ? 'bg-unswap-blue-deep text-white'
+                : 'text-stone-500 hover:bg-stone-100'
+                }`}
+            >
+              <item.icon className="w-3.5 h-3.5" />
+              {item.label}
+              {item.count > 0 && <span className="ml-1 opacity-70">({item.count})</span>}
+            </button>
+          ))}
+        </div>
+      </div>
+
+       {/* MAIN CONTENT AREA */}
+      <main className="flex-1 min-w-0 overflow-y-auto lg:pt-0 pt-28">
+        <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
+          <div className="mb-8">
+            <h2 className="text-3xl font-light text-slate-900 tracking-tight">
+              Welcome back, <span className="font-medium">{user?.username || user?.full_name || 'Colleague'}</span>
+            </h2>
+            <p className="text-stone-500 text-sm mt-1">Manage your listings, swaps, and account settings</p>
+          </div>
+
+          <div className="space-y-8">
             {activeTab === 'overview' && (
               <>
                 {/* Stats Grid */}
@@ -207,7 +239,7 @@ export default function Dashboard() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
                     >
-                      <Card className="bg-white border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-300 rounded-2xl overflow-hidden">
+                      <Card className="bg-white border border-stone-100 shadow-sm hover:shadow-md transition-shadow duration-300 rounded-2xl overflow-hidden">
                         <CardContent className="p-5">
                           <div className="flex items-center justify-between mb-3">
                             <div className={`w-9 h-9 ${stat.bg} rounded-xl flex items-center justify-center`}>
@@ -215,7 +247,7 @@ export default function Dashboard() {
                             </div>
                           </div>
                           <p className="text-2xl font-semibold text-slate-900 tracking-tight">{stat.value}</p>
-                          <p className="text-xs text-slate-400 mt-1 font-medium">{stat.label}</p>
+                          <p className="text-xs text-stone-400 mt-1 font-medium">{stat.label}</p>
                         </CardContent>
                       </Card>
                     </motion.div>
@@ -233,7 +265,7 @@ export default function Dashboard() {
                           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-600/30">
                             <Coins className="w-4 h-4 text-white" />
                           </div>
-                          <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Available Balance</span>
+                          <span className="text-xs font-medium text-stone-400 uppercase tracking-wider">Available Balance</span>
                         </div>
                         <div className="flex items-baseline gap-3">
                           <span className="text-5xl font-light tracking-tight">
@@ -246,12 +278,12 @@ export default function Dashboard() {
                       <div className="flex flex-col gap-3 sm:min-w-[220px]">
                         <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
                           <div className="flex justify-between items-center mb-2">
-                            <span className="text-[11px] text-slate-400 font-medium">Total Earned</span>
+                            <span className="text-[11px] text-stone-400 font-medium">Total Earned</span>
                             <span className="text-xs text-emerald-400 font-semibold">+{(stats.totalEarned || 0).toLocaleString()}</span>
                           </div>
                           <div className="flex justify-between items-center">
-                            <span className="text-[11px] text-slate-400 font-medium">Total Spent</span>
-                            <span className="text-xs text-slate-300 font-semibold">-{(stats.totalSpent || 0).toLocaleString()}</span>
+                            <span className="text-[11px] text-stone-400 font-medium">Total Spent</span>
+                            <span className="text-xs text-stone-300 font-semibold">-{(stats.totalSpent || 0).toLocaleString()}</span>
                           </div>
                         </div>
                         <Button
@@ -274,7 +306,7 @@ export default function Dashboard() {
                         Explore More →
                       </Link>
                     </div>
-                    <Card className="border border-slate-100 shadow-sm rounded-2xl overflow-hidden bg-white">
+                    <Card className="border border-stone-100 shadow-sm rounded-2xl overflow-hidden bg-white">
                       <div className="p-1">
                         <SwapPartnerSuggestions user={user} userProperties={properties} />
                       </div>
@@ -292,15 +324,15 @@ export default function Dashboard() {
                       </Button>
                     </Link>
                   </div>
-                  <Card className="border border-slate-100 shadow-sm rounded-2xl overflow-hidden bg-white">
+                  <Card className="border border-stone-100 shadow-sm rounded-2xl overflow-hidden bg-white">
                     <CardContent className="p-0">
                       {swapRequests.length === 0 ? (
                         <div className="text-center py-16 px-8">
-                          <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                            <ArrowLeftRight className="w-6 h-6 text-slate-300" />
+                          <div className="w-14 h-14 bg-stone-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <ArrowLeftRight className="w-6 h-6 text-stone-300" />
                           </div>
                           <p className="text-lg font-medium text-slate-900 mb-1">No swap requests yet</p>
-                          <p className="text-slate-400 text-sm mb-6 max-w-sm mx-auto">Start browsing properties or add your own to begin swapping</p>
+                          <p className="text-stone-400 text-sm mb-6 max-w-sm mx-auto">Start browsing properties or add your own to begin swapping</p>
                           <Link to={createPageUrl('FindProperties')}>
                             <Button className="bg-blue-600 text-white hover:bg-blue-700 rounded-xl px-8 h-10 text-sm font-medium shadow-lg shadow-blue-600/20">
                               Find Properties
@@ -310,24 +342,24 @@ export default function Dashboard() {
                       ) : (
                         <div className="divide-y divide-slate-50">
                           {swapRequests.slice(0, 5).map((request) => (
-                            <div key={request.id} className="flex items-center justify-between px-6 py-5 hover:bg-slate-50/50 transition-colors duration-200 group">
+                            <div key={request.id} className="flex items-center justify-between px-6 py-5 hover:bg-stone-50/50 transition-colors duration-200 group">
                               <div className="flex items-center gap-4 min-w-0">
                                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${request.status === 'approved' ? 'bg-emerald-50 text-emerald-600' :
                                     request.status === 'pending' ? 'bg-amber-50 text-amber-600' :
-                                      'bg-slate-100 text-slate-500'
+                                      'bg-stone-100 text-stone-500'
                                   }`}>
                                   {request.status === 'approved' ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
                                 </div>
                                 <div className="min-w-0">
                                   <p className="text-sm font-semibold text-slate-900 truncate group-hover:text-blue-600 transition-colors">{request.property_title}</p>
-                                  <p className="text-xs text-slate-400 mt-0.5">
+                                  <p className="text-xs text-stone-400 mt-0.5">
                                     {request.check_in && format(new Date(request.check_in), 'MMM dd')} – {request.check_out && format(new Date(request.check_out), 'MMM dd, yyyy')}
                                   </p>
                                 </div>
                               </div>
                               <Badge className={`${request.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
                                   request.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                                    'bg-slate-100 text-slate-600 border-slate-200'
+                                    'bg-stone-100 text-slate-600 border-stone-200'
                                 } border rounded-full capitalize text-xs font-medium px-3 py-0.5 ml-4 flex-shrink-0 shadow-none`}>
                                 {request.status}
                               </Badge>
@@ -354,20 +386,20 @@ export default function Dashboard() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {properties.length === 0 ? (
-                    <Card className="col-span-2 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50 p-16 text-center">
-                      <Home className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                      <p className="text-slate-500 font-medium">No properties listed yet</p>
-                      <p className="text-slate-400 text-sm mt-1">Add your first property to start swapping</p>
+                    <Card className="col-span-2 border-2 border-dashed border-stone-200 rounded-2xl bg-stone-50/50 p-16 text-center">
+                      <Home className="w-10 h-10 text-stone-300 mx-auto mb-3" />
+                      <p className="text-stone-500 font-medium">No properties listed yet</p>
+                      <p className="text-stone-400 text-sm mt-1">Add your first property to start swapping</p>
                     </Card>
                   ) : (
                     properties.map((property) => (
-                      <Card key={property.id} className="border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 rounded-2xl overflow-hidden group bg-white">
+                      <Card key={property.id} className="border border-stone-100 shadow-sm hover:shadow-lg transition-all duration-300 rounded-2xl overflow-hidden group bg-white">
                         <CardContent className="p-0">
-                          <div className="aspect-video bg-slate-100 relative overflow-hidden">
+                          <div className="aspect-video bg-stone-100 relative overflow-hidden">
                             {property.image_url ? (
                               <img src={property.image_url} alt={property.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-slate-300">
+                              <div className="w-full h-full flex items-center justify-center text-stone-300">
                                 <Home className="w-12 h-12" />
                               </div>
                             )}
@@ -380,7 +412,7 @@ export default function Dashboard() {
                             <p className="text-xs text-blue-600 font-medium mb-1">{property.location}</p>
                             <h3 className="text-lg font-semibold text-slate-900 tracking-tight mb-3 group-hover:text-blue-600 transition-colors">{property.title}</h3>
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-4 text-slate-400 text-xs font-medium">
+                              <div className="flex items-center gap-4 text-stone-400 text-xs font-medium">
                                 <span>{property.bedrooms} Beds</span>
                                 <span>{property.bathrooms} Baths</span>
                               </div>
@@ -408,19 +440,19 @@ export default function Dashboard() {
                   </Link>
                 </div>
 
-                <Card className="border border-slate-100 shadow-sm rounded-2xl overflow-hidden bg-white">
+                <Card className="border border-stone-100 shadow-sm rounded-2xl overflow-hidden bg-white">
                   <CardContent className="p-0">
                     {messages.length === 0 ? (
                       <div className="text-center py-20">
                         <MessageSquare className="w-10 h-10 text-slate-200 mx-auto mb-3" />
-                        <p className="text-slate-500 font-medium">No unread messages</p>
-                        <p className="text-slate-400 text-sm mt-1">You're all caught up!</p>
+                        <p className="text-stone-500 font-medium">No unread messages</p>
+                        <p className="text-stone-400 text-sm mt-1">You're all caught up!</p>
                       </div>
                     ) : (
                       <div className="divide-y divide-slate-50">
                         {messages.map((msg) => (
                           <Link key={msg.id} to={createPageUrl('Messages')}>
-                            <div className="px-6 py-5 hover:bg-slate-50/50 transition-colors cursor-pointer group">
+                            <div className="px-6 py-5 hover:bg-stone-50/50 transition-colors cursor-pointer group">
                               <div className="flex items-start gap-4">
                                 <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-xs flex-shrink-0">
                                   {msg.sender_name?.[0] || 'S'}
@@ -428,11 +460,11 @@ export default function Dashboard() {
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center justify-between">
                                     <p className="text-sm font-semibold text-slate-900">{msg.sender_name}</p>
-                                    <span className="text-xs text-slate-400">
+                                    <span className="text-xs text-stone-400">
                                       {format(new Date(msg.created_date), 'HH:mm · MMM dd')}
                                     </span>
                                   </div>
-                                  <p className="text-sm text-slate-500 truncate mt-1">{msg.content}</p>
+                                  <p className="text-sm text-stone-500 truncate mt-1">{msg.content}</p>
                                 </div>
                               </div>
                             </div>
@@ -451,14 +483,14 @@ export default function Dashboard() {
 
                 <div className="grid grid-cols-1 gap-4">
                   {upcomingCalls.length === 0 ? (
-                    <Card className="border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50 p-16 text-center">
-                      <Video className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                      <p className="text-slate-500 font-medium">No upcoming calls</p>
-                      <p className="text-slate-400 text-sm mt-1">Video calls will appear here once scheduled</p>
+                    <Card className="border-2 border-dashed border-stone-200 rounded-2xl bg-stone-50/50 p-16 text-center">
+                      <Video className="w-10 h-10 text-stone-300 mx-auto mb-3" />
+                      <p className="text-stone-500 font-medium">No upcoming calls</p>
+                      <p className="text-stone-400 text-sm mt-1">Video calls will appear here once scheduled</p>
                     </Card>
                   ) : (
                     upcomingCalls.map((call) => (
-                      <Card key={call.id} className="border border-slate-100 shadow-sm rounded-2xl bg-white overflow-hidden">
+                      <Card key={call.id} className="border border-stone-100 shadow-sm rounded-2xl bg-white overflow-hidden">
                         <CardContent className="p-6 flex items-center justify-between">
                           <div className="flex items-center gap-5">
                             <div className="w-14 h-14 bg-slate-900 rounded-xl flex flex-col items-center justify-center text-white">
@@ -470,7 +502,7 @@ export default function Dashboard() {
                               <h3 className="text-lg font-semibold text-slate-900 tracking-tight">
                                 Meeting with {call.guest_email === user?.email ? call.host_email : call.guest_email}
                               </h3>
-                              <p className="text-slate-400 text-sm mt-0.5">
+                              <p className="text-stone-400 text-sm mt-0.5">
                                 {format(new Date(call.scheduled_time), 'HH:mm')}
                               </p>
                             </div>
@@ -505,21 +537,21 @@ export default function Dashboard() {
                         <p className="text-xs font-medium text-blue-400 uppercase tracking-wider mb-2">Network Growth</p>
                         <h3 className="text-4xl font-light mb-1 tracking-tight">
                           {user?.referral_count || 0}
-                          <span className="text-sm font-medium text-slate-400 ml-2">colleagues invited</span>
+                          <span className="text-sm font-medium text-stone-400 ml-2">colleagues invited</span>
                         </h3>
 
                         <div className="mt-8 space-y-3">
-                          <label className="text-xs font-medium text-slate-400">Your Referral Link</label>
+                          <label className="text-xs font-medium text-stone-400">Your Referral Link</label>
                           <div className="flex gap-2">
                             <Input
                               readOnly
-                              value={`${window.location.origin}?ref=${user?.referral_code || user?.id}`}
+                              value={`${window.location.origin}/login?ref=${user?.referral_code || user?.id}`}
                               className="bg-white/5 border-white/10 text-white rounded-xl h-10 font-mono text-xs"
                             />
                             <Button
                               size="icon"
                               onClick={copyReferralLink}
-                              className="bg-white text-slate-900 rounded-xl h-10 w-10 hover:bg-slate-100 transition-all flex-shrink-0"
+                              className="bg-white text-slate-900 rounded-xl h-10 w-10 hover:bg-stone-100 transition-all flex-shrink-0"
                             >
                               {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
                             </Button>
@@ -530,7 +562,7 @@ export default function Dashboard() {
                   </Card>
 
                   {/* Rewards Track */}
-                  <Card className="border border-slate-100 rounded-2xl shadow-sm bg-white">
+                  <Card className="border border-stone-100 rounded-2xl shadow-sm bg-white">
                     <CardHeader className="pb-3 px-6 pt-6">
                       <CardTitle className="text-sm font-semibold text-slate-900">Rewards Track</CardTitle>
                     </CardHeader>
@@ -549,13 +581,13 @@ export default function Dashboard() {
                                   <Check className="w-3 h-3 text-white" />
                                 </div>
                               ) : (
-                                <div className="w-6 h-6 rounded-full border-2 border-slate-200" />
+                                <div className="w-6 h-6 rounded-full border-2 border-stone-200" />
                               )}
-                              <span className={`text-sm font-medium ${achieved ? 'text-blue-700' : 'text-slate-500'}`}>
+                              <span className={`text-sm font-medium ${achieved ? 'text-blue-700' : 'text-stone-500'}`}>
                                 {tier.count} {tier.count === 1 ? 'Colleague' : 'Colleagues'}
                               </span>
                             </div>
-                            <span className="text-xs text-slate-400 font-medium">{tier.icon} {tier.text}</span>
+                            <span className="text-xs text-stone-400 font-medium">{tier.icon} {tier.text}</span>
                           </div>
                         );
                       })}
@@ -568,11 +600,11 @@ export default function Dashboard() {
             {activeTab === 'guest-points' && (
               <GuestPointsTab user={user} />
             )}
-          </main>
+          </div>
         </div>
+      </main>
 
-        <OnboardingWizard user={user} open={showOnboarding} onClose={() => setShowOnboarding(false)} />
-      </div>
+      <OnboardingWizard user={user} open={showOnboarding} onClose={() => setShowOnboarding(false)} />
     </div>
   );
 }

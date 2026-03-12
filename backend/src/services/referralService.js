@@ -23,16 +23,17 @@ async function handleUserVerified(userEmail) {
             }
         });
 
-        // 2. Increment the referrer's count
+        // 3. Increment the referrer's count
         const referrer = await prisma.user.findUnique({
             where: { email: referral.referrer_email }
         });
 
         if (!referrer) return;
 
-        const newCount = referrer.referred_users_verified_count + 1;
+        const newCount = (referrer.referred_users_verified_count || 0) + 1;
+        const settings = await prisma.platformSettings.findFirst();
 
-        // 3. Define milestone updates
+        // 4. Define milestone updates
         const updates = {
             referred_users_verified_count: newCount
         };
@@ -43,16 +44,50 @@ async function handleUserVerified(userEmail) {
             console.log(`[ReferralService] Referrer ${referrer.email} unlocked SNEAK PEEK`);
         }
 
-        // Milestone 2: The Delegate (5 Referrals) - Founders' Lifetime Waiver
-        if (newCount >= 5 && referrer.subscription_status !== 'lifetime_waiver') {
-            updates.subscription_status = 'lifetime_waiver';
-            console.log(`[ReferralService] Referrer ${referrer.email} unlocked LIFETIME WAIVER`);
-        }
+        // Logic for Rewards based on Platform Status
+        if (settings?.platform_status === 'pre_launch' && settings.founders_waiver_enabled) {
+            // Milestone 2: The Delegate (5 Referrals) - Founders' Lifetime Waiver
+            const requiredForWaiver = settings.required_verified_referrals_for_waiver || 5;
+            if (newCount >= requiredForWaiver && referrer.subscription_status !== 'lifetime_waiver' && referrer.subscription_status !== 'lifetime_waived') {
+                updates.subscription_status = 'lifetime_waived';
+                console.log(`[ReferralService] Referrer ${referrer.email} unlocked LIFETIME WAIVER`);
+                
+                await prisma.notification.create({
+                    data: {
+                        user_email: referrer.email,
+                        type: 'system',
+                        title: "🎉 Founders' Lifetime Waiver Unlocked!",
+                        message: `You've referred ${newCount} verified colleagues and earned lifetime access!`,
+                        link: '/Dashboard'
+                    }
+                });
+            }
+        } else {
+            // Standard Launched Reward: 1000 Points per verified referral
+            const pointsReward = 1000;
+            const newBalance = (referrer.guest_points || 0) + pointsReward;
+            updates.guest_points = newBalance;
+            
+            await prisma.guestPointTransaction.create({
+                data: {
+                    user_email: referrer.email,
+                    transaction_type: 'earned_referral',
+                    points: pointsReward,
+                    balance_after: newBalance,
+                    description: `Referral reward for ${referral.referred_name || referral.referred_email}`,
+                    related_id: referral.id
+                }
+            });
 
-        // Milestone 3: The Ambassador (10 Referrals) - Trigger for Photo Shoot 
-        // (For now just log, could send email or notification)
-        if (newCount === 10) {
-            console.log(`[ReferralService] Referrer ${referrer.email} reached AMBASSADOR status`);
+            await prisma.notification.create({
+                data: {
+                    user_email: referrer.email,
+                    type: 'system',
+                    title: "🎁 Referral Reward Earned!",
+                    message: `You've earned ${pointsReward} GuestPoints for referring a verified colleague!`,
+                    link: '/Dashboard?tab=points'
+                }
+            });
         }
 
         // Milestone 4: Founder's Circle (20 Referrals)

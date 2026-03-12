@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { api } from '@/api/apiClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Home, Eye, Heart, Edit, Trash2, MoreVertical, AlertCircle, CheckCircle, LayoutDashboard } from 'lucide-react';
@@ -116,7 +117,7 @@ export default function MyListings() {
   };
 
   const statusColors = {
-    draft: 'bg-slate-100 text-slate-700',
+    draft: 'bg-stone-100 text-slate-700',
     active: 'bg-emerald-100 text-emerald-700',
     paused: 'bg-amber-100 text-amber-700',
     archived: 'bg-red-100 text-red-700',
@@ -151,18 +152,114 @@ export default function MyListings() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
-      {/* Structural Header */}
-      <div className="bg-white border-b border-slate-200 sticky top-0 z-10 backdrop-blur-md bg-white/80">
-        <div className="max-w-7xl mx-auto px-6 py-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div className="min-h-screen flex bg-[#FDF8F4]">
+      {/* SIDEBAR NAVIGATION (Desktop) */}
+      <aside className="hidden lg:flex w-60 flex-col bg-unswap-blue-deep border-r border-[#001733] shadow-2xl z-20">
+        {/* Sidebar Header / Brand */}
+        <div className="px-6 pt-8 pb-6">
+          <h1 className="text-lg font-bold text-white tracking-tight font-display">My Listings</h1>
+          <Badge variant="outline" className={`mt-2 flex items-center gap-1.5 px-2.5 py-0.5 w-fit rounded-full text-[9px] border-white/20 bg-white/10 text-white/80`}>
+             <span className={`w-1.5 h-1.5 rounded-full ${isVerified ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+             {isVerified ? 'VERIFIED' : 'PENDING'}
+          </Badge>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 px-3">
+          <div className="px-3 pt-4 pb-3">
+            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Menu</span>
+          </div>
+
+          <div className="space-y-0.5">
+            {[
+              { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+              { id: 'properties', label: 'Properties', icon: Home, badge: properties.length },
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`w-full group flex items-center gap-3 px-3 py-2.5 transition-all text-left rounded-sm border-l-[3px] ${activeTab === item.id
+                  ? 'border-unswap-silver-light bg-white/10 text-white'
+                  : 'border-transparent text-white/60 hover:text-white hover:bg-white/5'
+                  }`}
+              >
+                <item.icon className={`w-4 h-4 flex-shrink-0 transition-colors ${activeTab === item.id ? 'text-white' : 'text-white/40 group-hover:text-white/70'}`} />
+                <span className={`flex-1 text-[13px] tracking-wide ${activeTab === item.id ? 'font-semibold' : 'font-medium'}`}>{item.label}</span>
+                {item.badge > 0 && (
+                  <span className={`text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center ${activeTab === item.id ? 'bg-white text-unswap-blue-deep' : 'bg-white/10 text-white'}`}>
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </nav>
+
+        {/* User Info & Sign Out at bottom */}
+        <div className="px-3 pb-6 mt-auto border-t border-white/10 pt-4 space-y-2">
+            <div className="px-3 flex items-center gap-3 mb-4">
+              {user?.avatar_url ? (
+                  <img src={user?.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover border border-white/20" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white font-bold text-xs">
+                    {(user?.full_name || user?.username || user?.email || 'U')[0].toUpperCase()}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-medium text-white truncate">
+                    {user?.full_name || user?.username || user?.email?.split('@')[0] || '—'}
+                  </p>
+                </div>
+            </div>
+
+          <Button variant="ghost" size="sm" asChild className="w-full justify-start text-white/50 hover:text-white hover:bg-white/5 transition-all font-semibold text-[11px] tracking-wide gap-2 h-9 rounded-sm">
+             <Link to="/Dashboard"><LayoutDashboard className="w-3.5 h-3.5" /> Back to Dashboard</Link>
+          </Button>
+        </div>
+      </aside>
+
+      {/* MOBILE HEADER (shown only on small screens) */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-white border-b border-stone-200 px-4 py-3 shadow-sm flex flex-col items-center">
+        <div className="w-full flex items-center justify-between mb-3">
+          <h1 className="text-lg font-bold text-unswap-blue-deep font-display">My Listings</h1>
+          <Link to="/Dashboard">
+            <Button variant="ghost" size="sm" className="text-stone-400 hover:text-slate-600 text-[10px] font-bold uppercase tracking-widest">
+              Back
+            </Button>
+          </Link>
+        </div>
+        <div className="flex gap-1 overflow-x-auto pb-1 no-scrollbar w-full">
+          {[
+            { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+            { id: 'properties', label: 'Properties', icon: Home, badge: properties.length },
+          ].map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold whitespace-nowrap rounded-sm transition-all ${activeTab === item.id
+                ? 'bg-unswap-blue-deep text-white'
+                : 'text-stone-500 hover:bg-stone-100'
+                }`}
+            >
+              <item.icon className="w-3.5 h-3.5" />
+              {item.label}
+              {item.badge > 0 && <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[9px] ${activeTab === item.id ? 'bg-white/20' : 'bg-stone-200'}`}>{item.badge}</span>}
+            </button>
+          ))}
+        </div>
+      </div>
+
+       {/* MAIN CONTENT AREA */}
+      <main className="flex-1 min-w-0 overflow-y-auto lg:pt-0 pt-28">
+        <div className="max-w-6xl mx-auto px-6 lg:px-10 py-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-8 h-px bg-unswap-blue-deep/20" />
                 <p className="text-unswap-blue-deep/60 font-bold tracking-[0.4em] uppercase text-[10px]">Properties</p>
               </div>
-              <h1 className="text-4xl font-extralight tracking-tighter text-slate-900 mb-2">My <span className="italic font-serif">Listings</span></h1>
-              <p className="text-slate-500 text-sm font-light">Manage your properties and swap availability</p>
+              <h2 className="text-4xl font-extralight tracking-tighter text-slate-900 mb-2">My <span className="italic font-serif">Listings</span></h2>
+              <p className="text-stone-500 text-sm font-light">Manage your properties and swap availability</p>
             </div>
             <Button
               onClick={handleAddProperty}
@@ -172,39 +269,8 @@ export default function MyListings() {
               Add Property
             </Button>
           </div>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        <div className="flex flex-col lg:flex-row gap-12">
-          {/* Sidebar Navigation */}
-          <aside className="lg:w-80 shrink-0">
-            <nav className="flex flex-col gap-2">
-              {[
-                { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-                { id: 'properties', label: 'Properties', icon: Home, badge: properties.length },
-              ].map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`flex items-center justify-between w-full px-6 py-5 text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 border-l-2 ${activeTab === item.id
-                    ? 'bg-white border-unswap-blue-deep text-unswap-blue-deep shadow-lg shadow-unswap-blue-deep/5'
-                    : 'bg-transparent border-transparent text-slate-400 hover:bg-slate-50 hover:text-slate-600'
-                    }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <item.icon className={`w-4 h-4 ${activeTab === item.id ? 'text-unswap-blue-deep' : 'text-slate-300'}`} />
-                    <span>{item.label}</span>
-                  </div>
-                  {item.badge > 0 && (
-                    <span className="h-5 min-w-[20px] px-1.5 flex items-center justify-center bg-unswap-blue-deep text-white text-[9px] font-bold">
-                      {item.badge}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </nav>
-          </aside>
+          <div className="space-y-8">
 
           {/* Main Content Area */}
           <div className="flex-1">
@@ -226,13 +292,13 @@ export default function MyListings() {
                       { label: 'Total Views', value: properties.reduce((sum, p) => sum + (p.views_count || 0), 0), icon: Eye },
                       { label: 'Favorites', value: properties.reduce((sum, p) => sum + (p.favorites_count || 0), 0), icon: Heart },
                     ].map((stat, index) => (
-                      <Card key={index} className="rounded-none border-slate-200 shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-500 border-l-4 border-l-unswap-blue-deep/5 hover:border-l-unswap-blue-deep">
+                      <Card key={index} className="rounded-none border-stone-200 shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-500 border-l-4 border-l-unswap-blue-deep/5 hover:border-l-unswap-blue-deep">
                         <CardContent className="p-8 flex items-center gap-6">
-                          <div className="w-12 h-12 bg-slate-50 border border-slate-100 rounded-none flex items-center justify-center transition-all duration-500 group-hover:bg-unswap-blue-deep group-hover:text-white">
+                          <div className="w-12 h-12 bg-stone-50 border border-stone-100 rounded-none flex items-center justify-center transition-all duration-500 group-hover:bg-unswap-blue-deep group-hover:text-white">
                             <stat.icon className="w-5 h-5" />
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
+                            <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">{stat.label}</p>
                             <p className="text-3xl font-extralight text-slate-900 tracking-tighter leading-none">{stat.value}</p>
                           </div>
                         </CardContent>
@@ -240,9 +306,9 @@ export default function MyListings() {
                     ))}
                   </div>
 
-                  <div className="bg-white p-12 border border-slate-100 rounded-none border-l-4 border-l-unswap-blue-deep">
+                  <div className="bg-white p-12 border border-stone-100 rounded-none border-l-4 border-l-unswap-blue-deep">
                     <h3 className="text-xl font-light tracking-tight text-slate-900 mb-4 italic font-serif">Properties Overview</h3>
-                    <p className="text-slate-500 text-sm font-light leading-relaxed max-w-2xl">
+                    <p className="text-stone-500 text-sm font-light leading-relaxed max-w-2xl">
                       Manage your property portfolio and track performance across your listings. View engagement metrics and manage the lifecycle of each property in your collection.
                     </p>
                   </div>
@@ -262,15 +328,15 @@ export default function MyListings() {
                   {isLoading ? (
                     <div className="text-center py-20">
                       <div className="inline-block w-8 h-8 border-2 border-unswap-blue-deep/20 border-t-unswap-blue-deep rounded-full animate-spin" />
-                      <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Loading...</p>
+                      <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400">Loading...</p>
                     </div>
                   ) : properties.length === 0 ? (
-                    <div className="text-center py-32 border-2 border-dashed border-slate-200">
-                      <div className="w-20 h-20 bg-slate-50 rounded-none flex items-center justify-center mx-auto mb-8 border border-slate-100">
+                    <div className="text-center py-32 border-2 border-dashed border-stone-200">
+                      <div className="w-20 h-20 bg-stone-50 rounded-none flex items-center justify-center mx-auto mb-8 border border-stone-100">
                         <Home className="w-8 h-8 text-slate-200" />
                       </div>
                       <h3 className="text-2xl font-light text-slate-900 tracking-tight mb-2">No properties yet</h3>
-                      <p className="text-slate-500 text-sm font-light mb-8 max-w-sm mx-auto">List your first property to start swapping with colleagues</p>
+                      <p className="text-stone-500 text-sm font-light mb-8 max-w-sm mx-auto">List your first property to start swapping with colleagues</p>
                       <Button onClick={handleAddProperty} className="bg-unswap-blue-deep hover:bg-slate-900 text-white rounded-none h-14 px-10 text-[10px] font-bold uppercase tracking-[0.3em] transition-all shadow-xl">
                         <Plus className="w-4 h-4 mr-2" />
                         Add Your First Property
@@ -287,7 +353,7 @@ export default function MyListings() {
                             exit={{ opacity: 0, y: -20 }}
                             transition={{ delay: index * 0.05, duration: 0.5 }}
                           >
-                            <Card className="rounded-none border-slate-200 overflow-hidden group hover:shadow-2xl transition-all duration-500">
+                            <Card className="rounded-none border-stone-200 overflow-hidden group hover:shadow-2xl transition-all duration-500">
                               <CardContent className="p-0">
                                 <div className="flex flex-col md:flex-row min-h-[220px]">
                                   {/* Image - Architectural Zoom */}
@@ -315,23 +381,23 @@ export default function MyListings() {
                                         <h3 className="text-2xl font-light text-slate-900 tracking-tight leading-tight group-hover:text-unswap-blue-deep transition-colors duration-300">
                                           {property.title}
                                         </h3>
-                                        <div className="flex items-center gap-2 text-slate-400">
+                                        <div className="flex items-center gap-2 text-stone-400">
                                           <p className="text-[10px] font-bold uppercase tracking-[0.1em]">{property.location}</p>
                                         </div>
                                       </div>
 
                                       <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                          <Button variant="ghost" size="icon" className="h-10 w-10 p-0 rounded-none hover:bg-slate-100">
-                                            <MoreVertical className="w-4 h-4 text-slate-400" />
+                                          <Button variant="ghost" size="icon" className="h-10 w-10 p-0 rounded-none hover:bg-stone-100">
+                                            <MoreVertical className="w-4 h-4 text-stone-400" />
                                           </Button>
                                         </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" className="rounded-none border-slate-200 w-48 shadow-xl">
+                                        <DropdownMenuContent align="end" className="rounded-none border-stone-200 w-48 shadow-xl">
                                           <DropdownMenuItem onClick={() => handleEdit(property)} className="cursor-pointer py-3 rounded-none">
-                                            <Edit className="w-3.5 h-3.5 mr-3 text-slate-400" />
+                                            <Edit className="w-3.5 h-3.5 mr-3 text-stone-400" />
                                             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Edit</span>
                                           </DropdownMenuItem>
-                                          <DropdownMenuItem onClick={() => handleToggleStatus(property)} className="cursor-pointer py-3 rounded-none focus:bg-slate-50">
+                                          <DropdownMenuItem onClick={() => handleToggleStatus(property)} className="cursor-pointer py-3 rounded-none focus:bg-stone-50">
                                             {property.status === 'active' ? (
                                               <>
                                                 <AlertCircle className="w-3.5 h-3.5 mr-3 text-amber-400" />
@@ -355,20 +421,20 @@ export default function MyListings() {
                                       </DropdownMenu>
                                     </div>
 
-                                    <div className="mt-auto pt-8 border-t border-slate-50 flex items-center justify-between">
+                                    <div className="mt-auto pt-8 border-t border-stone-50 flex items-center justify-between">
                                       <div className="flex items-center gap-8">
-                                        <div className="flex items-center gap-2 text-slate-500">
+                                        <div className="flex items-center gap-2 text-stone-500">
                                           <Eye className="w-3.5 h-3.5 text-unswap-blue-deep/30" />
                                           <span className="text-[10px] font-bold uppercase tracking-widest">{property.views_count || 0} views</span>
                                         </div>
-                                        <div className="flex items-center gap-2 text-slate-500">
+                                        <div className="flex items-center gap-2 text-stone-500">
                                           <Heart className="w-3.5 h-3.5 text-rose-300" />
                                           <span className="text-[10px] font-bold uppercase tracking-widest">{property.favorites_count || 0} favorites</span>
                                         </div>
                                       </div>
                                       <div>
-                                        <span className="text-sm font-bold text-unswap-blue-deep tracking-wider">{property.smart_credit_value || 200}</span>
-                                        <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400 ml-1.5">pts / night</span>
+                                        <span className="text-sm font-bold text-unswap-blue-deep tracking-wider">{property.nightly_points || 200}</span>
+                                        <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-stone-400 ml-1.5">pts / night</span>
                                       </div>
                                     </div>
                                   </div>
@@ -382,19 +448,20 @@ export default function MyListings() {
                   )}
                 </motion.div>
               )}
-            </AnimatePresence>
+              </AnimatePresence>
+            </div>
           </div>
         </div>
-      </div>
+      </main>
 
       {/* Property Form Dialog - Architectural refinement */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-none border-0 shadow-2xl p-0">
-          <div className="p-8 border-b bg-slate-50">
+          <div className="p-8 border-b bg-stone-50">
             <DialogTitle className="text-3xl font-extralight tracking-tighter text-slate-900">
               {editingProperty ? 'Edit Property' : 'Add New Property'}
             </DialogTitle>
-            <DialogDescription className="text-slate-500 text-xs font-light mt-1 uppercase tracking-widest">
+            <DialogDescription className="text-stone-500 text-xs font-light mt-1 uppercase tracking-widest">
               Provide the details of your property to list it on the platform.
             </DialogDescription>
           </div>
@@ -413,15 +480,15 @@ export default function MyListings() {
 
       {/* Delete Confirmation - High Contrast */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent className="rounded-none border-slate-200 shadow-2xl">
+        <AlertDialogContent className="rounded-none border-stone-200 shadow-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-light tracking-tight">Delete Property</AlertDialogTitle>
-            <AlertDialogDescription className="text-slate-500 font-light pt-2">
+            <AlertDialogDescription className="text-stone-500 font-light pt-2">
               Are you sure you want to delete this property? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-6">
-            <AlertDialogCancel className="rounded-none font-bold text-[10px] uppercase tracking-widest border-slate-200">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-none font-bold text-[10px] uppercase tracking-widest border-stone-200">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteMutation.mutate(deleteId)}
               className="bg-red-500 hover:bg-red-600 rounded-none font-bold text-[10px] uppercase tracking-widest text-white shadow-lg"

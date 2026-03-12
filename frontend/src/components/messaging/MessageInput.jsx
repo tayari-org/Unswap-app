@@ -137,7 +137,7 @@ export default function MessageInput({
   };
 
   return (
-    <div className="p-8 border-t border-slate-100 bg-white">
+    <div className="p-3 md:p-4 border-t border-slate-100 bg-white">
       {/* Reply Preview - Architectural Adjustment */}
       {replyingTo && (
         <motion.div

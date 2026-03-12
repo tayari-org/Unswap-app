@@ -101,9 +101,9 @@ export default function NotificationCenter({ user }) {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[400px] p-0 rounded-none border-slate-200 shadow-2xl overflow-hidden" align="end">
+      <PopoverContent className="w-[380px] p-0 rounded-none border-slate-200 shadow-2xl overflow-hidden" align="end">
         {/* Header - Institutional Style */}
-        <div className="flex items-center justify-between p-10 bg-white border-b border-slate-100">
+        <div className="flex items-center justify-between px-5 py-4 bg-white border-b border-slate-100">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <div className="w-6 h-px bg-unswap-blue-deep/20" />
@@ -124,7 +124,7 @@ export default function NotificationCenter({ user }) {
         </div>
 
         {/* Notifications List */}
-        <ScrollArea className="h-[450px]">
+        <div className="max-h-[250px] overflow-y-auto">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-slate-300">
               <Bell className="w-12 h-12 mb-4 opacity-20" />
@@ -187,7 +187,7 @@ export default function NotificationCenter({ user }) {
               </AnimatePresence>
             </div>
           )}
-        </ScrollArea>
+        </div>
 
         {/* Footer - Institutional Link */}
         <div className="p-4 bg-slate-50 border-t border-slate-200 text-center">

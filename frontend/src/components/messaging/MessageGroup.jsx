@@ -18,15 +18,15 @@ export default function MessageGroup({ messages, isMe, user, onReply, onDelete, 
   const reactionEmojis = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
 
   return (
-    <div className={`flex gap-4 ${isMe ? 'flex-row-reverse' : 'flex-row'} mb-6`}>
+    <div className={`flex gap-2 ${isMe ? 'flex-row-reverse' : 'flex-row'} mb-3`}>
       {/* Avatar - only show for received messages */}
       {!isMe && (
-        <div className="w-12 h-12 rounded-none bg-slate-50 flex items-center justify-center flex-shrink-0 text-slate-400 border border-slate-100 font-extralight text-lg mt-auto transition-all duration-700 group-hover:bg-unswap-blue-deep group-hover:text-white group-hover:border-unswap-blue-deep shadow-sm">
+        <div className="w-8 h-8 rounded-none bg-slate-50 flex items-center justify-center flex-shrink-0 text-slate-400 border border-slate-100 font-extralight text-sm mt-auto shadow-sm">
           {messages[0].sender_name?.charAt(0) || '?'}
         </div>
       )}
 
-      <div className={`flex flex-col gap-1.5 max-w-[80%] sm:max-w-[75%]`}>
+      <div className={`flex flex-col gap-1 max-w-[85%] sm:max-w-[80%]`}>
         {messages.map((msg, index) => (
           <motion.div
             key={msg.id}
@@ -37,7 +37,7 @@ export default function MessageGroup({ messages, isMe, user, onReply, onDelete, 
           >
             <div className="relative">
               <div
-                className={`px-8 py-5 rounded-none shadow-sm relative transition-all duration-500 ${isMe
+                className={`px-3 md:px-4 py-2 md:py-2.5 rounded-none shadow-sm relative transition-all duration-500 ${isMe
                   ? 'bg-unswap-blue-deep text-white border-l-[6px] border-white/10 hover:shadow-2xl'
                   : 'bg-white text-slate-900 border border-slate-100 hover:shadow-2xl'
                   }`}

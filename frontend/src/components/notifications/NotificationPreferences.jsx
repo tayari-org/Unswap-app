@@ -88,13 +88,13 @@ export default function NotificationPreferences({ user }) {
   ];
 
   return (
-    <Card className="rounded-none border-slate-200 shadow-xl overflow-hidden group">
-      <CardHeader className="p-8 border-b border-slate-50">
+    <Card className="rounded-none border-stone-200 shadow-xl overflow-hidden group bg-white">
+      <CardHeader className="p-8 border-b border-stone-50">
         <CardTitle className="flex items-center gap-3">
           <div className="w-8 h-px bg-unswap-blue-deep/20" />
           <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-unswap-blue-deep">Notification Preferences</span>
         </CardTitle>
-        <CardDescription className="text-[10px] uppercase tracking-widest text-slate-400 mt-2 ml-11">
+        <CardDescription className="text-[10px] uppercase tracking-widest text-stone-400 mt-2 ml-11">
           Manage how you receive updates and alerts
         </CardDescription>
       </CardHeader>
@@ -103,19 +103,19 @@ export default function NotificationPreferences({ user }) {
           <div key={index}>
             {index > 0 && <Separator className="mb-6" />}
             <div className="flex items-start gap-6 mb-6">
-              <div className="w-12 h-12 bg-slate-50 border border-slate-100 rounded-none flex items-center justify-center flex-shrink-0 transition-all group-hover:bg-unswap-blue-deep group-hover:text-white group-hover:border-unswap-blue-deep group-hover:shadow-lg">
+              <div className="w-12 h-12 bg-stone-50 border border-stone-100 rounded-none flex items-center justify-center flex-shrink-0 transition-all group-hover:bg-unswap-blue-deep group-hover:text-white group-hover:border-unswap-blue-deep group-hover:shadow-lg">
                 <type.icon className="w-4 h-4" />
               </div>
               <div className="flex-1">
                 <h4 className="text-sm font-light text-slate-900 tracking-tight mb-1 uppercase">{type.title}</h4>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{type.description}</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400">{type.description}</p>
               </div>
             </div>
 
             <div className="ml-18 space-y-4">
-              <div className="flex items-center justify-between p-4 bg-slate-50/50 border border-transparent hover:border-slate-100 hover:bg-white transition-all">
+              <div className="flex items-center justify-between p-4 bg-stone-50/50 border border-transparent hover:border-stone-100 hover:bg-white transition-all">
                 <div className="flex items-center gap-3">
-                  <Mail className="w-3.5 h-3.5 text-slate-300" />
+                  <Mail className="w-3.5 h-3.5 text-stone-300" />
                   <Label htmlFor={`${type.emailKey}`} className="text-[10px] font-bold uppercase tracking-widest text-slate-600 cursor-pointer">Email notifications</Label>
                 </div>
                 <Switch
@@ -126,9 +126,9 @@ export default function NotificationPreferences({ user }) {
                 />
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-slate-50/50 border border-transparent hover:border-slate-100 hover:bg-white transition-all">
+              <div className="flex items-center justify-between p-4 bg-stone-50/50 border border-transparent hover:border-stone-100 hover:bg-white transition-all">
                 <div className="flex items-center gap-3">
-                  <Bell className="w-3.5 h-3.5 text-slate-300" />
+                  <Bell className="w-3.5 h-3.5 text-stone-300" />
                   <Label htmlFor={`${type.inAppKey}`} className="text-[10px] font-bold uppercase tracking-widest text-slate-600 cursor-pointer">In-app notifications</Label>
                 </div>
                 <Switch

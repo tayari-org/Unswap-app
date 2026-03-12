@@ -40,7 +40,7 @@ export default function ReferralProgram({ user }) {
   });
 
   const referralCode = user.referral_code || null;
-  const referralLink = referralCode ? `${window.location.origin}?ref=${referralCode}` : '';
+  const referralLink = referralCode ? `${window.location.origin}/login?ref=${referralCode}` : '';
 
   const stats = {
     total: referrals.length,

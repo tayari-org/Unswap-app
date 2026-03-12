@@ -32,17 +32,10 @@ export default function GuestFinalizeApprovalDialog({ open, onOpenChange, swapRe
           }
         }
 
-        // Transfer guest points if applicable
-        if (swapRequest.swap_type === 'guestpoints') {
-          await api.functions.invoke('transferGuestPoints', {
-            swapRequestId: swapRequest.id
-          });
-        }
-
-        // Update swap status to completed
+        // Update swap status to guest_agreed
         await api.entities.SwapRequest.update(swapRequest.id, {
-          status: 'completed',
-          completed_at: new Date().toISOString(),
+          status: 'guest_agreed',
+          guest_agreed_at: new Date().toISOString(),
           guest_agreed_to_terms: true
         });
 
@@ -53,12 +46,12 @@ export default function GuestFinalizeApprovalDialog({ open, onOpenChange, swapRe
           is_public: true
         });
 
-        // Notify host that guest approved
+        // Notify host that guest approved and wants to finalize
         await api.entities.Notification.create({
           user_email: swapRequest.host_email,
           type: 'swap_approved',
-          title: 'Swap Finalized',
-          message: `${swapRequest.requester_name || swapRequest.requester_email} has approved the finalization of your swap at ${swapRequest.property_title}. Swap is now complete!`,
+          title: 'Guest Agreed to Finalize',
+          message: `${swapRequest.requester_name || swapRequest.requester_email} has agreed to the conditions for the swap at ${swapRequest.property_title} and is ready to finalize. Please mark as complete to finish the process.`,
           link: '/MySwaps',
           related_id: swapRequest.id,
           sender_name: swapRequest.requester_name || swapRequest.requester_email,
@@ -258,7 +251,7 @@ export default function GuestFinalizeApprovalDialog({ open, onOpenChange, swapRe
             ) : (
               <>
                 <CheckCircle className="w-4 h-4 mr-2" />
-                Approve & Complete
+                Agree & Finalize
               </>
             )}
           </Button>

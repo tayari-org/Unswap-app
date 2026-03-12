@@ -44,7 +44,7 @@ export default function PropertyShowcase({ properties = [] }) {
                             <div className="flex items-center gap-3 mt-2 text-xs text-slate-500">
                                 <span className="flex items-center gap-1"><Eye className="w-3 h-3" /> {property.views_count || 0}</span>
                                 <span className="flex items-center gap-1"><Heart className="w-3 h-3" /> {property.favorites_count || 0}</span>
-                                <span className="font-semibold text-amber-600">{property.smart_credit_value || 200} pts/night</span>
+                                <span className="font-semibold text-amber-600">{property.nightly_points || 200} pts/night</span>
                             </div>
                         </div>
                     </div>

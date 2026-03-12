@@ -13,7 +13,7 @@ export default function FeaturedProperties({ properties = [] }) {
       title: "Lakeside Diplomatic Suite",
       location: "Geneva, Switzerland",
       nearest_duty_station: "UNOG (Palais des Nations)",
-      smart_credit_value: 450,
+      nightly_points: 450,
       bedrooms: 2,
       bathrooms: 2,
       max_guests: 4,
@@ -25,7 +25,7 @@ export default function FeaturedProperties({ properties = [] }) {
       title: "Manhattan Mission Penthouse",
       location: "New York, USA",
       nearest_duty_station: "UNHQ",
-      smart_credit_value: 620,
+      nightly_points: 620,
       bedrooms: 3,
       bathrooms: 3,
       max_guests: 6,
@@ -37,7 +37,7 @@ export default function FeaturedProperties({ properties = [] }) {
       title: "Gigiri Secure Residence",
       location: "Nairobi, Kenya",
       nearest_duty_station: "UNON",
-      smart_credit_value: 380,
+      nightly_points: 380,
       bedrooms: 4,
       bathrooms: 4,
       max_guests: 8,
@@ -100,7 +100,7 @@ export default function FeaturedProperties({ properties = [] }) {
 
                   {/* Credits Tag */}
                   <div className="absolute top-3 right-3 bg-white/80 backdrop-blur-md border border-white/40 px-3 py-1.5 rounded-xl shadow-sm">
-                    <span className="text-slate-900 font-bold text-base">{property.smart_credit_value}</span>
+                    <span className="text-slate-900 font-bold text-base">{property.nightly_points}</span>
                     <span className="text-slate-500 text-[9px] ml-1 uppercase tracking-widest">Credits</span>
                   </div>
 
