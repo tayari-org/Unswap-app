@@ -138,7 +138,7 @@ export default function FindProperties() {
     }
 
     // Points filter
-    if (filters.max_points < 500 && (property.smart_credit_value || 200) > filters.max_points) {
+    if (filters.max_points < 500 && (property.nightly_points || 200) > filters.max_points) {
       return false;
     }
 
@@ -184,15 +184,15 @@ export default function FindProperties() {
     <div className="space-y-8">
       {/* Duty Station */}
       <div>
-        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3 block">Duty Station</label>
+        <label className="text-[10px] font-bold text-white uppercase tracking-[0.2em] mb-3 block">Duty Station</label>
         <Select
           value={filters.duty_station}
           onValueChange={(v) => setFilters(f => ({ ...f, duty_station: v }))}
         >
-          <SelectTrigger className="rounded-none border-slate-200 bg-slate-50/50">
+          <SelectTrigger className="rounded-none border-white/10 bg-white/5 text-white/90 hover:bg-white/10 transition-colors">
             <SelectValue placeholder="Any duty station" />
           </SelectTrigger>
-          <SelectContent className="rounded-none">
+          <SelectContent className="rounded-none bg-unswap-blue-deep border-white/10 text-white">
             <SelectItem value={null}>Any duty station</SelectItem>
             {dutyStations.map(station => (
               <SelectItem key={station} value={station}>{station}</SelectItem>
@@ -203,15 +203,15 @@ export default function FindProperties() {
 
       {/* Property Type */}
       <div>
-        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3 block">Property Type</label>
+        <label className="text-[10px] font-bold text-white uppercase tracking-[0.2em] mb-3 block">Property Type</label>
         <Select
           value={filters.property_type}
           onValueChange={(v) => setFilters(f => ({ ...f, property_type: v }))}
         >
-          <SelectTrigger className="rounded-none border-slate-200 bg-slate-50/50">
+          <SelectTrigger className="rounded-none border-white/10 bg-white/5 text-white/90 hover:bg-white/10 transition-colors">
             <SelectValue placeholder="Any type" />
           </SelectTrigger>
-          <SelectContent className="rounded-none">
+          <SelectContent className="rounded-none bg-unswap-blue-deep border-white/10 text-white">
             <SelectItem value={null}>Any type</SelectItem>
             {propertyTypes.map(type => (
               <SelectItem key={type} value={type} className="capitalize">{type}</SelectItem>
@@ -222,15 +222,15 @@ export default function FindProperties() {
 
       {/* Availability */}
       <div>
-        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3 block">Stay Duration</label>
+        <label className="text-[10px] font-bold text-white uppercase tracking-[0.2em] mb-3 block">Stay Duration</label>
         <Select
           value={filters.availability_type}
           onValueChange={(v) => setFilters(f => ({ ...f, availability_type: v }))}
         >
-          <SelectTrigger className="rounded-none border-slate-200 bg-slate-50/50">
+          <SelectTrigger className="rounded-none border-white/10 bg-white/5 text-white/90 hover:bg-white/10 transition-colors">
             <SelectValue placeholder="Any duration" />
           </SelectTrigger>
-          <SelectContent className="rounded-none">
+          <SelectContent className="rounded-none bg-unswap-blue-deep border-white/10 text-white">
             <SelectItem value={null}>Any duration</SelectItem>
             {availabilityTypes.map(type => (
               <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
@@ -242,12 +242,12 @@ export default function FindProperties() {
       {/* Bedrooms & Bathrooms */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3 block">Min Bedrooms</label>
+          <label className="text-[10px] font-bold text-white uppercase tracking-[0.2em] mb-3 block">Min Bedrooms</label>
           <Select
             value={String(filters.bedrooms)}
             onValueChange={(v) => setFilters(f => ({ ...f, bedrooms: parseInt(v) }))}
           >
-            <SelectTrigger className="rounded-none border-slate-200 bg-slate-50/50">
+            <SelectTrigger className="rounded-none border-white/10 bg-white/5 text-white/90 hover:bg-white/10 transition-colors">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="rounded-none">
@@ -260,15 +260,15 @@ export default function FindProperties() {
           </Select>
         </div>
         <div>
-          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3 block">Min Bathrooms</label>
+          <label className="text-[10px] font-bold text-white uppercase tracking-[0.2em] mb-3 block">Min Bathrooms</label>
           <Select
             value={String(filters.bathrooms)}
             onValueChange={(v) => setFilters(f => ({ ...f, bathrooms: parseInt(v) }))}
           >
-            <SelectTrigger className="rounded-none border-slate-200 bg-slate-50/50">
+            <SelectTrigger className="rounded-none border-white/10 bg-white/5 text-white/90 hover:bg-white/10 transition-colors">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="rounded-none">
+            <SelectContent className="rounded-none bg-unswap-blue-deep border-white/10 text-white">
               {[0, 1, 2, 3, 4].map(num => (
                 <SelectItem key={num} value={String(num)}>
                   {num === 0 ? 'Any' : `${num}+`}
@@ -282,8 +282,8 @@ export default function FindProperties() {
       {/* Points Range */}
       <div>
         <div className="flex justify-between items-center mb-4">
-          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Max Points/Night</label>
-          <span className="text-[10px] font-bold text-unswap-blue-deep tracking-widest">{filters.max_points} PTS</span>
+          <label className="text-[10px] font-bold text-white uppercase tracking-[0.2em]">Max Points/Night</label>
+          <span className="text-[10px] font-bold text-white tracking-widest">{filters.max_points} PTS</span>
         </div>
         <Slider
           value={[filters.max_points]}
@@ -297,7 +297,7 @@ export default function FindProperties() {
 
       {/* Special Tags */}
       <div className="pt-2">
-        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-4 block">Special Features</label>
+        <label className="text-[10px] font-bold text-white uppercase tracking-[0.2em] mb-4 block">Special Features</label>
         <div className="space-y-3">
           {specialTags.map(tag => (
             <div key={tag} className="flex items-center gap-3 group cursor-pointer" onClick={() => {
@@ -308,10 +308,10 @@ export default function FindProperties() {
                   : [...f.special_tags, tag]
               }));
             }}>
-              <div className={`w-4 h-4 rounded-none border transition-all flex items-center justify-center ${filters.special_tags.includes(tag) ? 'bg-unswap-blue-deep border-unswap-blue-deep' : 'border-slate-300 group-hover:border-slate-400'}`}>
-                {filters.special_tags.includes(tag) && <Check className="w-3 h-3 text-white" />}
+              <div className={`w-4 h-4 rounded-none border transition-all flex items-center justify-center ${filters.special_tags.includes(tag) ? 'bg-white border-white' : 'border-white/30 group-hover:border-white/50'}`}>
+                {filters.special_tags.includes(tag) && <Check className="w-3 h-3 text-unswap-blue-deep" />}
               </div>
-              <span className={`text-[11px] font-medium uppercase tracking-widest transition-colors ${filters.special_tags.includes(tag) ? 'text-slate-900' : 'text-slate-500 group-hover:text-slate-700'}`}>
+              <span className={`text-[11px] font-medium uppercase tracking-widest transition-colors ${filters.special_tags.includes(tag) ? 'text-white' : 'text-white/60 group-hover:text-white/80'}`}>
                 {tag}
               </span>
             </div>
@@ -321,7 +321,7 @@ export default function FindProperties() {
 
       {/* Clear Filters */}
       {activeFilterCount > 0 && (
-        <Button variant="ghost" onClick={clearFilters} className="w-full text-unswap-blue-deep hover:text-slate-900 font-bold text-[9px] uppercase tracking-widest h-10 border border-slate-100 hover:border-slate-200 transition-all">
+        <Button variant="ghost" onClick={clearFilters} className="w-full text-white/50 hover:text-white font-bold text-[9px] uppercase tracking-widest h-10 border border-white/10 hover:border-white/30 hover:bg-white/5 transition-all mt-8">
           Clear All Filters
         </Button>
       )}
@@ -331,7 +331,7 @@ export default function FindProperties() {
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
       {/* Header - Search & View Controls */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200">
+      <header className="sticky top-16 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between gap-8">
           {/* Search Bar */}
           <div className="relative flex-1 max-w-2xl group">
@@ -354,10 +354,10 @@ export default function FindProperties() {
 
           {/* Controls */}
           <div className="flex items-center gap-6">
-            {/* Filters Toggle - Mobile Only */}
+            {/* Filters Toggle - Visible on All Sizes Now */}
             <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" className="lg:hidden h-10 rounded-none border-slate-200 px-6 font-bold text-[10px] uppercase tracking-widest">
+                <Button variant="outline" className="h-10 rounded-none border-slate-200 px-6 font-bold text-[10px] uppercase tracking-widest bg-white hover:bg-slate-50">
                   <SlidersHorizontal className="w-3.5 h-3.5 mr-2" />
                   Filters
                   {activeFilterCount > 0 && (
@@ -367,11 +367,13 @@ export default function FindProperties() {
                   )}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-80 border-r-0 rounded-none">
-                <SheetHeader className="mb-8">
-                  <SheetTitle className="text-[10px] font-bold uppercase tracking-[0.4em] text-slate-400">Filters</SheetTitle>
-                </SheetHeader>
-                <FilterContent />
+              <SheetContent side="left" className="w-96 max-w-[90vw] border-r border-[#001733] rounded-none bg-unswap-blue-deep shadow-2xl p-0">
+                <div className="h-full overflow-y-auto px-6 py-8 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                  <SheetHeader className="mb-8 border-b border-white/10 pb-4 sticky top-0 bg-unswap-blue-deep z-10">
+                    <SheetTitle className="text-[10px] font-bold uppercase tracking-[0.4em] text-white">Filters</SheetTitle>
+                  </SheetHeader>
+                  <FilterContent />
+                </div>
               </SheetContent>
             </Sheet>
 
@@ -397,24 +399,9 @@ export default function FindProperties() {
 
       {/* Main Content Area */}
       <div className="max-w-7xl mx-auto px-6 py-12">
-        <div className="flex flex-col lg:flex-row gap-12">
-          {/* Desktop Sidebar Filters */}
-          <aside className="hidden lg:block w-72 flex-shrink-0">
-            <div className="sticky top-32 space-y-8">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                <h3 className="text-[10px] font-bold text-slate-900 uppercase tracking-[0.4em]">Filters</h3>
-                {activeFilterCount > 0 && (
-                  <Badge className="bg-unswap-blue-deep text-white rounded-none border-0 font-bold tracking-widest uppercase text-[9px] px-2 py-0.5">
-                    {activeFilterCount}
-                  </Badge>
-                )}
-              </div>
-              <FilterContent />
-            </div>
-          </aside>
-
+        <div className="flex flex-col gap-12">
           {/* Results Area */}
-          <main className="flex-1 min-w-0">
+          <main className="w-full">
             {/* Active Badges Header */}
             {activeFilterCount > 0 && (
               <div className="flex flex-wrap gap-2 mb-8">
@@ -455,9 +442,9 @@ export default function FindProperties() {
             {/* Listings Grid/List/Map */}
             <div className="min-h-[400px]">
               {isLoading ? (
-                <div className={`grid gap-8 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'}`}>
-                  {[1, 2, 3, 4, 5, 6].map(i => (
-                    <div key={i} className="aspect-[4/5] bg-slate-50 border border-slate-100 rounded-none animate-pulse" />
+                <div className="grid gap-6 grid-cols-1">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="h-[220px] bg-slate-50 border border-slate-100 rounded-none animate-pulse" />
                   ))}
                 </div>
               ) : viewMode === 'map' ? (
@@ -475,7 +462,7 @@ export default function FindProperties() {
                   <Button variant="outline" onClick={() => setViewMode('grid')} className="rounded-none px-8 font-bold text-[10px] uppercase tracking-widest border-slate-200 hover:bg-slate-50">Return to Grid</Button>
                 </div>
               ) : filteredProperties.length > 0 ? (
-                <div className={`grid gap-10 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'}`}>
+                <div className={`grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3`}>
                   <AnimatePresence mode="popLayout">
                     {filteredProperties.map((property, index) => (
                       <motion.div
@@ -488,7 +475,7 @@ export default function FindProperties() {
                         <PropertyCard
                           property={property}
                           index={index}
-                          variant={viewMode === 'list' ? 'list' : 'default'}
+                          variant={viewMode === 'list' ? 'list' : 'grid'}
                         />
                       </motion.div>
                     ))}

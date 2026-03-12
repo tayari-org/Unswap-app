@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
   ArrowLeftRight, Calendar, Clock, CheckCircle, XCircle,
@@ -42,7 +42,9 @@ import GuestFinalizeApprovalDialog from '../components/swaps/GuestFinalizeApprov
 export default function MySwaps() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const activeTab = tabParam || 'overview';
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
   const [showVideoScheduler, setShowVideoScheduler] = useState(null);
@@ -203,61 +205,130 @@ export default function MySwaps() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
-      {/* Structural Header */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-6 py-12">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div className="min-h-screen flex bg-[#FDF8F4]">
+      {/* SIDEBAR NAVIGATION (Desktop) */}
+      <aside className="hidden lg:flex w-60 flex-col bg-unswap-blue-deep border-r border-[#001733] shadow-2xl z-20">
+        {/* Sidebar Header / Brand */}
+        <div className="px-6 pt-8 pb-6">
+          <h1 className="text-lg font-bold text-white tracking-tight font-display">My Swaps</h1>
+          <Badge variant="outline" className={`mt-2 flex items-center gap-1.5 px-2.5 py-0.5 w-fit rounded-full text-[9px] border-white/20 bg-white/10 text-white/80`}>
+             <span className={`w-1.5 h-1.5 rounded-full ${isVerified ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+             {isVerified ? 'VERIFIED' : 'PENDING'}
+          </Badge>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 px-3">
+          <div className="px-3 pt-4 pb-3">
+            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Menu</span>
+          </div>
+
+          <div className="space-y-0.5">
+            {[
+              { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+              { id: 'incoming', label: 'Incoming', icon: ArrowLeftRight, badge: incomingRequests.filter(r => r.status === 'pending').length },
+              { id: 'outgoing', label: 'Outgoing', icon: ArrowLeftRight },
+              { id: 'upcoming', label: 'Upcoming', icon: CalendarDays },
+              { id: 'video-calls', label: 'Video Calls', icon: Video },
+              { id: 'completed', label: 'History', icon: History }
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setSearchParams({ tab: item.id })}
+                className={`w-full group flex items-center gap-3 px-3 py-2.5 transition-all text-left rounded-sm border-l-[3px] ${activeTab === item.id
+                  ? 'border-unswap-silver-light bg-white/10 text-white'
+                  : 'border-transparent text-white/60 hover:text-white hover:bg-white/5'
+                  }`}
+              >
+                <item.icon className={`w-4 h-4 flex-shrink-0 transition-colors ${activeTab === item.id ? 'text-white' : 'text-white/40 group-hover:text-white/70'}`} />
+                <span className={`flex-1 text-[13px] tracking-wide ${activeTab === item.id ? 'font-semibold' : 'font-medium'}`}>{item.label}</span>
+                {item.badge > 0 && (
+                  <span className={`text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center ${activeTab === item.id ? 'bg-white text-unswap-blue-deep' : 'bg-white/10 text-white'}`}>
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </nav>
+
+        {/* User Info & Sign Out at bottom */}
+        <div className="px-3 pb-6 mt-auto border-t border-white/10 pt-4 space-y-2">
+            <div className="px-3 flex items-center gap-3 mb-4">
+              {user?.avatar_url ? (
+                  <img src={user?.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover border border-white/20" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white font-bold text-xs">
+                    {(user?.full_name || user?.username || user?.email || 'U')[0].toUpperCase()}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-medium text-white truncate">
+                    {user?.full_name || user?.username || user?.email?.split('@')[0] || '—'}
+                  </p>
+                </div>
+            </div>
+
+          <Button variant="ghost" size="sm" asChild className="w-full justify-start text-white/50 hover:text-white hover:bg-white/5 transition-all font-semibold text-[11px] tracking-wide gap-2 h-9 rounded-sm">
+             <Link to="/Dashboard"><LayoutDashboard className="w-3.5 h-3.5" /> Back to Dashboard</Link>
+          </Button>
+        </div>
+      </aside>
+
+      {/* MOBILE HEADER (shown only on small screens) */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-white border-b border-stone-200 px-4 py-3 shadow-sm flex flex-col items-center">
+        <div className="w-full flex items-center justify-between mb-3">
+          <h1 className="text-lg font-bold text-unswap-blue-deep font-display">My Swaps</h1>
+          <Link to="/Dashboard">
+            <Button variant="ghost" size="sm" className="text-stone-400 hover:text-slate-600 text-[10px] font-bold uppercase tracking-widest">
+              Back
+            </Button>
+          </Link>
+        </div>
+        <div className="flex gap-1 overflow-x-auto pb-1 no-scrollbar w-full">
+          {[
+            { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+            { id: 'incoming', label: 'Incoming', icon: ArrowLeftRight, badge: incomingRequests.filter(r => r.status === 'pending').length },
+            { id: 'outgoing', label: 'Outgoing', icon: ArrowLeftRight },
+            { id: 'upcoming', label: 'Upcoming', icon: CalendarDays },
+            { id: 'video-calls', label: 'Video Calls', icon: Video },
+            { id: 'completed', label: 'History', icon: History }
+          ].map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setSearchParams({ tab: item.id })}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold whitespace-nowrap rounded-sm transition-all ${activeTab === item.id
+                ? 'bg-unswap-blue-deep text-white'
+                : 'text-stone-500 hover:bg-stone-100'
+                }`}
+            >
+              <item.icon className="w-3.5 h-3.5" />
+              {item.label}
+              {item.badge > 0 && <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[9px] ${activeTab === item.id ? 'bg-white/20' : 'bg-stone-200'}`}>{item.badge}</span>}
+            </button>
+          ))}
+        </div>
+      </div>
+
+       {/* MAIN CONTENT AREA */}
+      <main className="flex-1 min-w-0 overflow-y-auto lg:pt-0 pt-28">
+        <div className="max-w-6xl mx-auto px-6 lg:px-10 py-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-8 h-px bg-unswap-blue-deep/20" />
                 <p className="text-unswap-blue-deep/60 font-bold tracking-[0.4em] uppercase text-[10px]">Operations</p>
               </div>
-              <h1 className="text-4xl font-extralight tracking-tighter text-slate-900 mb-2">My <span className="italic font-serif">Swaps</span></h1>
-              <p className="text-slate-500 text-sm font-light">Manage and track your swap requests</p>
+              <h2 className="text-4xl font-extralight tracking-tighter text-slate-900 mb-2">My <span className="italic font-serif">Swaps</span></h2>
+              <p className="text-stone-500 text-sm font-light">Manage and track your swap requests</p>
             </div>
             <Button onClick={handleNewSwapRequest} className="bg-unswap-blue-deep hover:bg-slate-900 text-white rounded-none h-14 px-8 text-[10px] font-bold uppercase tracking-[0.3em] transition-all shadow-xl">
               <Plus className="w-4 h-4 mr-2" />
               New Swap Request
             </Button>
           </div>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        <div className="flex flex-col lg:flex-row gap-12">
-          {/* Sidebar Navigation - Prestigious Architectural Style */}
-          <aside className="lg:w-80 shrink-0">
-            <nav className="flex flex-col gap-2">
-              {[
-                { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-                { id: 'incoming', label: 'Incoming', icon: ArrowLeftRight, badge: incomingRequests.filter(r => r.status === 'pending').length },
-                { id: 'outgoing', label: 'Outgoing', icon: ArrowLeftRight },
-                { id: 'upcoming', label: 'Upcoming', icon: CalendarDays },
-                { id: 'video-calls', label: 'Video Calls', icon: Video },
-                { id: 'completed', label: 'History', icon: History }
-              ].map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`flex items-center justify-between w-full px-6 py-5 text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 border-l-2 ${activeTab === item.id
-                    ? 'bg-white border-unswap-blue-deep text-unswap-blue-deep shadow-lg shadow-unswap-blue-deep/5'
-                    : 'bg-transparent border-transparent text-slate-400 hover:bg-slate-50 hover:text-slate-600'
-                    }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <item.icon className={`w-4 h-4 ${activeTab === item.id ? 'text-unswap-blue-deep' : 'text-slate-300'}`} />
-                    <span>{item.label}</span>
-                  </div>
-                  {item.badge > 0 && (
-                    <span className="h-5 min-w-[20px] px-1.5 flex items-center justify-center bg-unswap-blue-deep text-white text-[9px] font-bold">
-                      {item.badge}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </nav>
-          </aside>
+          <div className="space-y-8">
 
           {/* Main Content Area */}
           <div className="flex-1">
@@ -279,13 +350,13 @@ export default function MySwaps() {
                       { label: 'Completed', value: swapRequests.filter(r => r.status === 'completed').length, icon: History },
                       { label: 'Total', value: swapRequests.length, icon: LayoutDashboard },
                     ].map((stat, index) => (
-                      <Card key={index} className="rounded-none border-slate-200 shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-500 border-l-4 border-l-unswap-blue-deep/5 hover:border-l-unswap-blue-deep">
+                      <Card key={index} className="rounded-none border-stone-200 shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-500 border-l-4 border-l-unswap-blue-deep/5 hover:border-l-unswap-blue-deep">
                         <CardContent className="p-8 flex items-center gap-6">
-                          <div className="w-12 h-12 bg-slate-50 border border-slate-100 rounded-none flex items-center justify-center transition-all duration-500 group-hover:bg-unswap-blue-deep group-hover:text-white">
+                          <div className="w-12 h-12 bg-stone-50 border border-stone-100 rounded-none flex items-center justify-center transition-all duration-500 group-hover:bg-unswap-blue-deep group-hover:text-white">
                             <stat.icon className="w-5 h-5" />
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
+                            <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">{stat.label}</p>
                             <p className="text-3xl font-extralight text-slate-900 tracking-tighter leading-none">{stat.value}</p>
                           </div>
                         </CardContent>
@@ -293,9 +364,9 @@ export default function MySwaps() {
                     ))}
                   </div>
 
-                  <div className="bg-white p-12 border border-slate-100 rounded-none border-l-4 border-l-unswap-blue-deep">
+                  <div className="bg-white p-12 border border-stone-100 rounded-none border-l-4 border-l-unswap-blue-deep">
                     <h3 className="text-xl font-light tracking-tight text-slate-900 mb-4 italic font-serif">Overview</h3>
-                    <p className="text-slate-500 text-sm font-light leading-relaxed max-w-2xl">
+                    <p className="text-stone-500 text-sm font-light leading-relaxed max-w-2xl">
                       Manage your swap requests and track their status. Use the sidebar to navigate through your incoming, outgoing, and upcoming swaps.
                     </p>
                   </div>
@@ -443,15 +514,16 @@ export default function MySwaps() {
               )}
             </AnimatePresence>
           </div>
+          </div>
         </div>
-      </div>
+      </main>
 
       {/* Video Call Scheduler Dialog - Architectural refinement */}
       <Dialog open={!!showVideoScheduler} onOpenChange={() => setShowVideoScheduler(null)}>
         <DialogContent className="max-w-2xl rounded-none border-0 shadow-2xl p-0 overflow-hidden">
-          <div className="p-8 border-b bg-slate-50">
+          <div className="p-8 border-b bg-stone-50">
             <DialogTitle className="text-2xl font-extralight tracking-tight text-slate-900">Schedule Video Call</DialogTitle>
-            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Video Call Verification</p>
+            <p className="text-stone-400 text-[10px] font-bold uppercase tracking-widest mt-1">Video Call Verification</p>
           </div>
           <div className="p-8">
             {showVideoScheduler && (
@@ -466,7 +538,7 @@ export default function MySwaps() {
 
       {/* Reject Dialog - High Contrast */}
       <Dialog open={!!selectedRequest} onOpenChange={() => setSelectedRequest(null)}>
-        <DialogContent className="rounded-none border-slate-200 shadow-2xl p-0 overflow-hidden">
+        <DialogContent className="rounded-none border-stone-200 shadow-2xl p-0 overflow-hidden">
           <div className="p-8 border-b bg-rose-50/30">
             <DialogTitle className="text-2xl font-extralight tracking-tight text-slate-900 flex items-center gap-4">
               <XCircle className="w-6 h-6 text-red-500" />
@@ -474,12 +546,12 @@ export default function MySwaps() {
             </DialogTitle>
           </div>
           <div className="p-8">
-            <p className="text-slate-500 font-light mb-6 tracking-tight leading-relaxed">Please provide a reason for declining this request.</p>
+            <p className="text-stone-500 font-light mb-6 tracking-tight leading-relaxed">Please provide a reason for declining this request.</p>
             <Textarea
               placeholder="Reason for decline (Optional)..."
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              className="min-h-[120px] bg-slate-50/30 border-slate-200 focus-visible:ring-red-500 rounded-none font-light italic"
+              className="min-h-[120px] bg-stone-50/30 border-stone-200 focus-visible:ring-red-500 rounded-none font-light italic"
             />
             <div className="mt-8 flex justify-end gap-4">
               <Button variant="ghost" onClick={() => setSelectedRequest(null)} className="rounded-none font-bold text-[10px] uppercase tracking-widest">Cancel</Button>
@@ -491,7 +563,7 @@ export default function MySwaps() {
 
       {/* Messaging Sheet - Architectural Precision */}
       <Sheet open={!!showMessaging} onOpenChange={() => setShowMessaging(null)}>
-        <SheetContent className="w-full sm:max-w-xl p-0 border-l border-slate-200 shadow-2xl rounded-none">
+        <SheetContent className="w-full sm:max-w-xl p-0 border-l border-stone-200 shadow-2xl rounded-none">
           {showMessaging && (
             <SwapMessaging swapRequest={showMessaging} user={user} onClose={() => setShowMessaging(null)} />
           )}
@@ -500,16 +572,16 @@ export default function MySwaps() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!showDeleteDialog} onOpenChange={() => setShowDeleteDialog(null)}>
-        <DialogContent className="rounded-none border-slate-200 shadow-2xl">
+        <DialogContent className="rounded-none border-stone-200 shadow-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl font-extralight tracking-tight text-red-600">Delete Request</DialogTitle>
           </DialogHeader>
           <div className="py-8">
-            <p className="text-slate-500 font-light tracking-tight leading-relaxed">Are you sure you want to delete this swap request? This action cannot be undone.</p>
+            <p className="text-stone-500 font-light tracking-tight leading-relaxed">Are you sure you want to delete this swap request? This action cannot be undone.</p>
             {showDeleteDialog && (
-              <div className="mt-6 p-6 bg-slate-50 border border-slate-100 rounded-none border-l-4 border-l-red-400">
+              <div className="mt-6 p-6 bg-stone-50 border border-stone-100 rounded-none border-l-4 border-l-red-400">
                 <p className="text-[11px] font-bold uppercase tracking-widest text-slate-900">{showDeleteDialog.property_title}</p>
-                <div className="flex items-center gap-3 mt-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <div className="flex items-center gap-3 mt-3 text-[10px] font-bold text-stone-400 uppercase tracking-widest">
                   <CalendarDays className="w-3.5 h-3.5" />
                   {showDeleteDialog.check_in && format(new Date(showDeleteDialog.check_in), 'MMM d')} -
                   {showDeleteDialog.check_out && format(new Date(showDeleteDialog.check_out), 'MMM d, yyyy')}
@@ -518,7 +590,7 @@ export default function MySwaps() {
             )}
           </div>
           <DialogFooter className="gap-4">
-            <Button variant="outline" onClick={() => setShowDeleteDialog(null)} className="rounded-none font-bold text-[10px] uppercase tracking-widest border-slate-200">Cancel</Button>
+            <Button variant="outline" onClick={() => setShowDeleteDialog(null)} className="rounded-none font-bold text-[10px] uppercase tracking-widest border-stone-200">Cancel</Button>
             <Button onClick={confirmDelete} className="bg-red-600 hover:bg-red-700 text-white rounded-none h-12 px-8 text-[10px] font-bold uppercase tracking-widest shadow-xl">Delete</Button>
           </DialogFooter>
         </DialogContent>
@@ -531,9 +603,9 @@ export default function MySwaps() {
       <CompleteSwapDialog open={!!showCompleteDialog} onOpenChange={() => setShowCompleteDialog(null)} request={showCompleteDialog} user={user} />
       <Dialog open={!!showReviewDialog} onOpenChange={() => setShowReviewDialog(null)}>
         <DialogContent className="max-w-2xl rounded-none border-0 shadow-2xl p-0 overflow-hidden">
-          <div className="p-8 border-b bg-slate-50">
+          <div className="p-8 border-b bg-stone-50">
             <DialogTitle className="text-2xl font-extralight tracking-tight text-slate-900">Review</DialogTitle>
-            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Leave a Review</p>
+            <p className="text-stone-400 text-[10px] font-bold uppercase tracking-widest mt-1">Leave a Review</p>
           </div>
           <div className="p-8 max-h-[70vh] overflow-y-auto">
             {showReviewDialog && <ReviewForm swapRequest={showReviewDialog} onSuccess={() => setShowReviewDialog(null)} />}
@@ -548,12 +620,12 @@ export default function MySwaps() {
 
 function EmptyState({ message, onCreateNew }) {
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-32 bg-white rounded-none border border-slate-100 shadow-sm border-2 border-dashed">
-      <div className="w-16 h-16 bg-slate-50 border border-slate-100 rounded-none flex items-center justify-center mx-auto mb-8">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-32 bg-white rounded-none border border-stone-100 shadow-sm border-2 border-dashed">
+      <div className="w-16 h-16 bg-stone-50 border border-stone-100 rounded-none flex items-center justify-center mx-auto mb-8">
         <ArrowLeftRight className="w-8 h-8 text-slate-200" />
       </div>
       <h3 className="text-2xl font-light text-slate-900 tracking-tight mb-2">No Active Records</h3>
-      <p className="text-slate-500 font-light text-sm mb-10 max-w-sm mx-auto">{message}</p>
+      <p className="text-stone-500 font-light text-sm mb-10 max-w-sm mx-auto">{message}</p>
       <div className="flex flex-col sm:flex-row gap-4 justify-center px-8">
         {onCreateNew && (
           <Button onClick={onCreateNew} className="bg-unswap-blue-deep hover:bg-slate-900 text-white rounded-none h-14 px-10 text-[10px] font-bold uppercase tracking-widest shadow-xl transition-all">
@@ -562,7 +634,7 @@ function EmptyState({ message, onCreateNew }) {
           </Button>
         )}
         <Link to={createPageUrl('FindProperties')}>
-          <Button variant="outline" className="rounded-none border-slate-200 h-14 px-10 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-50 transition-all">
+          <Button variant="outline" className="rounded-none border-stone-200 h-14 px-10 text-[10px] font-bold uppercase tracking-widest hover:bg-stone-50 transition-all">
             Explore Properties
             <ChevronRight className="w-4 h-4 ml-2.5" />
           </Button>

@@ -84,7 +84,7 @@ export default function FinalizeSwapDialog({ open, onOpenChange, swapRequest, us
         type: 'swap_finalization',
         title: 'Finalize Your Swap',
         message: `${swapRequest.host_name || swapRequest.host_email} has provided finalization details for ${swapRequest.property_title}. Please review and approve.`,
-        link: '/MySwaps',
+        link: '/MySwaps?tab=outgoing',
         related_id: swapRequest.id,
         sender_name: swapRequest.host_name || swapRequest.host_email,
         sender_email: swapRequest.host_email

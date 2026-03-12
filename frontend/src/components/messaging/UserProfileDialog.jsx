@@ -265,7 +265,7 @@ export default function UserProfileDialog({ open, onOpenChange, userEmail }) {
                             </p>
                             <div className="flex items-center gap-2 mt-1">
                               <Badge variant="outline" className="text-xs">
-                                {property.smart_credit_value || 200} pts/night
+                                {property.nightly_points || 200} pts/night
                               </Badge>
                             </div>
                           </div>

@@ -98,8 +98,17 @@ async function completeSwap(req, res) {
 async function createDailyRoom(req, res) {
     const { videoCallId } = req.body;
     const apiKey = process.env.DAILY_API_KEY;
-    if (!apiKey) return res.status(500).json({ error: 'Daily API key not configured' });
     if (!videoCallId) return res.status(400).json({ error: 'videoCallId is required' });
+
+    if (!apiKey || apiKey === "REPLACE_WITH_YOUR_DAILY_API_KEY") {
+        const mockRoomName = `unswap-mock-${videoCallId}`;
+        const mockRoomUrl = `https://unswap-mock.daily.co/${mockRoomName}`;
+        await prisma.videoCall.update({
+            where: { id: videoCallId },
+            data: { room_id: mockRoomName, room_url: mockRoomUrl }
+        });
+        return res.json({ roomUrl: mockRoomUrl, roomName: mockRoomName, success: true });
+    }
 
     const roomResponse = await fetch('https://api.daily.co/v1/rooms', {
         method: 'POST',

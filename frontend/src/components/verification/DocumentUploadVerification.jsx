@@ -131,33 +131,33 @@ export default function DocumentUploadVerification({ user, emailVerified, existi
   }
 
   return (
-    <Card className={`rounded-none border-slate-200 shadow-xl overflow-hidden group transition-all duration-700 ${!emailVerified ? 'grayscale opacity-40 select-none' : ''}`}>
-      <CardHeader className="p-8 border-b border-slate-50">
+    <Card className={`rounded-none border-stone-200 shadow-xl overflow-hidden group bg-white transition-all duration-700 ${!emailVerified ? 'grayscale opacity-40 select-none' : ''}`}>
+      <CardHeader className="p-8 border-b border-stone-50">
         <CardTitle className="flex items-center gap-3">
           <div className="w-8 h-px bg-unswap-blue-deep/20" />
           <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-unswap-blue-deep">Step 2: Identity Verification</span>
         </CardTitle>
-        <CardDescription className="text-[10px] uppercase tracking-widest text-slate-400 mt-2 ml-11 leading-relaxed">
+        <CardDescription className="text-[10px] uppercase tracking-widest text-stone-400 mt-2 ml-11 leading-relaxed">
           Please upload a copy of your UN/Organization ID or diplomatic passport.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {!emailVerified && (
-          <div className="flex items-center gap-4 p-5 bg-slate-50 border border-slate-100 rounded-none mb-4">
+          <div className="flex items-center gap-4 p-5 bg-stone-50 border border-stone-100 rounded-none mb-4">
             <AlertCircle className="w-4 h-4 text-unswap-blue-deep/40" />
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Please complete email verification first</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400">Please complete email verification first</p>
           </div>
         )}
 
         <div className="space-y-4">
-          <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Document Type</Label>
+          <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500">Document Type</Label>
           <Select value={documentType} onValueChange={setDocumentType} disabled={!emailVerified}>
-            <SelectTrigger className="h-12 rounded-none border-slate-200 bg-slate-50/30 focus-visible:ring-unswap-blue-deep text-[10px] font-bold uppercase tracking-widest">
+            <SelectTrigger className="h-12 rounded-none border-stone-200 bg-stone-50/30 focus-visible:ring-unswap-blue-deep text-[10px] font-bold uppercase tracking-widest">
               <SelectValue placeholder="Select document type..." />
             </SelectTrigger>
-            <SelectContent className="rounded-none border-slate-200">
+            <SelectContent className="rounded-none border-stone-200">
               {DOCUMENT_TYPES.map(type => (
-                <SelectItem key={type.value} value={type.value} className="text-[10px] font-bold uppercase tracking-widest hover:bg-slate-50">
+                <SelectItem key={type.value} value={type.value} className="text-[10px] font-bold uppercase tracking-widest hover:bg-stone-50">
                   {type.label}
                 </SelectItem>
               ))}
@@ -168,8 +168,8 @@ export default function DocumentUploadVerification({ user, emailVerified, existi
         <div className="space-y-4">
           <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Upload Document</Label>
           <label className={`flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-none transition-all duration-500 ${emailVerified
-            ? 'border-slate-200 cursor-pointer hover:border-unswap-blue-deep hover:bg-slate-50/50'
-            : 'border-slate-100 cursor-not-allowed'
+            ? 'border-stone-200 cursor-pointer hover:border-unswap-blue-deep hover:bg-stone-50/50'
+            : 'border-stone-100 cursor-not-allowed'
             }`}>
             {documentFile ? (
               <div className="text-center animate-in zoom-in duration-500">
@@ -181,9 +181,9 @@ export default function DocumentUploadVerification({ user, emailVerified, existi
               </div>
             ) : (
               <div className="text-center group-hover:scale-105 transition-transform">
-                <Upload className="w-8 h-8 text-slate-300 mx-auto mb-4" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">Select File</span>
-                <p className="text-[9px] font-medium uppercase tracking-widest text-slate-300 mt-2">Accepted formats: PDF, JPG, PNG</p>
+                <Upload className="w-8 h-8 text-stone-300 mx-auto mb-4" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-stone-400">Select File</span>
+                <p className="text-[9px] font-medium uppercase tracking-widest text-stone-300 mt-2">Accepted formats: PDF, JPG, PNG</p>
               </div>
             )}
             <input
@@ -208,7 +208,7 @@ export default function DocumentUploadVerification({ user, emailVerified, existi
           )}
         </Button>
 
-        <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-slate-300 text-center leading-relaxed">
+        <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-stone-300 text-center leading-relaxed">
           Your documents are stored securely and won't be shared with third parties.
         </p>
       </CardContent>

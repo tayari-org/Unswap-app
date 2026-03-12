@@ -28,7 +28,7 @@ export default function SwapPartnerSuggestions({ user, userProperties }) {
         type: p.property_type,
         duty_station: p.nearest_duty_station,
         bedrooms: p.bedrooms,
-        points: p.smart_credit_value
+        points: p.nightly_points
       }));
 
       const response = await api.integrations.Core.InvokeLLM({
@@ -148,7 +148,7 @@ Return ONLY a JSON array with property IDs and brief match reasons.`,
                           </div>
                         </div>
                         <Badge variant="outline" className="text-blue-600 border-blue-300">
-                          {property.smart_credit_value || 200} pts
+                          {property.nightly_points || 200} pts
                         </Badge>
                       </div>
                       <p className="text-sm text-slate-600 mb-2">

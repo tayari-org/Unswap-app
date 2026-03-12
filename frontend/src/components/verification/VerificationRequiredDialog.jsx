@@ -15,7 +15,7 @@ import {
 export default function VerificationRequiredDialog({ open, onOpenChange, action = 'access this feature' }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl p-0 overflow-hidden rounded-none border-0 shadow-2xl">
+      <DialogContent className="max-w-xl p-0 rounded-none border-0 shadow-2xl flex flex-col max-h-[90vh] overflow-y-auto">
         <DialogHeader className="p-10 border-b bg-slate-50">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-8 h-px bg-amber-500/20" />

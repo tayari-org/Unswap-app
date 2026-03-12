@@ -23,6 +23,7 @@ const statusStyles = {
   completed: 'bg-indigo-50 text-indigo-700 border-indigo-100',
   counter_proposed: 'bg-violet-50 text-violet-700 border-violet-100',
   pending_guest_approval: 'bg-orange-50 text-orange-700 border-orange-100',
+  guest_agreed: 'bg-emerald-100 text-emerald-800 border-emerald-200',
 };
 
 export default function SwapRequestCard({
@@ -179,6 +180,10 @@ export default function SwapRequestCard({
 
             {!isIncoming && request.status === 'pending_guest_approval' && (
               <Button onClick={() => onGuestApprovalNeeded?.(request)} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-none h-14 text-[10px] font-bold uppercase tracking-[0.3em] shadow-xl transition-all">Accept Stay</Button>
+            )}
+
+            {isIncoming && request.status === 'guest_agreed' && (
+              <Button onClick={() => onCompleteSwap?.(request)} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-none h-14 text-[10px] font-bold uppercase tracking-[0.3em] shadow-xl transition-all"><CheckCircle className="w-4 h-4 mr-3 opacity-60" /> Mark Complete</Button>
             )}
 
             {request.status === 'completed' && onLeaveReview && (

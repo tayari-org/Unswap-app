@@ -145,13 +145,13 @@ export default function EmailOtpVerification({ user, onVerified }) {
   }
 
   return (
-    <Card className="rounded-none border-slate-200 shadow-xl overflow-hidden group">
-      <CardHeader className="p-8 border-b border-slate-50">
+    <Card className="rounded-none border-stone-200 shadow-xl overflow-hidden group bg-white">
+      <CardHeader className="p-8 border-b border-stone-50">
         <CardTitle className="flex items-center gap-3">
           <div className="w-8 h-px bg-unswap-blue-deep/20" />
           <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-unswap-blue-deep">Step 1: Email Verification</span>
         </CardTitle>
-        <CardDescription className="text-[10px] uppercase tracking-widest text-slate-400 mt-2 ml-11 leading-relaxed">
+        <CardDescription className="text-[10px] uppercase tracking-widest text-stone-400 mt-2 ml-11 leading-relaxed">
           Verify your official institutional email address to unlock diplomatic features.
         </CardDescription>
       </CardHeader>
@@ -159,7 +159,7 @@ export default function EmailOtpVerification({ user, onVerified }) {
         {!otpSent ? (
           <>
             <div className="space-y-4">
-              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Official Email Address</Label>
+              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500">Official Email Address</Label>
               <Input
                 type="email"
                 value={officialEmail}
@@ -168,14 +168,14 @@ export default function EmailOtpVerification({ user, onVerified }) {
                   setEmailError('');
                 }}
                 placeholder="name@un.org"
-                className={`h-12 rounded-none border-slate-200 focus-visible:ring-unswap-blue-deep bg-slate-50/30 transition-all font-mono text-sm ${emailError ? 'border-red-300 bg-red-50/20' : ''}`}
+                className={`h-12 rounded-none border-stone-200 focus-visible:ring-unswap-blue-deep bg-stone-50/30 transition-all font-mono text-sm ${emailError ? 'border-red-300 bg-red-50/20' : ''}`}
               />
               {emailError ? (
                 <div className="p-4 bg-red-50/50 border border-red-100 rounded-none animate-in fade-in slide-in-from-top-1">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-red-600 leading-relaxed">{emailError}</p>
                 </div>
               ) : (
-                <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-slate-300 mt-2">
+                <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-stone-300 mt-2">
                   Protocols: un.org // undp.org // who.int // worldbank.org
                 </p>
               )}
@@ -210,7 +210,7 @@ export default function EmailOtpVerification({ user, onVerified }) {
 
             <div className="space-y-8">
               <div className="text-center space-y-4">
-                <Label className="text-[10px] font-bold uppercase tracking-[0.4em] text-slate-400">Enter Verification Code</Label>
+                <Label className="text-[10px] font-bold uppercase tracking-[0.4em] text-stone-400">Enter Verification Code</Label>
                 <div className="flex justify-center">
                   <InputOTP
                     maxLength={6}
@@ -219,7 +219,7 @@ export default function EmailOtpVerification({ user, onVerified }) {
                   >
                     <InputOTPGroup className="gap-2">
                       {[0, 1, 2, 3, 4, 5].map((i) => (
-                        <InputOTPSlot key={i} index={i} className="w-12 h-16 border-slate-200 rounded-none text-xl font-light focus:border-unswap-blue-deep bg-slate-50/30" />
+                        <InputOTPSlot key={i} index={i} className="w-12 h-16 border-stone-200 rounded-none text-xl font-light focus:border-unswap-blue-deep bg-stone-50/30" />
                       ))}
                     </InputOTPGroup>
                   </InputOTP>

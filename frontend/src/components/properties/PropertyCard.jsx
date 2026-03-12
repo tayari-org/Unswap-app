@@ -94,19 +94,20 @@ export default function PropertyCard({ property, variant = 'default', index = 0 
     window.location.href = createPageUrl('HostProfile') + `?email=${encodeURIComponent(property.owner_email)}`;
   };
 
-  const isList = variant === 'list';
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05, duration: 0.5 }}
-      className={`group bg-white rounded-none border-slate-200 overflow-hidden hover:shadow-2xl transition-all duration-500 ${isList ? 'w-full' : ''}`}
-    >
-      <div className={`flex flex-col ${isList ? 'md:flex-row min-h-[220px]' : ''}`}>
-
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.05, duration: 0.5 }}
+        className={`group bg-white rounded-none border border-slate-200 overflow-hidden hover:shadow-2xl transition-all duration-500 w-full flex cursor-pointer relative ${variant === 'grid' ? 'flex-col' : 'flex-col md:flex-row'}`}
+      >
+        <Link 
+          to={createPageUrl('PropertyDetails') + `?id=${property.id}`}
+          className="absolute inset-0 z-[1]"
+        />
         {/* Image Section */}
-        <div className={`relative overflow-hidden shrink-0 ${isList ? 'w-full md:w-64 lg:w-80 h-48 md:h-auto' : 'h-64'}`}>
+        <div className={`relative overflow-hidden shrink-0 w-full ${variant === 'grid' ? 'h-60' : 'md:w-64 lg:w-80 h-52 md:h-auto'}`}>
           <img
             src={property.images?.[0] || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800'}
             alt={property.title}
@@ -114,16 +115,14 @@ export default function PropertyCard({ property, variant = 'default', index = 0 
           />
           <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-transparent transition-colors duration-500" />
 
-          {/* Points Badge (Only in Grid) */}
-          {!isList && (
-            <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-none shadow-lg border border-slate-100 z-10">
-              <span className="font-serif italic font-extralight text-lg text-slate-900">{property.smart_credit_value || 200}</span>
-              <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 ml-1"> pts/night</span>
-            </div>
-          )}
+          {/* Points Badge */}
+          <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-none shadow-lg border border-slate-100 z-10 pointer-events-none">
+            <span className="font-serif italic font-extralight text-lg text-slate-900">{property.nightly_points || 200}</span>
+            <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-slate-400 ml-1">pts/night</span>
+          </div>
 
           {/* Action Buttons */}
-          <div className="absolute top-4 left-4 flex flex-col gap-2 z-10 transition-all duration-300 opacity-0 group-hover:opacity-100 translate-x-[-10px] group-hover:translate-x-0">
+          <div className="absolute top-4 right-4 flex flex-col gap-2 z-10 transition-all duration-300 opacity-0 group-hover:opacity-100 translate-x-[10px] group-hover:translate-x-0">
             <button
               onClick={toggleFavorite}
               className="w-9 h-9 bg-white shadow-xl flex items-center justify-center hover:bg-slate-50 transition-colors"
@@ -137,37 +136,41 @@ export default function PropertyCard({ property, variant = 'default', index = 0 
               <Share2 className="w-4 h-4 text-slate-400" />
             </button>
           </div>
+
+          {/* Verified badge overlay */}
+          {property.is_verified && (
+            <div className="absolute bottom-4 left-4 z-10 pointer-events-none">
+              <Badge className="rounded-none px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest bg-unswap-blue-deep/10 text-unswap-blue-deep border-unswap-blue-deep/20 border backdrop-blur-sm">
+                Verified
+              </Badge>
+            </div>
+          )}
         </div>
 
         {/* Content Section */}
-        <div className="flex-1 flex flex-col p-8 lg:p-10">
-          <div className="flex items-start justify-between mb-4">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                {property.is_verified && (
-                  <Badge className="rounded-none px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest bg-unswap-blue-deep/10 text-unswap-blue-deep border-unswap-blue-deep/20 border">
-                    Verified
-                  </Badge>
-                )}
+        <div className={`flex-1 flex flex-col ${variant === 'grid' ? 'p-6' : 'p-8 lg:p-10'}`}>
+          <div className="flex items-start justify-between mb-3">
+            <div className={`space-y-3 flex-1 min-w-0 ${variant === 'grid' ? '' : 'pr-4'}`}>
+              <div className="flex items-center gap-2 flex-wrap pointer-events-none">
                 <Badge className="rounded-none px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest bg-slate-100 text-slate-600 border border-slate-200">
                   {property.status || 'Active'}
                 </Badge>
               </div>
 
-              <Link to={createPageUrl('PropertyDetails') + `?id=${property.id}`}>
-                <h3 className="text-2xl font-light text-slate-900 tracking-tight leading-tight group-hover:text-unswap-blue-deep transition-colors duration-300">
+              <div className="relative">
+                <h3 className={`font-light text-slate-900 tracking-tight leading-tight group-hover:text-unswap-blue-deep transition-colors duration-300 ${variant === 'grid' ? 'text-xl' : 'text-2xl'}`}>
                   {property.title}
                 </h3>
-              </Link>
+              </div>
 
               <div className="flex items-center gap-2 text-slate-400">
-                <MapPin className="w-3.5 h-3.5" />
-                <p className="text-[10px] font-bold uppercase tracking-[0.1em]">{property.location || property.city}</p>
+                <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                <p className="text-[10px] font-bold uppercase tracking-[0.1em] truncate">{property.location || property.city}</p>
               </div>
             </div>
 
             {reviews.length > 0 && (
-              <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 border border-slate-100">
+              <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 border border-slate-100 flex-shrink-0">
                 <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                 <span className="text-xs font-bold text-slate-900">{averageRating}</span>
                 <span className="text-[10px] text-slate-400 uppercase tracking-widest">({reviews.length})</span>
@@ -175,25 +178,24 @@ export default function PropertyCard({ property, variant = 'default', index = 0 
             )}
           </div>
 
-          {!isList && (
-            <div className="flex items-center gap-6 text-slate-500 text-xs mb-8 py-4 border-y border-slate-50 font-serif italic">
-              <div className="flex items-center gap-2">
-                <Bed className="w-4 h-4 opacity-40 text-unswap-blue-deep" />
-                <span>{property.bedrooms || 1} Bed</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Bath className="w-4 h-4 opacity-40 text-unswap-blue-deep" />
-                <span>{property.bathrooms || 1} Bath</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 opacity-40 text-unswap-blue-deep" />
-                <span>{property.max_guests || 2} Guests</span>
-              </div>
+          {/* Room stats */}
+          <div className="flex items-center gap-6 text-slate-500 text-xs mb-6 py-4 border-y border-slate-50 font-serif italic">
+            <div className="flex items-center gap-2">
+              <Bed className="w-4 h-4 opacity-40 text-unswap-blue-deep" />
+              <span>{property.bedrooms || 1} Bed</span>
             </div>
-          )}
+            <div className="flex items-center gap-2">
+              <Bath className="w-4 h-4 opacity-40 text-unswap-blue-deep" />
+              <span>{property.bathrooms || 1} Bath</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 opacity-40 text-unswap-blue-deep" />
+              <span>{property.max_guests || 2} Guests</span>
+            </div>
+          </div>
 
-          {/* Footer Stats - From "My Listings" */}
-          <div className={`mt-auto pt-6 border-t border-slate-50 flex items-center justify-between ${isList ? 'gap-12' : ''}`}>
+          {/* Footer Stats — matching My Listings */}
+          <div className="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between">
             <div className="flex items-center gap-8">
               <div className="flex items-center gap-2 text-slate-500">
                 <Eye className="w-3.5 h-3.5 text-unswap-blue-deep/30" />
@@ -205,38 +207,30 @@ export default function PropertyCard({ property, variant = 'default', index = 0 
               </div>
             </div>
 
-            <div className="flex flex-col items-end">
-              <div className="flex items-baseline gap-1">
-                <span className="text-xl font-serif italic font-extralight text-slate-900">{property.smart_credit_value || 200}</span>
-                <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400">pts / night</span>
-              </div>
-            </div>
+            {/* Host link */}
+            {property.owner_email && (
+              <button
+                onClick={handleHostProfileClick}
+                className="relative z-10 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-unswap-blue-deep transition-colors"
+              >
+                <div className="w-7 h-7 rounded-none bg-slate-50 border border-slate-100 flex items-center justify-center">
+                  {!currentUser || !isCurrentUserVerified ? (
+                    <Lock className="w-3 h-3 text-slate-300" />
+                  ) : (
+                    <Users className="w-3 h-3" />
+                  )}
+                </div>
+                <span className="hidden sm:inline">View Host</span>
+              </button>
+            )}
           </div>
-
-          {/* Host Link (Optional for List) */}
-          {property.owner_email && !isList && (
-            <button
-              onClick={handleHostProfileClick}
-              className="flex items-center gap-3 mt-6 pt-6 border-t border-slate-50 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-unswap-blue-deep transition-colors w-full"
-            >
-              <div className="w-8 h-8 rounded-none bg-slate-50 border border-slate-100 flex items-center justify-center">
-                {!currentUser || !isCurrentUserVerified ? (
-                  <Lock className="w-3.5 h-3.5 text-slate-300" />
-                ) : (
-                  <Users className="w-3.5 h-3.5" />
-                )}
-              </div>
-              <span>View Host Protocol</span>
-            </button>
-          )}
         </div>
-      </div>
-
+    </motion.div>
       <VerificationRequiredDialog
         open={showVerificationDialog}
         onOpenChange={setShowVerificationDialog}
         action="view host profiles"
       />
-    </motion.div>
+    </>
   );
 }
