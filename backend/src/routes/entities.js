@@ -265,6 +265,33 @@ router.post('/:entity', requireAuth, async (req, res) => {
         const processedData = preprocessData(data, entity);
 
         const record = await prisma[prismaModel].create({ data: processedData });
+
+        // Admin Notification Hooks
+        if (entity === 'Property' || entity === 'Verification' || entity === 'SwapRequest') {
+            const { notifyAdmins } = require('../services/adminNotificationService');
+            let title = '';
+            let message = '';
+            let link = '';
+
+            if (entity === 'Property') {
+                title = '🏠 New Property Listing';
+                message = `A new property has been listed: ${record.title || 'Untitled'}`;
+                link = `/AdminDashboard?tab=properties`;
+            } else if (entity === 'Verification') {
+                title = '🛡 New Verification Request';
+                message = `A user has submitted a new verification request.`;
+                link = `/AdminDashboard?tab=verifications`;
+            } else if (entity === 'SwapRequest') {
+                title = '🤝 New Swap Request';
+                message = `A new swap request has been initiated.`;
+                link = `/AdminDashboard?tab=swaps`;
+            }
+
+            if (title) {
+                notifyAdmins({ title, message, link });
+            }
+        }
+
         res.status(201).json(transformRecord(record, entity));
     } catch (err) {
         console.error(`POST entities/${req.params.entity} error:`, err);

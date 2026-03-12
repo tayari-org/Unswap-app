@@ -46,14 +46,20 @@ const upload = multer({
 
 // POST /api/upload
 router.post('/', requireAuth, upload.single('file'), (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ error: 'No file provided' });
+    try {
+        if (!req.file) {
+            console.error('[Upload] No file provided in request');
+            return res.status(400).json({ error: 'No file provided' });
+        }
+
+        const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3001}`;
+        const file_url = `${baseUrl}/uploads/${req.file.filename}`;
+
+        res.json({ file_url, filename: req.file.filename, size: req.file.size });
+    } catch (error) {
+        console.error('[Upload] Internal Error:', error);
+        res.status(500).json({ error: 'Internal server error during upload' });
     }
-
-    const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3001}`;
-    const file_url = `${baseUrl}/uploads/${req.file.filename}`;
-
-    res.json({ file_url, filename: req.file.filename, size: req.file.size });
 });
 
 module.exports = router;
