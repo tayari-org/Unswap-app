@@ -1,13 +1,13 @@
 {
     "name": "unswap-backend",
     "version": "1.0.0",
-    "description": "Unswap self-hosted backend — Express + MongoDB",
+    "description": "Unswap Backend",
     "type": "commonjs",
     "main": "src/server.js",
     "scripts": {
         "dev": "nodemon src/server.js",
         "start": "node src/server.js",
-        "build": "prisma generate",
+        "build": "npm run build && prisma generate",
         "db:seed": "node src/db/seed.js"
     },
     "dependencies": {
