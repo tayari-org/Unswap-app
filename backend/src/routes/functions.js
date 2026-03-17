@@ -12,6 +12,95 @@ const { prisma } = require('../db');
 const router = express.Router();
 router.use(requireAuth);
 
+// ─── finalizeSwap ──────────────────────────────────────────────────────────────
+async function finalizeSwap(req, res) {
+    const user = req.user;
+    const { swap_request_id } = req.body;
+    if (!swap_request_id) return res.status(400).json({ error: 'Missing swap_request_id' });
+
+    const swapRequest = await prisma.swapRequest.findUnique({ where: { id: swap_request_id } });
+    if (!swapRequest) return res.status(404).json({ error: 'Swap request not found' });
+
+    const isRequester = swapRequest.requester_email === user.email;
+    const isHost = swapRequest.host_email === user.email;
+    if (!isRequester && !isHost) return res.status(403).json({ error: 'Not part of this swap' });
+
+    // Deduct points if guestpoints swap
+    if (swapRequest.swap_type === 'guestpoints' && swapRequest.status !== 'finalized') {
+        const totalPoints = swapRequest.total_points || 0;
+        const requester = await prisma.user.findUnique({ where: { email: swapRequest.requester_email } });
+        const host = await prisma.user.findUnique({ where: { email: swapRequest.host_email } });
+        if (!requester || !host) return res.status(500).json({ error: 'Could not fetch user data' });
+
+        const reqPoints = requester.guest_points || 0;
+        const hostPoints = host.guest_points || 0;
+        if (reqPoints < totalPoints) {
+            return res.status(400).json({ error: `Insufficient points. Requester has ${reqPoints}, needs ${totalPoints}.` });
+        }
+
+        await prisma.$transaction([
+            prisma.user.update({ where: { email: swapRequest.requester_email }, data: { guest_points: reqPoints - totalPoints } }),
+            prisma.user.update({ where: { email: swapRequest.host_email }, data: { guest_points: hostPoints + totalPoints } }),
+            prisma.guestPointTransaction.create({
+                data: {
+                    user_email: swapRequest.requester_email,
+                    transaction_type: 'spent_swap',
+                    points: -totalPoints,
+                    balance_after: reqPoints - totalPoints,
+                    description: `Swap finalized for ${swapRequest.property_title}`,
+                    related_id: swap_request_id
+                }
+            }),
+            prisma.guestPointTransaction.create({
+                data: {
+                    user_email: swapRequest.host_email,
+                    transaction_type: 'earned_swap',
+                    points: totalPoints,
+                    balance_after: hostPoints + totalPoints,
+                    description: `Earned from swap finalized for ${swapRequest.property_title}`,
+                    related_id: swap_request_id
+                }
+            }),
+            prisma.swapRequest.update({
+                where: { id: swap_request_id },
+                data: { status: 'finalized', finalized_at: new Date() }
+            })
+        ]);
+    } else {
+        await prisma.swapRequest.update({
+            where: { id: swap_request_id },
+            data: { status: 'finalized', finalized_at: new Date() }
+        });
+    }
+
+    await prisma.activityLog.create({
+        data: {
+            activity_type: 'swap_finalized',
+            description: `Swap finalized: ${swapRequest.property_title}`,
+            location_from: swapRequest.requester_email,
+            location_to: swapRequest.host_email,
+            is_public: true
+        }
+    });
+
+    const otherEmail = isRequester ? swapRequest.host_email : swapRequest.requester_email;
+    await prisma.notification.create({
+        data: {
+            user_email: otherEmail,
+            type: 'swap_finalized',
+            title: 'Swap Finalized',
+            message: `The swap for ${swapRequest.property_title} has been finalized.`,
+            link: '/MySwaps',
+            related_id: swap_request_id,
+            sender_email: user.email,
+            sender_name: user.full_name || user.email
+        }
+    });
+
+    return res.json({ success: true, message: 'Swap finalized successfully', swap_request_id });
+}
+
+
 // ─── completeSwap ──────────────────────────────────────────────────────────────
 async function completeSwap(req, res) {
     const user = req.user;
@@ -27,39 +116,7 @@ async function completeSwap(req, res) {
 
     if (swapRequest.swap_type === 'guestpoints') {
         const totalPoints = swapRequest.total_points || 0;
-        const requester = await prisma.user.findUnique({ where: { email: swapRequest.requester_email } });
-        const host = await prisma.user.findUnique({ where: { email: swapRequest.host_email } });
-        if (!requester || !host) return res.status(500).json({ error: 'Could not fetch user data' });
-
-        const reqPoints = requester.guest_points || 0;
-        const hostPoints = host.guest_points || 0;
-        if (reqPoints < totalPoints) {
-            return res.status(400).json({ error: `Insufficient points. Requester has ${reqPoints}, needs ${totalPoints}` });
-        }
-
-        await prisma.user.update({ where: { email: swapRequest.requester_email }, data: { guest_points: reqPoints - totalPoints } });
-        await prisma.user.update({ where: { email: swapRequest.host_email }, data: { guest_points: hostPoints + totalPoints } });
-
-        await prisma.guestPointTransaction.create({
-            data: {
-                user_email: swapRequest.requester_email,
-                transaction_type: 'spent_swap',
-                points: -totalPoints,
-                balance_after: reqPoints - totalPoints,
-                description: `Swap for ${swapRequest.property_title}`,
-                related_id: swap_request_id
-            }
-        });
-        await prisma.guestPointTransaction.create({
-            data: {
-                user_email: swapRequest.host_email,
-                transaction_type: 'earned_swap',
-                points: totalPoints,
-                balance_after: hostPoints + totalPoints,
-                description: `Earned from swap for ${swapRequest.property_title}`,
-                related_id: swap_request_id
-            }
-        });
+        // Points are now deducted during finalizeSwap. completeSwap only marks the stay as finished.
     }
 
     await prisma.swapRequest.update({
@@ -462,6 +519,7 @@ async function deleteUserAndData(req, res) {
 
 // ─── Route dispatcher ─────────────────────────────────────────────────────────
 const FUNCTION_MAP = {
+    finalizeSwap,
     completeSwap,
     createDailyRoom,
     createStripeCheckoutSession,

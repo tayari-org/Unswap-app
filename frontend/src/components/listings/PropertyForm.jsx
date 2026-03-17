@@ -541,8 +541,8 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
                     {['reciprocal', 'guestpoints', 'both'].map(type => (
                       <button
                         key={type}
-                        onClick={() => toggleArrayItem('swap_types_accepted', type)}
-                        className={`px-6 py-3 text-[10px] font-bold uppercase tracking-widest border transition-all duration-300 ${formData.swap_types_accepted.includes(type) 
+                        onClick={() => handleChange('swap_types_accepted', [type])}
+                        className={`px-6 py-3 text-[10px] font-bold uppercase tracking-widest border transition-all duration-300 ${formData.swap_types_accepted.includes(type) || formData.swap_types_accepted[0] === type
                           ? 'bg-unswap-blue-deep border-unswap-blue-deep text-white shadow-md' 
                           : 'bg-white border-slate-100 text-slate-400 hover:border-slate-300'
                         }`}

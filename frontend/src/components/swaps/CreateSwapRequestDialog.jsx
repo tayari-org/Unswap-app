@@ -245,7 +245,7 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
                   <SelectValue placeholder="Select swap type" />
                 </SelectTrigger>
                 <SelectContent className="rounded-none border-slate-200 shadow-2xl">
-                  {(availableSwapTypes === 'guestpoints_only' || availableSwapTypes === 'both') && (
+                  {(availableSwapTypes.includes('guestpoints') || availableSwapTypes.includes('guestpoints_only') || availableSwapTypes.includes('both')) && (
                     <SelectItem value="guestpoints" className="py-3 rounded-none">
                       <div className="flex items-center gap-3">
                         <div className="w-2 h-2 rounded-full bg-amber-500" />
@@ -253,7 +253,7 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
                       </div>
                     </SelectItem>
                   )}
-                  {myProperties.length > 0 && (availableSwapTypes === 'reciprocal_only' || availableSwapTypes === 'both') && (
+                  {myProperties.length > 0 && (availableSwapTypes.includes('reciprocal') || availableSwapTypes.includes('reciprocal_only') || availableSwapTypes.includes('both')) && (
                     <SelectItem value="reciprocal" className="py-3 rounded-none">
                       <div className="flex items-center gap-3">
                         <div className="w-2 h-2 rounded-full bg-unswap-blue-deep" />

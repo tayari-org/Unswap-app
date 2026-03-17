@@ -61,6 +61,8 @@ model Property {
   address                  String?
   city                     String
   country                  String
+  host_phone               String?
+  handoff_method           String?
   latitude                 Float?
   longitude                Float?
   duty_station             String?

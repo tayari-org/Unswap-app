@@ -250,9 +250,23 @@ router.get('/:entity', optionalAuth, async (req, res) => {
 
         const { _sort, _limit, _offset, ...filters } = req.query;
         const where = buildFilter(filters);
-        const orderBy = buildSort(_sort);
         const take = _limit ? parseInt(_limit) : undefined;
         const skip = _offset ? parseInt(_offset) : 0;
+        
+        let orderBy = undefined;
+        if (_sort) {
+             orderBy = buildSort(_sort);
+        } else {
+             // Default sort check
+             const modelFields = Object.keys(prisma[prismaModel].fields || {});
+             // If we can't reflect fields easily in this older Prisma version, we try to use a safe default mapping
+             if (prismaModel === 'typingStatus') {
+                 orderBy = { updated_at: 'desc' };
+             } else if (prismaModel !== 'messageReaction' && prismaModel !== 'pinnedConversation') {
+                 // most other ones have created_at
+                 orderBy = { created_at: 'desc' };
+             }
+        }
 
         const records = await prisma[prismaModel].findMany({
             where,
