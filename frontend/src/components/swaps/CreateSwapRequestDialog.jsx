@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -31,6 +32,7 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
   const [checkOut, setCheckOut] = useState(null);
   const [guestsCount, setGuestsCount] = useState(1);
   const [message, setMessage] = useState('');
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
 
   // Check login status
@@ -124,6 +126,7 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
     setCheckOut(null);
     setGuestsCount(1);
     setMessage('');
+    setAgreedToTerms(false);
   };
 
   const handleSubmit = () => {
@@ -163,7 +166,9 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
       duration_nights: nights,
       party_size: guestsCount,
       total_points: swapType === 'guestpoints' ? totalPoints : 0,
-      status: 'pending'
+      status: 'pending',
+      guest_agreed_to_terms: true,
+      guest_agreed_at: new Date().toISOString()
     };
 
     createSwapMutation.mutate({
@@ -360,6 +365,24 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
                 </div>
               </div>
             )}
+
+            {/* Terms Agreement */}
+            <div className="space-y-4 pt-6 border-t border-slate-100">
+              <div className="flex items-center gap-3">
+                <Checkbox 
+                  id="request_terms" 
+                  checked={agreedToTerms}
+                  onCheckedChange={setAgreedToTerms}
+                  className="rounded-none border-slate-300 data-[state=checked]:bg-unswap-blue-deep data-[state=checked]:border-unswap-blue-deep"
+                />
+                <label 
+                  htmlFor="request_terms" 
+                  className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.1em] cursor-pointer"
+                >
+                  I agree to the <span className="text-unswap-blue-deep underline underline-offset-2">UNswap Terms & Conditions</span> and house rules
+                </label>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -373,8 +396,8 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={createSwapMutation.isPending || (swapType === 'guestpoints' && (user?.guest_points ?? 500) < totalPoints) || !checkIn || !checkOut}
-            className={`rounded-none h-16 px-16 text-[10px] font-bold uppercase tracking-[0.4em] transition-all shadow-xl ${createSwapMutation.isPending || (swapType === 'guestpoints' && (user?.guest_points ?? 500) < totalPoints) || !checkIn || !checkOut
+            disabled={!agreedToTerms || createSwapMutation.isPending || (swapType === 'guestpoints' && (user?.guest_points ?? 500) < totalPoints) || !checkIn || !checkOut}
+            className={`rounded-none h-16 px-16 text-[10px] font-bold uppercase tracking-[0.4em] transition-all shadow-xl ${!agreedToTerms || createSwapMutation.isPending || (swapType === 'guestpoints' && (user?.guest_points ?? 500) < totalPoints) || !checkIn || !checkOut
               ? 'bg-slate-200 text-slate-400'
               : 'bg-unswap-blue-deep text-white hover:bg-slate-900 active:scale-95'
               }`}

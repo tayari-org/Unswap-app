@@ -95,7 +95,7 @@ export default function NotificationCenter({ user }) {
         <Button variant="ghost" size="icon" className="relative rounded-none h-11 w-11 hover:bg-slate-100/50 transition-colors">
           <Bell className="w-5 h-5" />
           {unreadCount > 0 && (
-            <span className="absolute top-2 right-2 w-4 h-4 bg-unswap-blue-deep text-white text-[9px] font-bold rounded-none flex items-center justify-center border border-white shadow-lg">
+            <span className="absolute top-2 right-2 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-white shadow-lg">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}

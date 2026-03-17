@@ -39,22 +39,23 @@ export default function FinalizeSwapDialog({ open, onOpenChange, swapRequest, us
       // Update swap request with finalization details
       await api.entities.SwapRequest.update(swapRequest.id, {
         insurance_certificate_url: insuranceCert,
-        status: 'pending_guest_approval',
         key_handoff_method: keyHandoffMethod,
         emergency_contact_name: emergencyContactName,
         emergency_contact_phone: emergencyContactPhone,
         special_instructions: specialInstructions,
-        finalized_at: new Date().toISOString()
       });
+
+      // Call the backend function to deduct points and mark as finalized
+      await api.functions.finalizeSwap({ swap_request_id: swapRequest.id });
 
       // Send finalization details email to guest
       await api.integrations.Core.SendEmail({
         to: swapRequest.requester_email,
-        subject: `Finalize Your Swap: ${swapRequest.property_title}`,
+        subject: `Your Swap is Finalized: ${swapRequest.property_title}`,
         body: `
-          <h2>Swap Finalization Details</h2>
+          <h2>Swap Finalized</h2>
           <p>Hello ${swapRequest.requester_name || swapRequest.requester_email},</p>
-          <p>${swapRequest.host_name || swapRequest.host_email} has provided the finalization details for your swap.</p>
+          <p>${swapRequest.host_name || swapRequest.host_email} has finalized your swap and provided the following logistics.</p>
           
           <h3>Property Details</h3>
           <p><strong>Property:</strong> ${swapRequest.property_title}</p>
@@ -72,28 +73,15 @@ export default function FinalizeSwapDialog({ open, onOpenChange, swapRequest, us
           ${specialInstructions ? `<h3>Special Instructions</h3><p>${specialInstructions.replace(/\n/g, '<br>')}</p>` : ''}
           
           <h3>Insurance Coverage</h3>
-          <p>Comprehensive insurance coverage will be activated upon your approval.</p>
+          <p>Comprehensive insurance coverage is now activated for your stay.</p>
           <p><a href="${insuranceCert}">View Insurance Certificate</a></p>
-          
-          <p>Please log in to UNswap to review and approve these details to complete the swap.</p>
         `
-      });
-
-      // Send finalization request notification to guest
-      await api.entities.Notification.create({
-        user_email: swapRequest.requester_email,
-        type: 'swap_finalization',
-        title: 'Finalize Your Swap',
-        message: `${swapRequest.host_name || swapRequest.host_email} has provided finalization details for ${swapRequest.property_title}. Please review and approve.`,
-        link: '/MySwaps?tab=outgoing',
-        related_id: swapRequest.id,
-        sender_name: swapRequest.host_name || swapRequest.host_email,
-        sender_email: swapRequest.host_email
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['my-swaps']);
-      toast.success('✓ Finalization details sent to guest for approval');
+      queryClient.invalidateQueries(['current-user']);
+      toast.success('✓ Swap finalized and points deducted (if applicable)');
       onOpenChange(false);
     }
   });

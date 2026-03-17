@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from 'sonner';
 
 const PROPERTY_TYPES = ['apartment', 'house', 'villa', 'cabin', 'condo', 'townhouse'];
 const DUTY_STATIONS = [
@@ -62,6 +63,8 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
     swap_types_accepted: property?.swap_types_accepted || [],
     nightly_points: property?.nightly_points || 200,
     status: property?.status || 'draft',
+    host_phone: property?.host_phone || '',
+    handoff_method: property?.handoff_method || 'in_person',
   });
 
   const handleChange = (field, value) => {
@@ -112,6 +115,58 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
     setSaving(false);
   };
 
+  const isStepValid = (stepNumber) => {
+    switch (stepNumber) {
+      case 1:
+        return !!(
+          formData.title?.trim() &&
+          formData.property_type &&
+          formData.city?.trim() &&
+          formData.country?.trim() &&
+          formData.host_phone?.trim() &&
+          formData.handoff_method &&
+          formData.bedrooms > 0 &&
+          formData.bathrooms > 0 &&
+          formData.max_guests > 0
+        );
+      case 2:
+        return formData.images.length > 0;
+      case 3:
+      case 4:
+        return true; // No strict requirements for amenities/security
+      case 5:
+        return !!(formData.available_from);
+      default:
+        return true;
+    }
+  };
+
+  const handleNextStep = () => {
+    if (isStepValid(step) && step < 5) {
+      setStep(prev => prev + 1);
+    } else if (!isStepValid(step)) {
+      toast.error('Please fill in all required fields marked with *');
+    }
+  };
+
+  const canNavigateToStep = (targetStep) => {
+    // Can always go back
+    if (targetStep < step) return true;
+    // To go forward, current and all intermediate steps must be valid
+    for (let i = step; i < targetStep; i++) {
+        if (!isStepValid(i)) return false;
+    }
+    return true;
+  };
+
+  const handleStepClick = (s) => {
+    if (canNavigateToStep(s.num)) {
+        setStep(s.num);
+    } else {
+        toast.error('Please complete the current step first');
+    }
+  };
+
   const steps = [
     { num: 1, title: 'Basic Info' },
     { num: 2, title: 'Photos' },
@@ -130,12 +185,12 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
         {steps.map((s, index) => (
           <React.Fragment key={s.num}>
             <div
-              className="flex flex-col items-center group cursor-pointer"
-              onClick={() => setStep(s.num)}
+              className={`flex flex-col items-center group cursor-pointer ${canNavigateToStep(s.num) ? '' : 'opacity-50 pointer-events-none'}`}
+              onClick={() => handleStepClick(s)}
             >
-              <div className={`w-10 h-10 rounded-none rotate-45 border flex items-center justify-center transition-all duration-500 relative bg-white ${step >= s.num 
+              <div className={`w-10 h-10 rounded-none rotate-45 border flex items-center justify-center transition-all duration-500 relative ${step >= s.num 
                 ? 'border-unswap-blue-deep bg-unswap-blue-deep text-white shadow-lg' 
-                : 'border-slate-200 text-slate-300 hover:border-slate-400'
+                : 'bg-white border-slate-200 text-slate-300 hover:border-slate-400'
               }`}>
                 <div className="-rotate-45 font-serif italic text-xs">
                   {step > s.num ? <Check className="w-4 h-4" /> : s.num}
@@ -216,6 +271,38 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
                       placeholder="e.g., Switzerland"
                       className="h-14 rounded-none border-slate-200 bg-white focus:ring-0 focus:border-slate-400"
                     />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-8 border-t border-slate-50 pt-10">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Host Phone *</Label>
+                    <Input
+                      value={formData.host_phone}
+                      onChange={(e) => handleChange('host_phone', e.target.value)}
+                      placeholder="e.g., +41 22 123 4567"
+                      className="h-14 rounded-none border-slate-200 bg-white focus:ring-0 focus:border-slate-400"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Preferred Handoff Method *</Label>
+                    <Select value={formData.handoff_method} onValueChange={(v) => handleChange('handoff_method', v)}>
+                      <SelectTrigger className="h-14 rounded-none border-slate-200 bg-white">
+                        <SelectValue placeholder="Select Method" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-none">
+                        {[
+                          { value: 'in_person', label: 'In Person' },
+                          { value: 'lockbox', label: 'Lockbox' },
+                          { value: 'property_manager', label: 'Property Manager / Staff' },
+                          { value: 'doorman', label: 'Doorman / Concierge' },
+                          { value: 'neighbor', label: 'Neighbor' }
+                        ].map(method => (
+                          <SelectItem key={method.value} value={method.value} className="rounded-none py-3">{method.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
@@ -527,7 +614,7 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
 
                 <div className="grid md:grid-cols-2 gap-8 bg-stone-50 p-10 border border-slate-100">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Available From</Label>
+                    <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Available From *</Label>
                     <Input
                       type="date"
                       value={formData.available_from}
@@ -577,8 +664,12 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
 
               {step < 5 ? (
                 <Button 
-                  onClick={() => setStep(step + 1)} 
-                  className="rounded-none h-14 px-12 bg-slate-900 text-white hover:bg-slate-800 text-[10px] font-bold uppercase tracking-[0.3em] shadow-lg transition-all active:scale-95"
+                  onClick={handleNextStep} 
+                  className={`rounded-none h-14 px-12 text-white text-[10px] font-bold uppercase tracking-[0.3em] transition-all active:scale-95 ${
+                    isStepValid(step)
+                      ? 'bg-slate-900 hover:bg-slate-800 shadow-lg'
+                      : 'bg-slate-300 cursor-not-allowed'
+                  }`}
                 >
                   Next
                   <ChevronRight className="w-4 h-4 ml-2" />
@@ -594,8 +685,14 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
                     Archive Draft
                   </Button>
                   <Button
-                    onClick={() => handleSubmit(false)}
-                    disabled={saving || !formData.title || !formData.city || !formData.country}
+                    onClick={() => {
+                        if (canNavigateToStep(6)) { 
+                           handleSubmit(false);
+                        } else {
+                           toast.error('Please fill in all required fields marked with * across all steps');
+                        }
+                    }}
+                    disabled={saving}
                     className="rounded-none h-14 px-12 bg-unswap-blue-deep text-white hover:bg-slate-900 text-[10px] font-bold uppercase tracking-[0.4em] shadow-xl transition-all active:scale-95"
                   >
                     {saving ? (
