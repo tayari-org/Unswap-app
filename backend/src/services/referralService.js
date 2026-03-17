@@ -44,14 +44,39 @@ async function handleUserVerified(userEmail) {
             console.log(`[ReferralService] Referrer ${referrer.email} unlocked SNEAK PEEK`);
         }
 
-        // Logic for Rewards based on Platform Status
+        // Always award 1000 points per verified referral
+        const pointsReward = 1000;
+        const newBalance = (referrer.guest_points || 0) + pointsReward;
+        updates.guest_points = newBalance;
+
+        await prisma.guestPointTransaction.create({
+            data: {
+                user_email: referrer.email,
+                transaction_type: 'earned_referral',
+                points: pointsReward,
+                balance_after: newBalance,
+                description: `Referral reward for ${referral.referred_name || referral.referred_email}`,
+                related_id: referral.id
+            }
+        });
+
+        await prisma.notification.create({
+            data: {
+                user_email: referrer.email,
+                type: 'system',
+                title: "🎁 Referral Reward Earned!",
+                message: `You've earned ${pointsReward} GuestPoints for referring a verified colleague!`,
+                link: '/Dashboard?tab=points'
+            }
+        });
+
+        // Logic for pre_launch bonus: Founders' Lifetime Waiver at milestone
         if (settings?.platform_status === 'pre_launch' && settings.founders_waiver_enabled) {
-            // Milestone 2: The Delegate (5 Referrals) - Founders' Lifetime Waiver
             const requiredForWaiver = settings.required_verified_referrals_for_waiver || 5;
             if (newCount >= requiredForWaiver && referrer.subscription_status !== 'lifetime_waiver' && referrer.subscription_status !== 'lifetime_waived') {
                 updates.subscription_status = 'lifetime_waived';
                 console.log(`[ReferralService] Referrer ${referrer.email} unlocked LIFETIME WAIVER`);
-                
+
                 await prisma.notification.create({
                     data: {
                         user_email: referrer.email,
@@ -62,32 +87,6 @@ async function handleUserVerified(userEmail) {
                     }
                 });
             }
-        } else {
-            // Standard Launched Reward: 1000 Points per verified referral
-            const pointsReward = 1000;
-            const newBalance = (referrer.guest_points || 0) + pointsReward;
-            updates.guest_points = newBalance;
-            
-            await prisma.guestPointTransaction.create({
-                data: {
-                    user_email: referrer.email,
-                    transaction_type: 'earned_referral',
-                    points: pointsReward,
-                    balance_after: newBalance,
-                    description: `Referral reward for ${referral.referred_name || referral.referred_email}`,
-                    related_id: referral.id
-                }
-            });
-
-            await prisma.notification.create({
-                data: {
-                    user_email: referrer.email,
-                    type: 'system',
-                    title: "🎁 Referral Reward Earned!",
-                    message: `You've earned ${pointsReward} GuestPoints for referring a verified colleague!`,
-                    link: '/Dashboard?tab=points'
-                }
-            });
         }
 
         // Milestone 4: Founder's Circle (20 Referrals)

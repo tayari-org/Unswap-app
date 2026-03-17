@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { AvatarUI } from '@/lib/utils';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -71,18 +72,13 @@ export default function Layout({ children, currentPageName }) {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between h-16">
             {/* Logo - Refined Architectural Logo */}
-            <Link to={createPageUrl('Home')} className="flex items-center gap-3 group">
+            <Link to={createPageUrl('Home')} className="flex items-center gap-2.5 group">
               <img
                 src={logo}
                 alt="UNswap"
-                className="w-9 h-9 object-contain transition-transform duration-500 group-hover:scale-110"
+                className="h-10 w-auto object-contain transition-transform duration-500 group-hover:scale-105"
               />
-              <div className="flex flex-col items-start leading-none pt-1">
-                <span className={`text-2xl font-extralight tracking-[-0.05em] transition-colors duration-500 ${scrolled || !isHomePage ? 'text-slate-900' : 'text-white'}`}>
-                  UN<span className="italic font-serif">swap</span>
-                </span>
-                <div className={`w-6 h-px mt-0.5 transition-colors duration-500 ${scrolled || !isHomePage ? 'bg-unswap-blue-deep/20' : 'bg-white/20'}`} />
-              </div>
+              <span className={`text-xl font-light tracking-tight transition-colors ${scrolled || !isHomePage ? 'text-slate-900' : 'text-white'}`}>UN<span className="italic font-serif">swap</span></span>
             </Link>
 
             {/* Desktop Navigation - Minimalist High-Contrast */}
@@ -119,7 +115,7 @@ export default function Layout({ children, currentPageName }) {
                   Dashboard
                 </Link>
               )}
-              {showVerifiedUI && (
+              {user && (
                 <>
                   <Link
                     to={createPageUrl('MyListings')}
@@ -160,7 +156,8 @@ export default function Layout({ children, currentPageName }) {
                     <NotificationCenter user={user} />
                   </div>
 
-                  {/* Messages */}
+                  {/* Messages - verified only */}
+                  {user && (
                   <Link to={createPageUrl('Messages')}>
                     <Button
                       variant="ghost"
@@ -177,6 +174,7 @@ export default function Layout({ children, currentPageName }) {
                       </div>
                     </Button>
                   </Link>
+                  )}
 
                   {/* Points - Institutional Credit */}
                   <Link 
@@ -185,7 +183,7 @@ export default function Layout({ children, currentPageName }) {
                     }`}
                   >
                     <Coins className={`w-3.5 h-3.5 transition-transform duration-500 group-hover/points:scale-110 ${scrolled || !isHomePage ? 'text-unswap-blue-deep' : 'text-amber-300'}`} />
-                    <span className="text-[10px] font-bold uppercase tracking-widest leading-none">{user.guest_points || 500} PTS</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest leading-none">{user.guest_points ?? 500} PTS</span>
                   </Link>
 
                   {/* User Menu - Prestigious Profile Trigger */}
@@ -193,13 +191,7 @@ export default function Layout({ children, currentPageName }) {
                     <DropdownMenuTrigger asChild>
                       <button className="flex items-center gap-3 focus:outline-none group">
                         <div className={`w-9 h-9 rounded-full overflow-hidden border-2 transition-all duration-500 group-hover:shadow-lg ${scrolled || !isHomePage ? 'border-slate-200' : 'border-white/20'}`}>
-                          {user.avatar_url ? (
-                            <img src={user.avatar_url} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-slate-50 text-slate-400">
-                              <User className="w-4 h-4" />
-                            </div>
-                          )}
+                          <AvatarUI user={user} className="w-full h-full text-[12px]" imgClassName="transition-transform duration-700 group-hover:scale-110" />
                         </div>
                         <ChevronDown className={`w-3 h-3 hidden md:block transition-all duration-500 group-hover:translate-y-0.5 ${scrolled || !isHomePage ? 'text-slate-400' : 'text-white/60'
                           }`} />
@@ -324,7 +316,7 @@ export default function Layout({ children, currentPageName }) {
                     <span className="text-[11px] font-bold uppercase tracking-widest">Dashboard</span>
                   </Link>
                 )}
-                {showVerifiedUI && (
+                {user && (
                   <>
                     <Link
                       to={createPageUrl('MyListings')}
@@ -398,7 +390,7 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Footer - Institutional Legacy Styling */}
       {
-        currentPageName !== 'Home' && (
+        !['Home', 'Messages', 'Dashboard', 'AdminDashboard', 'MyListings', 'MySwaps', 'Settings', 'HostProfile', 'GuestDashboard'].includes(currentPageName) && (
           <footer className="bg-slate-900 text-white py-20 px-6 border-t border-white/5">
             <div className="max-w-7xl mx-auto">
               <div className="grid md:grid-cols-4 gap-16">
@@ -407,9 +399,9 @@ export default function Layout({ children, currentPageName }) {
                     <img
                       src={logo}
                       alt="UNswap"
-                      className="w-10 h-10 object-contain grayscale brightness-200"
+                      className="w-10 h-10 object-contain opacity-80"
                     />
-                    <span className="text-2xl font-extralight tracking-tighter">UN<span className="italic font-serif">swap</span></span>
+                    <span className="text-xl font-bold uppercase tracking-widest text-white">UNSWAP</span>
                   </div>
                   <p className="text-slate-400 text-[10px] uppercase font-bold tracking-[0.15em] leading-loose">
                     A secure home exchange network for international civil servants.

@@ -86,35 +86,6 @@ export default function RecentReviews({ reviews, detailed = false }) {
                   </p>
                 )}
 
-                {/* Detailed Ratings */}
-                {detailed && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t">
-                    {review.cleanliness_rating && (
-                      <div className="text-center">
-                        <p className="text-xs text-slate-500 mb-1">Cleanliness</p>
-                        <p className="font-semibold text-slate-900">{review.cleanliness_rating}</p>
-                      </div>
-                    )}
-                    {review.communication_rating && (
-                      <div className="text-center">
-                        <p className="text-xs text-slate-500 mb-1">Communication</p>
-                        <p className="font-semibold text-slate-900">{review.communication_rating}</p>
-                      </div>
-                    )}
-                    {review.accuracy_rating && (
-                      <div className="text-center">
-                        <p className="text-xs text-slate-500 mb-1">Accuracy</p>
-                        <p className="font-semibold text-slate-900">{review.accuracy_rating}</p>
-                      </div>
-                    )}
-                    {review.location_rating && (
-                      <div className="text-center">
-                        <p className="text-xs text-slate-500 mb-1">Location</p>
-                        <p className="font-semibold text-slate-900">{review.location_rating}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
 
                 {/* Host Response */}
                 {review.response_from_host && (

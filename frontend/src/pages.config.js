@@ -66,6 +66,7 @@ import Documentation from './pages/Documentation';
 import Login from './pages/Login';
 import ResetPassword from './pages/ResetPassword';
 import ReferralDashboard from './pages/ReferralDashboard';
+import OAuthCallback from './pages/OAuthCallback';
 import __Layout from './Layout.jsx';
 
 
@@ -89,6 +90,7 @@ export const PAGES = {
     "Login": Login,
     "ResetPassword": ResetPassword,
     "ReferralDashboard": ReferralDashboard,
+    "OAuthCallback": OAuthCallback,
 }
 
 export const pagesConfig = {

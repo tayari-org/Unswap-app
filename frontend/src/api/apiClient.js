@@ -29,7 +29,10 @@
  */
 
 // @ts-ignore — Vite injects import.meta.env at build time
-const API_BASE = /** @type {any} */ (import.meta).env?.VITE_API_BASE_URL || 'http://localhost:3001';
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
+if (!API_BASE) {
+    throw new Error('VITE_API_BASE_URL is not defined. Check your .env file.');
+}
 
 // ─── Token management ─────────────────────────────────────────────────────────
 
@@ -141,12 +144,6 @@ const auth = {
         return post('/api/auth/reset-password', { token, new_password: newPassword });
     },
 
-    async googleLogin(credential, referred_by) {
-        const data = await post('/api/auth/google', { credential, referred_by });
-        setToken(data.token);
-        return data.user;
-    },
-
     logout(returnUrl) {
         setToken(null);
         const loginPath = '/login';
@@ -156,6 +153,27 @@ const auth = {
 
     redirectToLogin(returnUrl) {
         this.logout(returnUrl);
+    },
+
+    googleLogin({ returnUrl = '/Dashboard', refCode = '' } = {}) {
+        const params = new URLSearchParams();
+        if (returnUrl) params.set('from', returnUrl);
+        if (refCode) params.set('ref', refCode);
+        window.location.href = `${API_BASE}/api/auth/google?${params}`;
+    },
+
+    linkedinLogin({ returnUrl = '/Dashboard', refCode = '' } = {}) {
+        const params = new URLSearchParams();
+        if (returnUrl) params.set('from', returnUrl);
+        if (refCode) params.set('ref', refCode);
+        window.location.href = `${API_BASE}/api/auth/linkedin?${params}`;
+    },
+
+    xLogin({ returnUrl = '/Dashboard', refCode = '' } = {}) {
+        const params = new URLSearchParams();
+        if (returnUrl) params.set('from', returnUrl);
+        if (refCode) params.set('ref', refCode);
+        window.location.href = `${API_BASE}/api/auth/x?${params}`;
     },
 };
 
@@ -266,6 +284,14 @@ const referrals = {
     },
 };
 
+// ─── Favorites ────────────────────────────────────────────────────────────────
+
+const favorites = {
+    async toggle(propertyId) {
+        return post('/api/favorites/toggle', { property_id: propertyId });
+    },
+};
+
 // ─── Main export ───────────────────────────────────────────────────────────────
 
 export const api = {
@@ -274,6 +300,7 @@ export const api = {
     functions,
     integrations,
     referrals,
+    favorites,
     // asServiceRole is the same object — backend handles admin elevation via JWT role
     get asServiceRole() {
         return this;

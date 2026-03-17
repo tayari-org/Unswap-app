@@ -77,6 +77,25 @@ function transformRecord(record, entity) {
         });
     }
 
+    // Handle dynamic URLs
+    const baseUrl = process.env.BACKEND_URL || '';
+    const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    const prependBase = (val) => {
+        if (typeof val === 'string' && val && !val.startsWith('http')) {
+            return `${cleanBaseUrl}/uploads/${val}`;
+        }
+        return val;
+    };
+
+    if (entity === 'User' && result.avatar_url) {
+        result.avatar_url = prependBase(result.avatar_url);
+    } else if (entity === 'Property') {
+        if (Array.isArray(result.photos)) result.photos = result.photos.map(prependBase);
+        if (Array.isArray(result.images)) result.images = result.images.map(prependBase);
+    } else if (entity === 'Verification' && result.document_url) {
+        result.document_url = prependBase(result.document_url);
+    }
+
     return result;
 }
 
@@ -84,14 +103,36 @@ function transformRecord(record, entity) {
  * Preprocess data before sending to Prisma (stringifying arrays/objects for SQLite)
  */
 function preprocessData(data, entity) {
-    if (!data || !entity || !JSON_FIELDS[entity]) return data;
+    if (!data || !entity) return data;
 
     const result = { ...data };
-    JSON_FIELDS[entity].forEach(field => {
-        if (result[field] !== undefined && result[field] !== null && typeof result[field] !== 'string') {
-            result[field] = JSON.stringify(result[field]);
+    
+    // Handle dynamic URLs by stripping baseUrl
+    const baseUrl = process.env.BACKEND_URL || '';
+    const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    const stripBase = (val) => {
+        if (typeof val === 'string' && val.startsWith(cleanBaseUrl)) {
+            return val.replace(`${cleanBaseUrl}/uploads/`, '');
         }
-    });
+        return val;
+    };
+
+    if (entity === 'User' && result.avatar_url) {
+        result.avatar_url = stripBase(result.avatar_url);
+    } else if (entity === 'Property') {
+        if (Array.isArray(result.photos)) result.photos = result.photos.map(stripBase);
+        if (Array.isArray(result.images)) result.images = result.images.map(stripBase);
+    } else if (entity === 'Verification' && result.document_url) {
+        result.document_url = stripBase(result.document_url);
+    }
+
+    if (JSON_FIELDS[entity]) {
+        JSON_FIELDS[entity].forEach(field => {
+            if (result[field] !== undefined && result[field] !== null && typeof result[field] !== 'string') {
+                result[field] = JSON.stringify(result[field]);
+            }
+        });
+    }
     return result;
 }
 
@@ -192,7 +233,7 @@ function buildSort(sortParam) {
         updated_date: 'updated_at',
         createdAt: 'created_at',
         updatedAt: 'updated_at',
-        scheduled_time: 'scheduled_time' // Explicit mapping if needed, though name is identical now
+        scheduled_time: 'scheduled_at' // Map frontend scheduled_time to schema scheduled_at
     };
     return { [fieldMap[field] || field]: direction };
 }
@@ -222,8 +263,8 @@ router.get('/:entity', optionalAuth, async (req, res) => {
 
         res.json(records.map(r => transformRecord(r, entity)));
     } catch (err) {
-        console.error(`[API] GET entities/${req.params.entity} error:`, err);
-        res.status(500).json({ error: err.message });
+        console.error(`[API] [Entities] GET /${req.params.entity} error:`, err);
+        res.status(500).json({ error: err.message || 'Internal server error during fetch' });
     }
 });
 

@@ -16,6 +16,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CompleteSwapDialog({ open, onOpenChange, request, user }) {
   const queryClient = useQueryClient();
@@ -41,13 +42,13 @@ export default function CompleteSwapDialog({ open, onOpenChange, request, user }
         // Get requester data
         if (isRequester) {
           setRequesterData(user);
-          const requesterPoints = user?.guest_points || 500;
+          const requesterPoints = user?.guest_points ?? 500;
           setInsufficientPoints(requesterPoints < request.total_points);
         } else {
           const reqUsers = await api.entities.User.filter({ email: request.requester_email });
           const req = reqUsers[0];
           setRequesterData(req);
-          const requesterPoints = req?.guest_points || 500;
+          const requesterPoints = req?.guest_points ?? 500;
           setInsufficientPoints(requesterPoints < request.total_points);
         }
 
@@ -65,8 +66,8 @@ export default function CompleteSwapDialog({ open, onOpenChange, request, user }
     }
   }, [open, request, user, isRequester, isGuestPointsSwap]);
 
-  const requesterPoints = requesterData?.guest_points || 500;
-  const hostPoints = hostData?.guest_points || 500;
+  const requesterPoints = requesterData?.guest_points ?? 500;
+  const hostPoints = hostData?.guest_points ?? 500;
 
   const completeSwapMutation = useMutation({
     mutationFn: async () => {
@@ -89,116 +90,136 @@ export default function CompleteSwapDialog({ open, onOpenChange, request, user }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md rounded-none border-0 shadow-2xl p-0 overflow-hidden">
-        <DialogHeader className="p-10 border-b bg-slate-50">
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto rounded-none border-0 shadow-2xl p-0">
+        <DialogHeader className="p-10 border-b bg-stone-50/80 relative">
+          <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500" />
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-8 h-px bg-emerald-500/20" />
+            <div className="w-8 h-px bg-emerald-500" />
             <p className="text-emerald-600 font-bold tracking-[0.4em] uppercase text-[9px]">Swap Conclusion</p>
           </div>
-          <DialogTitle className="text-3xl font-extralight text-slate-900 tracking-tighter leading-tight">
+          <DialogTitle className="text-5xl font-extralight text-slate-900 tracking-tighter leading-none mb-4">
             Stay <span className="italic font-serif">Completed.</span>
           </DialogTitle>
-          <DialogDescription className="text-slate-500 text-sm font-light mt-4 leading-relaxed">
+          <DialogDescription className="text-[13px] text-slate-500 font-light max-w-sm leading-relaxed">
             Please confirm that the home swap has been successfully concluded to release GuestPoints and finalize the record.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-4 space-y-4">
+        <div className="p-10 space-y-10">
           {/* Swap Summary */}
-          <Card className="bg-slate-50">
-            <CardContent className="p-4 space-y-3">
-              <div>
-                <p className="text-sm text-slate-500">Property</p>
-                <p className="font-medium">{request?.property_title}</p>
+          <div className="p-8 bg-stone-50/50 border border-slate-100 rounded-none shadow-sm">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-6">Swap Summary</p>
+            <div className="grid grid-cols-2 gap-8">
+              <div className="col-span-2">
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-2">Property</p>
+                <p className="text-lg font-extralight tracking-tight text-slate-900 leading-tight">{request?.property_title}</p>
               </div>
-              <div className="flex justify-between">
-                <div>
-                  <p className="text-sm text-slate-500">Dates</p>
-                  <p className="font-medium">
-                    {request?.check_in && format(new Date(request.check_in), 'MMM d')} -
-                    {request?.check_out && format(new Date(request.check_out), 'MMM d')}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">Duration</p>
-                  <p className="font-medium">{nights} nights</p>
+              <div className="space-y-1">
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-2">Dates</p>
+                <div className="flex items-center gap-2 text-slate-900 font-light text-sm">
+                  {request?.check_in && format(new Date(request.check_in), 'MMM d')} - {request?.check_out && format(new Date(request.check_out), 'MMM d, yyyy')}
                 </div>
               </div>
-            </CardContent>
-          </Card>
+              <div className="space-y-1 text-right">
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-2">Duration</p>
+                <p className="text-sm font-light tracking-tight text-slate-900">{nights} nights</p>
+              </div>
+            </div>
+          </div>
 
           {/* Points Transfer Info */}
           {isGuestPointsSwap && (
-            <Card className={insufficientPoints ? "bg-red-50 border-red-200" : "bg-amber-50 border-amber-200"}>
-              <CardContent className="p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="text-center">
-                    <p className="text-sm text-slate-600">From</p>
-                    <p className="font-medium text-slate-900">
-                      {isRequester ? 'You' : request?.requester_name || request?.requester_email?.split('@')[0]}
-                    </p>
-                    <p className="text-xs text-slate-500">Balance: {requesterPoints} pts</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Coins className={`w-5 h-5 ${insufficientPoints ? 'text-red-500' : 'text-amber-500'}`} />
-                    <span className={`text-xl font-bold ${insufficientPoints ? 'text-red-600' : 'text-amber-600'}`}>
-                      {request?.total_points}
-                    </span>
-                    <ArrowRight className="w-5 h-5 text-slate-400" />
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-slate-600">To</p>
-                    <p className="font-medium text-slate-900">
-                      {!isRequester ? 'You' : request?.host_email?.split('@')[0]}
-                    </p>
-                    <p className="text-xs text-slate-500">Balance: {hostPoints} pts</p>
+            <div className={`p-8 border rounded-none shadow-sm ${insufficientPoints ? 'bg-rose-50/50 border-rose-100' : 'bg-stone-50/50 border-slate-100'}`}>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-8">
+                <div className="flex-1 text-center sm:text-left">
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-3">Origin</p>
+                  <p className="text-lg font-light tracking-tighter text-slate-900">
+                    {isRequester ? 'YOU' : (request?.requester_name || request?.requester_email?.split('@')[0]).toUpperCase()}
+                  </p>
+                  <div className="mt-3 flex items-center justify-center sm:justify-start gap-2">
+                    <span className="text-[8px] font-bold text-slate-300 uppercase tracking-widest">Balance</span>
+                    <span className="text-xs font-bold text-slate-500">{requesterPoints} GP</span>
                   </div>
                 </div>
-
-                {insufficientPoints && (
-                  <div className="flex items-center gap-2 p-2 bg-red-100 rounded-lg">
-                    <AlertCircle className="w-4 h-4 text-red-600" />
-                    <p className="text-sm text-red-700 font-medium">
-                      Insufficient points! {isRequester ? 'You need' : 'Requester needs'} {request?.total_points - requesterPoints} more points.
-                    </p>
+                
+                <div className="flex flex-col items-center justify-center shrink-0">
+                  <div className={`flex items-center gap-4 px-8 py-4 ${insufficientPoints ? 'bg-rose-100/50 text-rose-600 border-rose-200' : 'bg-emerald-500 text-white border-emerald-600'} rounded-none border shadow-lg`}>
+                    <Coins className="w-5 h-5 opacity-80" />
+                    <span className="text-2xl font-bold tracking-tighter">
+                      {request?.total_points}
+                    </span>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                  <ArrowRight className="w-4 h-4 text-slate-200 mt-6 rotate-90 sm:rotate-0" />
+                </div>
+                
+                <div className="flex-1 text-center sm:text-right">
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-3">Destination</p>
+                  <p className="text-lg font-light tracking-tighter text-slate-900">
+                    {!isRequester ? 'YOU' : (request?.host_email?.split('@')[0]).toUpperCase()}
+                  </p>
+                  <div className="mt-3 flex items-center justify-center sm:justify-end gap-2">
+                    <span className="text-[8px] font-bold text-slate-300 uppercase tracking-widest">Balance</span>
+                    <span className="text-xs font-bold text-slate-500">{hostPoints} GP</span>
+                  </div>
+                </div>
+              </div>
+
+              {insufficientPoints && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-8 flex items-center gap-4 p-5 bg-rose-600 text-white rounded-none shadow-xl"
+                >
+                  <AlertCircle className="w-5 h-5 shrink-0" />
+                  <p className="text-[10px] uppercase tracking-[0.2em] font-bold">
+                    Critical: Insufficient Balance. {isRequester ? 'Deficit' : 'Requester Deficit'}: {request?.total_points - requesterPoints} GP
+                  </p>
+                </motion.div>
+              )}
+            </div>
           )}
 
           {/* Warning */}
-          <div className="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-yellow-800">
-              This action cannot be undone. Make sure the stay has been completed satisfactorily.
-            </p>
+          <div className="flex items-start gap-4 p-6 bg-stone-50 border border-slate-100 rounded-none border-l-4 border-l-amber-500">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div className="text-[11px] text-slate-600 font-light leading-relaxed">
+              <strong className="font-bold block mb-2 uppercase text-[9px] tracking-[0.2em] text-amber-700">Protocol Warning</strong>
+              This action cannot be undone. Make sure the stay has been completed satisfactorily before final authorization.
+            </div>
           </div>
 
           {/* Confirmation */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-start space-x-5 p-8 bg-stone-50/50 border border-slate-100 rounded-none transition-all duration-300 hover:bg-white hover:shadow-md group">
             <Checkbox
               id="confirm"
               checked={confirmed}
               onCheckedChange={setConfirmed}
+              className="mt-1 rounded-none border-slate-300 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
             />
-            <Label htmlFor="confirm" className="text-sm">
+            <Label htmlFor="confirm" className="text-xs font-light tracking-tight leading-relaxed text-slate-600 cursor-pointer group-hover:text-slate-900">
               I confirm that the swap has been completed and I'm satisfied with the exchange
             </Label>
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="p-0 flex flex-row h-16 bg-white border-t border-slate-100">
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            className="flex-1 rounded-none h-full text-[10px] font-bold uppercase tracking-[0.4em] text-slate-400 hover:text-slate-900 transition-colors"
+          >
             Cancel
           </Button>
           <Button
             onClick={() => completeSwapMutation.mutate()}
             disabled={!confirmed || completeSwapMutation.isPending || (isGuestPointsSwap && insufficientPoints) || loadingUsers}
-            className="bg-emerald-500 hover:bg-emerald-600"
+            className={`flex-1 rounded-none h-full text-[10px] font-bold uppercase tracking-[0.5em] transition-all shadow-2xl ${
+              !confirmed || completeSwapMutation.isPending || (isGuestPointsSwap && insufficientPoints) || loadingUsers
+                ? 'bg-slate-50 text-slate-300'
+                : 'bg-emerald-600 text-white hover:bg-slate-900'
+            }`}
           >
-            {(completeSwapMutation.isPending || loadingUsers) && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            {insufficientPoints ? 'Insufficient Points' : 'Complete & Transfer Points'}
+            {(completeSwapMutation.isPending || loadingUsers) ? <Loader2 className="w-4 h-4 animate-spin" /> : (insufficientPoints ? 'Insufficient' : 'Complete & Transfer')}
           </Button>
         </DialogFooter>
       </DialogContent>

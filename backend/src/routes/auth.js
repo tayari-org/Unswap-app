@@ -2,12 +2,10 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
-const { OAuth2Client } = require('google-auth-library');
 const { prisma } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const INSTITUTIONAL_DOMAINS = [
     'un.org', 'undp.org', 'unicef.org', 'unhcr.org', 'unfpa.org', 'wfp.org',
@@ -43,6 +41,14 @@ function sanitizeUser(user) {
     delete obj.password_hash;
     obj.created_date = user.created_at;
     obj.updated_date = user.updated_at;
+
+    // Handle dynamic avatar_url
+    if (obj.avatar_url && !obj.avatar_url.startsWith('http')) {
+        const baseUrl = process.env.BACKEND_URL || '';
+        const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+        obj.avatar_url = `${cleanBaseUrl}/uploads/${obj.avatar_url}`;
+    }
+
     return obj;
 }
 
@@ -73,6 +79,7 @@ router.post('/register', async (req, res) => {
                 referred_by: referred_by || null,
                 institutional_email_verified,
                 guest_points: 500,
+                ...(email.toLowerCase() === 'webdev@jacquelinetsuma.com' ? { role: 'admin' } : {})
             },
         });
 
@@ -139,7 +146,7 @@ router.get('/me', requireAuth, async (req, res) => {
 router.patch('/me', requireAuth, async (req, res) => {
     try {
         const allowed = [
-            'full_name', 'phone', 'bio', 'institution', 'job_title', 'duty_station',
+            'full_name', 'username', 'phone', 'bio', 'institution', 'organization', 'job_title', 'staff_grade', 'duty_station',
             'languages', 'avatar_url', 'notification_preferences', 'swap_preferences',
             'verification_status', 'institutional_email_verified',
         ];
@@ -149,6 +156,18 @@ router.patch('/me', requireAuth, async (req, res) => {
                 // Handle JSON fields if they are passed as objects but stored as strings
                 if (['notification_preferences', 'swap_preferences', 'languages'].includes(field) && typeof req.body[field] !== 'string') {
                     updatable[field] = JSON.stringify(req.body[field]);
+                } else if (field === 'avatar_url' && typeof req.body[field] === 'string') {
+                    // Strip BACKEND_URL from avatar_url
+                    const baseUrl = process.env.BACKEND_URL || '';
+                    const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+                    if (req.body[field].startsWith(cleanBaseUrl)) {
+                        updatable[field] = req.body[field].replace(`${cleanBaseUrl}/uploads/`, '');
+                    } else {
+                        updatable[field] = req.body[field];
+                    }
+                } else if (field === 'username' && req.body[field] === '') {
+                    // Convert empty username to null to avoid unique constraint issues in SQLite
+                    updatable[field] = null;
                 } else {
                     updatable[field] = req.body[field];
                 }
@@ -162,7 +181,7 @@ router.patch('/me', requireAuth, async (req, res) => {
         res.json(sanitizeUser(user));
     } catch (err) {
         console.error('Update me error:', err);
-        res.status(500).json({ error: 'Failed to update profile' });
+        res.status(500).json({ error: 'Failed to update profile', details: err.message, meta: err?.meta });
     }
 });
 
@@ -223,7 +242,9 @@ router.post('/forgot-password', async (req, res) => {
             }
         });
 
-        const resetLink = `http://localhost:5173/reset-password?token=${token}`;
+        const frontendUrl = process.env.FRONTEND_URL;
+        if (!frontendUrl) throw new Error('FRONTEND_URL is not defined in backend .env');
+        const resetLink = `${frontendUrl}/reset-password?token=${token}`;
 
         const { sendEmail } = require('./email');
         await sendEmail({
@@ -289,60 +310,137 @@ router.post('/reset-password', async (req, res) => {
     }
 });
 
-// ─── POST /api/auth/google ───────────────────────────────────────────────────
-router.post('/google', async (req, res) => {
+
+// ─── OAuth state store (in-memory, 10-min TTL) ──────────────────────────────
+// Keyed by random state UUID; stores { codeVerifier, provider, ref, from }
+const oauthStateStore = new Map();
+setInterval(() => {
+    const cutoff = Date.now() - 10 * 60 * 1000;
+    for (const [key, val] of oauthStateStore) {
+        if (val.createdAt < cutoff) oauthStateStore.delete(key);
+    }
+}, 60 * 1000);
+
+function buildOAuthState(extras = {}) {
+    const crypto = require('crypto');
+    const state = crypto.randomBytes(16).toString('hex');
+    const codeVerifier = crypto.randomBytes(32).toString('base64url');
+    const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
+    oauthStateStore.set(state, { codeVerifier, createdAt: Date.now(), ...extras });
+    return { state, codeVerifier, codeChallenge };
+}
+
+// ─── GET /api/auth/google ────────────────────────────────────────────────────
+router.get('/google', (req, res) => {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    
+    if (!clientId) {
+        return res.redirect(`${frontendUrl}/login?oauthError=${encodeURIComponent('Google OAuth not configured. Add credentials to backend/.env')}`);
+    }
+
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+    const redirectUri = `${backendUrl}/api/auth/google/callback`;
+    const { state, codeChallenge } = buildOAuthState({ provider: 'google', ref: req.query.ref || '', from: req.query.from || '/Dashboard' });
+
+    const params = new URLSearchParams({
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        response_type: 'code',
+        scope: 'openid email profile',
+        state,
+        code_challenge: codeChallenge,
+        code_challenge_method: 'S256',
+        access_type: 'online'
+    });
+
+    res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
+});
+
+// ─── GET /api/auth/google/callback ───────────────────────────────────────────
+router.get('/google/callback', async (req, res) => {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const { code, state, error } = req.query;
+
+    if (error) {
+        return res.redirect(`${frontendUrl}/login?oauthError=${encodeURIComponent(error)}`);
+    }
+
+    const stored = oauthStateStore.get(state);
+    if (!stored) {
+        return res.redirect(`${frontendUrl}/login?oauthError=${encodeURIComponent('Invalid or expired OAuth state. Please try again.')}`);
+    }
+    oauthStateStore.delete(state);
+
     try {
-        const { credential, referred_by } = req.body;
-        if (!credential) return res.status(400).json({ error: 'Google credential is required' });
+        const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+        const redirectUri = `${backendUrl}/api/auth/google/callback`;
 
-        console.log('Verifying Google token with audience:', process.env.GOOGLE_CLIENT_ID);
-        const ticket = await googleClient.verifyIdToken({
-            idToken: credential,
-            audience: process.env.GOOGLE_CLIENT_ID,
+        // Exchange code for access token & id_token
+        const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                client_id: process.env.GOOGLE_CLIENT_ID,
+                client_secret: process.env.GOOGLE_CLIENT_SECRET,
+                code,
+                grant_type: 'authorization_code',
+                redirect_uri: redirectUri,
+                code_verifier: stored.codeVerifier,
+            }),
         });
-        const payload = ticket.getPayload();
-        const { sub: googleId, email, name, picture } = payload;
+        const tokenData = await tokenRes.json();
+        if (!tokenRes.ok) {
+            console.error('[Google OAuth] Token exchange failed. Status:', tokenRes.status, 'Response:', JSON.stringify(tokenData));
+            throw new Error(tokenData.error_description || tokenData.error || 'Google token exchange failed');
+        }
 
-        if (!email) return res.status(400).json({ error: 'Could not retrieve email from Google account' });
+        // Fetch user profile
+        const userRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { Authorization: `Bearer ${tokenData.access_token}` },
+        });
+        const profile = await userRes.json();
+        if (!userRes.ok) throw new Error('Failed to fetch Google profile');
 
-        // Find existing user by google_id or email
+        const email = (profile.email || '').toLowerCase();
+        if (!email) throw new Error('Google did not return an email address.');
+
         let user = await prisma.user.findFirst({
-            where: { OR: [{ google_id: googleId }, { email: email.toLowerCase() }] }
+            where: { OR: [{ google_id: profile.sub }, { email }] },
         });
 
         if (user) {
-            // Link google_id if not already linked
             if (!user.google_id) {
                 user = await prisma.user.update({
                     where: { id: user.id },
-                    data: { google_id: googleId, avatar_url: user.avatar_url || picture || null },
+                    data: { google_id: profile.sub, avatar_url: user.avatar_url || profile.picture || null },
                 });
             }
         } else {
-            // Create new user from Google data
             const referral_code = generateReferralCode();
             user = await prisma.user.create({
                 data: {
-                    email: email.toLowerCase(),
-                    google_id: googleId,
-                    full_name: name || null,
-                    avatar_url: picture || null,
+                    email,
+                    google_id: profile.sub,
+                    full_name: profile.name || null,
+                    avatar_url: profile.picture || null,
                     referral_code,
-                    referred_by: referred_by || null,
+                    referred_by: stored.ref || null,
                     guest_points: 500,
+                    institutional_email_verified: isInstitutionalEmail(email),
+                    ...(email === 'webdev@jacquelinetsuma.com' ? { role: 'admin' } : {})
                 },
             });
+            console.log(`[Auth] Created user via Google: ${email}`);
 
-            if (referred_by) {
-                const referrer = await prisma.user.findUnique({
-                    where: { referral_code: referred_by }
-                });
+            if (stored.ref) {
+                const referrer = await prisma.user.findUnique({ where: { referral_code: stored.ref } });
                 if (referrer) {
                     await prisma.referral.create({
                         data: {
                             referrer_email: referrer.email,
                             referred_email: user.email,
-                            referred_name: name || null,
+                            referred_name: user.full_name || null,
                             referred_user_status: 'registered',
                         },
                     });
@@ -351,22 +449,253 @@ router.post('/google', async (req, res) => {
         }
 
         const token = signToken(user.id);
-        res.json({ token, user: sanitizeUser(user) });
+        const from = stored.from || '/Dashboard';
+        res.redirect(`${frontendUrl}/oauth-callback?token=${encodeURIComponent(token)}&from=${encodeURIComponent(from)}`);
     } catch (err) {
-        console.error('Google auth error:', err);
-        // Special debug: if it's an audience mismatch, let's see what the token actually says (decode without verification for logging ONLY)
-        try {
-            const { credential } = req.body;
-            const parts = credential.split('.');
-            if (parts.length === 3) {
-                const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
-                console.log('DEBUG: Token payload "aud":', payload.aud);
-                console.log('DEBUG: Expected audience:', process.env.GOOGLE_CLIENT_ID);
+        console.error('Google callback error:', err);
+        res.redirect(`${frontendUrl}/login?oauthError=${encodeURIComponent(err.message || 'Google sign-in failed')}`);
+    }
+});
+
+// ─── GET /api/auth/linkedin ──────────────────────────────────────────────────
+router.get('/linkedin', (req, res) => {
+    const clientId = process.env.LINKEDIN_CLIENT_ID;
+    if (!clientId || clientId.startsWith('REPLACE_')) {
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        return res.redirect(`${frontendUrl}/login?oauthError=${encodeURIComponent('LinkedIn OAuth not configured. Add credentials to backend/.env')}`);
+    }
+
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+    const redirectUri = `${backendUrl}/api/auth/linkedin/callback`;
+    const { state } = buildOAuthState({ provider: 'linkedin', ref: req.query.ref || '', from: req.query.from || '/Dashboard' });
+
+    const params = new URLSearchParams({
+        response_type: 'code',
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        state,
+        scope: 'openid profile email',
+    });
+
+    res.redirect(`https://www.linkedin.com/oauth/v2/authorization?${params}`);
+});
+
+// ─── GET /api/auth/linkedin/callback ─────────────────────────────────────────
+router.get('/linkedin/callback', async (req, res) => {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const { code, state, error } = req.query;
+
+    if (error) {
+        return res.redirect(`${frontendUrl}/login?oauthError=${encodeURIComponent(error)}`);
+    }
+
+    const stored = oauthStateStore.get(state);
+    if (!stored) {
+        return res.redirect(`${frontendUrl}/login?oauthError=${encodeURIComponent('Invalid or expired OAuth state. Please try again.')}`);
+    }
+    oauthStateStore.delete(state);
+
+    try {
+        const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+        const redirectUri = `${backendUrl}/api/auth/linkedin/callback`;
+
+        // Exchange code for access token
+        const tokenRes = await fetch('https://www.linkedin.com/oauth/v2/accessToken', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                grant_type: 'authorization_code',
+                code,
+                redirect_uri: redirectUri,
+                client_id: process.env.LINKEDIN_CLIENT_ID,
+                client_secret: process.env.LINKEDIN_CLIENT_SECRET,
+            }),
+        });
+        const tokenData = await tokenRes.json();
+        if (!tokenRes.ok) throw new Error(tokenData.error_description || 'LinkedIn token exchange failed');
+
+        // Fetch user info via OpenID Connect
+        const userRes = await fetch('https://api.linkedin.com/v2/userinfo', {
+            headers: { Authorization: `Bearer ${tokenData.access_token}` },
+        });
+        const profile = await userRes.json();
+        if (!userRes.ok) throw new Error('Failed to fetch LinkedIn profile');
+
+        const email = (profile.email || '').toLowerCase();
+        if (!email) throw new Error('LinkedIn did not return an email address. Ensure your LinkedIn account has a verified email.');
+
+        let user = await prisma.user.findFirst({
+            where: { OR: [{ linkedin_id: profile.sub }, { email }] },
+        });
+
+        if (user) {
+            if (!user.linkedin_id) {
+                user = await prisma.user.update({
+                    where: { id: user.id },
+                    data: { linkedin_id: profile.sub, avatar_url: user.avatar_url || profile.picture || null },
+                });
             }
-        } catch (e) {
-            console.error('Failed to decode token for debugging:', e);
+        } else {
+            const referral_code = generateReferralCode();
+            user = await prisma.user.create({
+                data: {
+                    email,
+                    linkedin_id: profile.sub,
+                    full_name: profile.name || null,
+                    avatar_url: profile.picture || null,
+                    referral_code,
+                    referred_by: stored.ref || null,
+                    guest_points: 500,
+                    institutional_email_verified: isInstitutionalEmail(email),
+                },
+            });
+            console.log(`[Auth] Created user via LinkedIn: ${email}`);
+
+            if (stored.ref) {
+                const referrer = await prisma.user.findUnique({ where: { referral_code: stored.ref } });
+                if (referrer) {
+                    await prisma.referral.create({
+                        data: {
+                            referrer_email: referrer.email,
+                            referred_email: user.email,
+                            referred_name: user.full_name || null,
+                            referred_user_status: 'registered',
+                        },
+                    });
+                }
+            }
         }
-        res.status(401).json({ error: `Google authentication failed: ${err.message}` });
+
+        const token = signToken(user.id);
+        const from = stored.from || '/Dashboard';
+        res.redirect(`${frontendUrl}/oauth-callback?token=${encodeURIComponent(token)}&from=${encodeURIComponent(from)}`);
+    } catch (err) {
+        console.error('LinkedIn callback error:', err);
+        res.redirect(`${frontendUrl}/login?oauthError=${encodeURIComponent(err.message || 'LinkedIn sign-in failed')}`);
+    }
+});
+
+// ─── GET /api/auth/x ─────────────────────────────────────────────────────────
+router.get('/x', (req, res) => {
+    const clientId = process.env.X_CLIENT_ID;
+    if (!clientId || clientId.startsWith('REPLACE_')) {
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        return res.redirect(`${frontendUrl}/login?oauthError=${encodeURIComponent('X OAuth not configured. Add credentials to backend/.env')}`);
+    }
+
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+    const redirectUri = `${backendUrl}/api/auth/x/callback`;
+    const { state, codeChallenge } = buildOAuthState({ provider: 'x', ref: req.query.ref || '', from: req.query.from || '/Dashboard' });
+
+    const params = new URLSearchParams({
+        response_type: 'code',
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        state,
+        scope: 'tweet.read users.read offline.access',
+        code_challenge: codeChallenge,
+        code_challenge_method: 'S256',
+    });
+
+    res.redirect(`https://twitter.com/i/oauth2/authorize?${params}`);
+});
+
+// ─── GET /api/auth/x/callback ────────────────────────────────────────────────
+router.get('/x/callback', async (req, res) => {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const { code, state, error } = req.query;
+
+    if (error) {
+        return res.redirect(`${frontendUrl}/login?oauthError=${encodeURIComponent(error)}`);
+    }
+
+    const stored = oauthStateStore.get(state);
+    if (!stored) {
+        return res.redirect(`${frontendUrl}/login?oauthError=${encodeURIComponent('Invalid or expired OAuth state. Please try again.')}`);
+    }
+    oauthStateStore.delete(state);
+
+    try {
+        const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+        const redirectUri = `${backendUrl}/api/auth/x/callback`;
+        const credentials = Buffer.from(`${process.env.X_CLIENT_ID}:${process.env.X_CLIENT_SECRET}`).toString('base64');
+
+        // Exchange code for access token (PKCE)
+        const tokenRes = await fetch('https://api.twitter.com/2/oauth2/token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                Authorization: `Basic ${credentials}`,
+            },
+            body: new URLSearchParams({
+                grant_type: 'authorization_code',
+                code,
+                redirect_uri: redirectUri,
+                code_verifier: stored.codeVerifier,
+            }),
+        });
+        const tokenData = await tokenRes.json();
+        if (!tokenRes.ok) throw new Error(tokenData.error_description || tokenData.error || 'X token exchange failed');
+
+        // Fetch user info
+        const userRes = await fetch('https://api.twitter.com/2/users/me?user.fields=id,name,username,profile_image_url', {
+            headers: { Authorization: `Bearer ${tokenData.access_token}` },
+        });
+        const { data: xUser } = await userRes.json();
+        if (!userRes.ok || !xUser) throw new Error('Failed to fetch X profile');
+
+        // X doesn't always expose email — build a synthetic one
+        const syntheticEmail = `x_${xUser.id}@x-oauth.unswap.app`;
+        const email = syntheticEmail.toLowerCase();
+
+        let user = await prisma.user.findFirst({
+            where: { OR: [{ x_id: xUser.id }, { email }] },
+        });
+
+        if (user) {
+            if (!user.x_id) {
+                user = await prisma.user.update({
+                    where: { id: user.id },
+                    data: { x_id: xUser.id, avatar_url: user.avatar_url || xUser.profile_image_url || null },
+                });
+            }
+        } else {
+            const referral_code = generateReferralCode();
+            user = await prisma.user.create({
+                data: {
+                    email,
+                    x_id: xUser.id,
+                    full_name: xUser.name || null,
+                    username: xUser.username || null,
+                    avatar_url: xUser.profile_image_url || null,
+                    referral_code,
+                    referred_by: stored.ref || null,
+                    guest_points: 500,
+                },
+            });
+            console.log(`[Auth] Created user via X: @${xUser.username}`);
+
+            if (stored.ref) {
+                const referrer = await prisma.user.findUnique({ where: { referral_code: stored.ref } });
+                if (referrer) {
+                    await prisma.referral.create({
+                        data: {
+                            referrer_email: referrer.email,
+                            referred_email: user.email,
+                            referred_name: user.full_name || null,
+                            referred_user_status: 'registered',
+                        },
+                    });
+                }
+            }
+        }
+
+        const token = signToken(user.id);
+        const from = stored.from || '/Dashboard';
+        res.redirect(`${frontendUrl}/oauth-callback?token=${encodeURIComponent(token)}&from=${encodeURIComponent(from)}`);
+    } catch (err) {
+        console.error('X callback error:', err);
+        res.redirect(`${frontendUrl}/login?oauthError=${encodeURIComponent(err.message || 'X sign-in failed')}`);
     }
 });
 

@@ -74,7 +74,7 @@ export default function Messages() {
   const { data: typingStatuses = [] } = useQuery({
     queryKey: ['typing-status', user?.email],
     queryFn: () => api.entities.TypingStatus.filter({
-      recipient_email: user?.email,
+      conversation_id: user?.email,
       is_typing: true
     }),
     enabled: !!user?.email,
@@ -146,7 +146,7 @@ export default function Messages() {
     const unsubscribe = api.entities.TypingStatus.subscribe((event) => {
       if (event.type === 'create' || event.type === 'update') {
         const status = event.data;
-        if (status.recipient_email === user.email && status.user_email === selectedConversation) {
+        if (status.conversation_id === user.email && status.user_email === selectedConversation) {
           queryClient.invalidateQueries(['typing-status']);
         }
       }
@@ -373,23 +373,21 @@ export default function Messages() {
       // Find existing typing status
       const existingStatuses = await api.entities.TypingStatus.filter({
         user_email: user.email,
-        recipient_email: selectedConversation
+        conversation_id: selectedConversation
       });
 
       if (isTyping) {
         if (existingStatuses.length > 0) {
           // Update existing status
           await api.entities.TypingStatus.update(existingStatuses[0].id, {
-            is_typing: true,
-            last_updated: new Date().toISOString()
+            is_typing: true
           });
         } else {
           // Create new status
           await api.entities.TypingStatus.create({
             user_email: user.email,
-            recipient_email: selectedConversation,
-            is_typing: true,
-            last_updated: new Date().toISOString()
+            conversation_id: selectedConversation,
+            is_typing: true
           });
         }
 
@@ -674,7 +672,7 @@ export default function Messages() {
                       {(() => {
                         const typingUser = typingStatuses.find(
                           ts => ts.user_email === selectedConversation &&
-                            ts.recipient_email === user?.email &&
+                            ts.conversation_id === user?.email &&
                             ts.is_typing
                         );
                         return typingUser && (

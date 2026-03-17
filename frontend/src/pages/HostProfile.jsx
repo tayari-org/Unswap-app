@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { AvatarUI } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import {
@@ -232,14 +233,8 @@ export default function HostProfile() {
                   </div>
                   <CardContent className="relative pb-8 px-6">
                     <div className="relative -top-12 mb-[-32px] flex flex-col sm:flex-row items-end gap-4">
-                      <div className="w-24 h-24 rounded-none bg-stone-200 overflow-hidden border-4 border-white shadow-lg">
-                        {host?.avatar_url ? (
-                          <img src={host.avatar_url} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-stone-100">
-                            <User className="w-10 h-10 text-stone-400" />
-                          </div>
-                        )}
+                      <div className="w-24 h-24 rounded-none bg-stone-200 overflow-hidden border-4 border-white shadow-lg flex-shrink-0">
+                        <AvatarUI user={host} className="w-full h-full text-stone-500 text-3xl" />
                       </div>
                       <div className="flex-1">
                         <h3 className="text-2xl font-extralight tracking-tighter text-slate-900">

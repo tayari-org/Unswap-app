@@ -12,6 +12,7 @@ import {
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { AvatarUI } from '@/lib/utils';
 
 export default function UserProfileDialog({ open, onOpenChange, userEmail }) {
   const { data: user, isLoading, error } = useQuery({
@@ -138,11 +139,7 @@ export default function UserProfileDialog({ open, onOpenChange, userEmail }) {
             <div className="flex items-start gap-8 p-10 bg-white">
               <div className="w-24 h-24 rounded-none bg-slate-50 flex items-center justify-center overflow-hidden flex-shrink-0 border border-slate-100 shadow-sm relative group">
                 <div className="absolute inset-0 bg-unswap-blue-deep/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                {user.avatar_url ? (
-                  <img src={user.avatar_url} alt="" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" />
-                ) : (
-                  <User className="w-10 h-10 text-slate-300" />
-                )}
+                <AvatarUI user={user} className="w-full h-full text-slate-300 text-3xl" imgClassName="grayscale hover:grayscale-0 transition-all duration-700" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">

@@ -5,7 +5,15 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { Calendar, CheckCircle, Clock, XCircle } from 'lucide-react';
 
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/api/apiClient';
+
 export default function BookingTrends({ swapRequests, detailed = false }) {
+  // Fetch properties to get images
+  const { data: properties = [] } = useQuery({
+    queryKey: ['all-properties'],
+    queryFn: () => api.entities.Property.list(),
+  });
   // Group requests by month for the last 6 months
   const getLast6MonthsData = () => {
     const months = [];
@@ -115,27 +123,36 @@ export default function BookingTrends({ swapRequests, detailed = false }) {
           <div className="pt-4 border-t">
             <h4 className="font-semibold text-slate-900 mb-3">Recent Bookings</h4>
             <div className="space-y-3">
-              {swapRequests.slice(0, 5).map((request) => (
-                <div key={request.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                  <div className="flex-1">
-                    <p className="font-medium text-slate-900">{request.property_title}</p>
-                    <p className="text-sm text-slate-600">
-                      {format(new Date(request.check_in), 'MMM d')} - {format(new Date(request.check_out), 'MMM d, yyyy')}
-                    </p>
+              {swapRequests.slice(0, 5).map((request) => {
+                const property = properties.find(p => p.id === request.property_id);
+                return (
+                  <div key={request.id} className="flex items-center gap-4 p-3 bg-slate-50 rounded-lg">
+                    {property?.images?.[0] && (
+                      <div className="w-16 h-12 shrink-0 rounded-md overflow-hidden bg-slate-200">
+                        <img src={property.images[0]} alt="" className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-slate-900 truncate">{request.property_title}</p>
+                      <p className="text-sm text-slate-600">
+                        {format(new Date(request.check_in), 'MMM d')} - {format(new Date(request.check_out), 'MMM d, yyyy')}
+                      </p>
+                    </div>
+                    <Badge
+                      variant={
+                        request.status === 'completed' || request.status === 'approved'
+                          ? 'default'
+                          : request.status === 'pending'
+                          ? 'secondary'
+                          : 'destructive'
+                      }
+                      className="shrink-0"
+                    >
+                      {request.status}
+                    </Badge>
                   </div>
-                  <Badge
-                    variant={
-                      request.status === 'completed' || request.status === 'approved'
-                        ? 'default'
-                        : request.status === 'pending'
-                        ? 'secondary'
-                        : 'destructive'
-                    }
-                  >
-                    {request.status}
-                  </Badge>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

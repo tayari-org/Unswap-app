@@ -21,31 +21,25 @@ export default function NotificationPreferences({ user }) {
     in_app_verification_status: true,
   });
 
-  const { data: existingSettings } = useQuery({
-    queryKey: ['notification-settings', user?.email],
-    queryFn: () => api.entities.UserNotificationSettings.filter({ user_email: user?.email }),
-    enabled: !!user?.email,
-  });
-
   useEffect(() => {
-    if (existingSettings && existingSettings.length > 0) {
-      setSettings(existingSettings[0]);
+    if (user?.notification_preferences) {
+      try {
+        const prefs = typeof user.notification_preferences === 'string' 
+          ? JSON.parse(user.notification_preferences) 
+          : user.notification_preferences;
+        
+        // Merge with defaults to ensure all keys exist
+        setSettings(prev => ({ ...prev, ...prefs }));
+      } catch (e) {
+        console.warn('Failed to parse notification preferences', e);
+      }
     }
-  }, [existingSettings]);
+  }, [user]);
 
   const updateSettingsMutation = useMutation({
-    mutationFn: async (newSettings) => {
-      if (existingSettings && existingSettings.length > 0) {
-        return await api.entities.UserNotificationSettings.update(existingSettings[0].id, newSettings);
-      } else {
-        return await api.entities.UserNotificationSettings.create({
-          user_email: user?.email,
-          ...newSettings
-        });
-      }
-    },
+    mutationFn: (newSettings) => api.auth.updateMe({ notification_preferences: newSettings }),
     onSuccess: () => {
-      queryClient.invalidateQueries(['notification-settings']);
+      queryClient.invalidateQueries(['current-user']);
       toast.success('Notification preferences updated');
     },
   });

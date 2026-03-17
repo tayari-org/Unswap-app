@@ -65,7 +65,8 @@ export default function VideoCallRoom({ videoCall, user, onCallEnd }) {
   const initializeCall = async () => {
     try {
       // Create Daily.co room URL (using room_id as the room name)
-      const roomUrl = `https://unswap.daily.co/${videoCall.room_id}`;
+      const dailyDomain = import.meta.env.VITE_DAILY_DOMAIN;
+      const roomUrl = `${dailyDomain}/${videoCall.room_id}`;
 
       // Create Daily iframe
       callFrameRef.current = window.DailyIframe.createFrame(

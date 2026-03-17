@@ -4,7 +4,7 @@ import { createPageUrl } from '@/utils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { format, differenceInDays } from 'date-fns';
-import { Calendar as CalendarIcon, ArrowLeftRight, Coins, Loader2, Home, Users, HelpCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, ArrowLeftRight, Coins, Loader2, Home, Users, HelpCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -69,7 +69,7 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
     mutationFn: async (data) => {
       // Check if user has enough points for guestpoints swap
       if (data.swap_type === 'guestpoints') {
-        const userPoints = user?.guest_points || 500;
+        const userPoints = user?.guest_points ?? 500;
         if (userPoints < data.total_points) {
           throw new Error('Insufficient GuestPoints');
         }
@@ -142,7 +142,7 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
 
     // Check if user has enough points for guestpoints swap
     if (swapType === 'guestpoints') {
-      const userPoints = user?.guest_points || 500;
+      const userPoints = user?.guest_points ?? 500;
       if (userPoints < totalPoints) {
         toast.error(`Insufficient GuestPoints. You need ${totalPoints} points but only have ${userPoints}.`);
         return;
@@ -175,35 +175,36 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto rounded-none border-0 shadow-[0_100px_150px_-30px_rgba(0,0,0,0.2)] p-0">
-        <DialogHeader className="p-10 border-b bg-slate-50">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-8 h-px bg-unswap-blue-deep/20" />
-            <p className="text-unswap-blue-deep/60 font-bold tracking-[0.4em] uppercase text-[9px]">Swap Request</p>
+        <DialogHeader className="p-12 border-b bg-stone-50/80">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-[2px] bg-unswap-blue-deep" />
+            <p className="text-unswap-blue-deep font-bold tracking-[0.5em] uppercase text-[10px]">Swap Request</p>
           </div>
-          <DialogTitle className="text-4xl font-extralight text-slate-900 tracking-tighter leading-tight">
-            Institutional <span className="italic font-serif">Exchange.</span>
+          <DialogTitle className="text-5xl font-extralight text-slate-900 tracking-tighter leading-none mb-6">
+            Initiate <span className="italic font-serif">Swap Request.</span>
           </DialogTitle>
-          <p className="text-sm text-slate-500 font-light mt-4 max-w-xl leading-relaxed">
-            Initiate a secure swap protocol with a verified host. Note that all stays require a preliminary video coordination call.
+          <p className="text-[13px] text-slate-500 font-light max-w-xl leading-relaxed">
+            Send a swap request to the host. You can choose to use GuestPoints or a reciprocal swap if both of you have properties listed.
           </p>
         </DialogHeader>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 border-b border-slate-100">
           {/* LEFT: Parameters & Selection */}
-          <div className="p-10 space-y-10 border-r border-slate-100">
+          <div className="p-12 space-y-12 border-r border-slate-100 bg-white">
             {/* Property Selection */}
-            <div>
-              <Label>Select Property</Label>
+            <div className="space-y-4">
+              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Select Property</Label>
               <Select value={selectedProperty} onValueChange={setSelectedProperty}>
-                <SelectTrigger className="mt-1">
+                <SelectTrigger className="mt-1 h-14 rounded-none border-slate-200 bg-slate-50/50 focus:ring-0 focus:border-slate-400">
                   <SelectValue placeholder="Choose a property to swap with" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-none border-slate-200 shadow-2xl">
                   {availableProperties.map(property => (
-                    <SelectItem key={property.id} value={property.id}>
-                      <div className="flex items-center gap-2">
-                        <Home className="w-4 h-4" />
-                        {property.title} - {property.location}
+                    <SelectItem key={property.id} value={property.id} className="py-3 rounded-none">
+                      <div className="flex items-center gap-3">
+                        <Home className="w-4 h-4 text-slate-400" />
+                        <span className="text-sm font-medium">{property.title}</span>
+                        <span className="text-[10px] text-slate-400 uppercase tracking-widest">— {property.location}</span>
                       </div>
                     </SelectItem>
                   ))}
@@ -212,9 +213,9 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
             </div>
 
             {/* Calendar */}
-            <div>
-              <Label className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 mb-6 block">Stay Window</Label>
-              <div className="border border-slate-100 bg-white shadow-sm overflow-hidden rounded-none p-4">
+            <div className="space-y-4">
+              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Select Dates</Label>
+              <div className="border border-slate-100 bg-stone-50/30 shadow-inner overflow-hidden rounded-none p-6 flex justify-center">
                 <Calendar
                   mode="range"
                   selected={{ from: checkIn, to: checkOut }}
@@ -223,35 +224,35 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
                     setCheckOut(range?.to);
                   }}
                   disabled={(date) => date < new Date()}
-                  className="rounded-none border-0 px-0"
+                  className="rounded-none border-0 p-0"
                 />
               </div>
             </div>
           </div>
 
           {/* RIGHT: Protocol Details */}
-          <div className="p-10 space-y-10 bg-slate-50/30">
+          <div className="p-12 space-y-12 bg-slate-50/30">
             {/* Swap Type */}
-            <div>
-              <Label>Swap Type</Label>
+            <div className="space-y-4">
+              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Swap Type</Label>
               <Select value={swapType} onValueChange={setSwapType}>
-                <SelectTrigger className="mt-1">
+                <SelectTrigger className="mt-1 h-14 rounded-none border-slate-200 bg-white focus:ring-0 focus:border-slate-400">
                   <SelectValue placeholder="Select swap type" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-none border-slate-200 shadow-2xl">
                   {(availableSwapTypes === 'guestpoints_only' || availableSwapTypes === 'both') && (
-                    <SelectItem value="guestpoints">
-                      <div className="flex items-center gap-2">
-                        <Coins className="w-4 h-4 text-amber-500" />
-                        GuestPoints
+                    <SelectItem value="guestpoints" className="py-3 rounded-none">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full bg-amber-500" />
+                        <span className="text-sm font-medium">GuestPoints Distribution</span>
                       </div>
                     </SelectItem>
                   )}
                   {myProperties.length > 0 && (availableSwapTypes === 'reciprocal_only' || availableSwapTypes === 'both') && (
-                    <SelectItem value="reciprocal">
-                      <div className="flex items-center gap-2">
-                        <ArrowLeftRight className="w-4 h-4 text-blue-500" />
-                        Reciprocal Exchange
+                    <SelectItem value="reciprocal" className="py-3 rounded-none">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full bg-unswap-blue-deep" />
+                        <span className="text-sm font-medium">Reciprocal Swap</span>
                       </div>
                     </SelectItem>
                   )}
@@ -261,16 +262,16 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
 
             {/* Reciprocal Property Selection */}
             {swapType === 'reciprocal' && myProperties.length > 0 && (
-              <div>
-                <Label>Your Property to Offer</Label>
+              <div className="space-y-4">
+                <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Select Your Property</Label>
                 <Select value={reciprocalPropertyId} onValueChange={setReciprocalPropertyId}>
-                  <SelectTrigger className="mt-1">
+                  <SelectTrigger className="mt-1 h-14 rounded-none border-slate-200 bg-white focus:ring-0 focus:border-slate-400">
                     <SelectValue placeholder="Select your property" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-none border-slate-200 shadow-2xl">
                     {myProperties.map(property => (
-                      <SelectItem key={property.id} value={property.id}>
-                        {property.title} - {property.location}
+                      <SelectItem key={property.id} value={property.id} className="py-3 rounded-none">
+                        <span className="text-sm font-medium">{property.title}</span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -279,15 +280,15 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
             )}
 
             {/* Guests */}
-            <div>
-              <Label>Number of Guests</Label>
+            <div className="space-y-4">
+              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Number of Guests</Label>
               <Select value={guestsCount.toString()} onValueChange={(val) => setGuestsCount(parseInt(val))}>
-                <SelectTrigger className="mt-1">
+                <SelectTrigger className="mt-1 h-14 rounded-none border-slate-200 bg-white focus:ring-0 focus:border-slate-400">
                   <SelectValue placeholder="1 guest" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-none border-slate-200 shadow-2xl">
                   {Array.from({ length: selectedProp?.max_guests || 10 }, (_, i) => i + 1).map(num => (
-                    <SelectItem key={num} value={num.toString()}>
+                    <SelectItem key={num} value={num.toString()} className="py-3 rounded-none">
                       {num} {num === 1 ? 'guest' : 'guests'}
                     </SelectItem>
                   ))}
@@ -296,58 +297,65 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
             </div>
 
             {/* Message */}
-            <div>
-              <Label>Message to Host</Label>
+            <div className="space-y-4">
+              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Message to Host</Label>
               <Textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Introduce yourself and explain why you'd like to stay..."
-                rows={3}
-                className="mt-1"
+                placeholder="Introduce yourself and explain the professional context of your stay..."
+                rows={4}
+                className="mt-1 rounded-none border-slate-200 bg-white p-4 focus:ring-0 focus:border-slate-400 resize-none"
               />
             </div>
 
             {/* Reciprocal Swap Info */}
             {checkIn && checkOut && swapType === 'reciprocal' && (
-              <div className="border rounded-lg p-4 bg-blue-50">
-                <div className="flex items-center gap-2 mb-2">
-                  <ArrowLeftRight className="w-5 h-5 text-blue-600" />
-                  <h4 className="font-medium text-blue-900">Reciprocal Exchange</h4>
+              <div className="border border-blue-100 p-6 bg-blue-50/50 rounded-none">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center">
+                    <ArrowLeftRight className="w-3.5 h-3.5 text-white" />
+                  </div>
+                  <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-900">Swap Details</h4>
                 </div>
-                <p className="text-sm text-blue-700">
-                  No GuestPoints required. You're offering your property in exchange for staying at this property.
+                <p className="text-sm text-blue-800/80 font-light leading-relaxed">
+                  Reciprocal swap selected. No GuestPoints will be deducted.
                 </p>
               </div>
             )}
 
             {/* Points Breakdown */}
             {checkIn && checkOut && selectedProp && swapType === 'guestpoints' && (
-              <div className="border rounded-lg p-4 bg-slate-50">
-                <div className="flex justify-between items-center mb-3">
-                  <h4 className="font-medium text-slate-900">Points Breakdown</h4>
-                  <HelpCircle className="w-4 h-4 text-slate-400" />
+              <div className="border border-slate-100 p-6 bg-white shadow-sm rounded-none">
+                <div className="flex justify-between items-center mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-px bg-amber-500/30" />
+                    <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Points Breakdown</h4>
+                  </div>
+                  <HelpCircle className="w-4 h-4 text-slate-300" />
                 </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between text-lg font-bold">
-                    <span>{selectedProp.nightly_points || 200} PTS × {nights} nights</span>
-                    <span className="text-amber-600">{totalPoints} PTS</span>
+                
+                <div className="space-y-4">
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-widest">{selectedProp.nightly_points || 200} PTS × {nights} nights</span>
+                    <span className="text-2xl font-extralight tracking-tighter text-slate-900">{totalPoints} <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">pts</span></span>
                   </div>
                 </div>
 
                 {/* Balance Section */}
-                <div className={`mt-4 pt-4 border-t ${(user?.guest_points || 500) < totalPoints ? 'bg-red-50 p-3 rounded' : 'bg-green-50 p-3 rounded'}`}>
-                  <div className="flex justify-between mb-2">
-                    <span className={(user?.guest_points || 500) < totalPoints ? 'text-red-700 font-medium' : 'text-teal-700 font-medium'}>
-                      Your balance
-                    </span>
-                    <span className={(user?.guest_points || 500) < totalPoints ? 'text-red-700 font-medium' : 'text-teal-700 font-medium'}>
-                      {user?.guest_points || 500} PTS
+                <div className={`mt-8 pt-8 border-t border-slate-50 ${(user?.guest_points ?? 500) < totalPoints ? 'bg-red-50/50 -mx-6 px-6 pb-4' : ''}`}>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Your Balance</span>
+                    <span className={`text-sm font-semibold ${(user?.guest_points ?? 500) < totalPoints ? 'text-red-600' : 'text-slate-900'}`}>
+                      {user?.guest_points ?? 500} PTS
                     </span>
                   </div>
-                  {(user?.guest_points || 500) < totalPoints && (
-                    <p className="text-red-700 text-sm font-medium">
-                      You need {totalPoints - (user?.guest_points || 500)} more points for this swap
-                    </p>
+                  {(user?.guest_points ?? 500) < totalPoints && (
+                    <div className="mt-4 p-4 border border-red-100 bg-white flex items-center gap-3">
+                      <AlertCircle className="w-4 h-4 text-red-500" />
+                      <p className="text-[11px] text-red-600 font-medium">
+                        Insufficient balance. You need {totalPoints - (user?.guest_points ?? 500)} more points.
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
@@ -355,24 +363,30 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
           </div>
         </div>
 
-        <div className="p-10 flex justify-between items-center bg-white border-t border-slate-100">
+        <div className="p-10 flex justify-between items-center bg-slate-50/50 border-t border-slate-100">
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="rounded-none text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 hover:text-slate-900 transition-colors"
+            className="rounded-none text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 hover:text-slate-900 transition-colors h-14"
           >
-            Abort Protocol
+            Cancel
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={createSwapMutation.isPending || (swapType === 'guestpoints' && (user?.guest_points || 500) < totalPoints) || !checkIn || !checkOut}
-            className={`rounded-none h-16 px-12 text-[10px] font-bold uppercase tracking-[0.4em] transition-all shadow-xl ${createSwapMutation.isPending || (swapType === 'guestpoints' && (user?.guest_points || 500) < totalPoints) || !checkIn || !checkOut
+            disabled={createSwapMutation.isPending || (swapType === 'guestpoints' && (user?.guest_points ?? 500) < totalPoints) || !checkIn || !checkOut}
+            className={`rounded-none h-16 px-16 text-[10px] font-bold uppercase tracking-[0.4em] transition-all shadow-xl ${createSwapMutation.isPending || (swapType === 'guestpoints' && (user?.guest_points ?? 500) < totalPoints) || !checkIn || !checkOut
               ? 'bg-slate-200 text-slate-400'
-              : 'bg-unswap-blue-deep text-white hover:bg-slate-900'
+              : 'bg-unswap-blue-deep text-white hover:bg-slate-900 active:scale-95'
               }`}
           >
-            {createSwapMutation.isPending && <Loader2 className="w-4 h-4 mr-3 animate-spin" />}
-            Initiate Request
+            {createSwapMutation.isPending ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 mr-3 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              'Send Request'
+            )}
           </Button>
         </div>
       </DialogContent>

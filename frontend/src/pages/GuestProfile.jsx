@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { AvatarUI } from '@/lib/utils';
 import { format } from 'date-fns';
 import {
   User, Star, Calendar, MapPin, Shield, MessageSquare, 
@@ -178,11 +179,7 @@ export default function GuestProfile() {
           <CardContent className="pt-6">
             <div className="flex items-start gap-6">
               <div className="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                {guestUser?.avatar_url ? (
-                  <img src={guestUser.avatar_url} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <User className="w-10 h-10 text-slate-500" />
-                )}
+                <AvatarUI user={guestUser} className="w-full h-full text-slate-500 text-3xl" />
               </div>
               <div className="flex-1">
                 <h1 className="text-2xl font-bold text-slate-900">

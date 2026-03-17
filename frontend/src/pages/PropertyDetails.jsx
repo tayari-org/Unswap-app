@@ -37,14 +37,7 @@ export default function PropertyDetails() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showSwapDialog, setShowSwapDialog] = useState(false);
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
-  const [swapData, setSwapData] = useState({
-    swap_type: 'guestpoints',
-    check_in: '',
-    check_out: '',
-    guests_count: 1,
-    message: '',
-    reciprocal_property_id: '',
-  });
+
 
   const { data: property, isLoading } = useQuery({
     queryKey: ['property', propertyId],
@@ -119,74 +112,54 @@ export default function PropertyDetails() {
     setShowSwapDialog(true);
   };
 
-  const updateUserMutation = useMutation({
-    mutationFn: (data) => api.auth.updateMe(data),
-    onSuccess: () => queryClient.invalidateQueries(['current-user']),
-  });
+  const savedProperties = React.useMemo(() => {
+    try {
+      const sp = user?.saved_properties;
+      return Array.isArray(sp) ? sp : JSON.parse(sp || '[]');
+    } catch { return []; }
+  }, [user?.saved_properties]);
 
-  const createSwapMutation = useMutation({
-    mutationFn: (data) => api.entities.SwapRequest.create(data),
-    onSuccess: () => {
-      toast.success('Swap request sent!');
-      setShowSwapDialog(false);
+  const isFavorite = savedProperties.includes(propertyId);
+
+  const favoriteMutation = useMutation({
+    mutationFn: () => api.favorites.toggle(propertyId),
+    onMutate: async () => {
+      const newSaved = isFavorite
+        ? savedProperties.filter(id => id !== propertyId)
+        : [...savedProperties, propertyId];
+      queryClient.setQueryData(['current-user'], prev => prev ? { ...prev, saved_properties: newSaved } : prev);
+      return { previousSaved: savedProperties };
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(['current-user'], prev => prev ? { ...prev, saved_properties: data.saved_properties } : prev);
+      queryClient.invalidateQueries(['property', propertyId]);
+      toast.success(data.isFavorite ? 'Added to favorites' : 'Removed from favorites');
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousSaved) {
+        queryClient.setQueryData(['current-user'], prev => prev ? { ...prev, saved_properties: context.previousSaved } : prev);
+      }
+      toast.error('Could not update favorites');
     },
   });
 
   const toggleFavorite = () => {
-    if (!user) {
-      toast.error('Please log in to save properties');
-      return;
-    }
-    const saved = user.saved_properties || [];
-    const newSaved = saved.includes(propertyId)
-      ? saved.filter(id => id !== propertyId)
-      : [...saved, propertyId];
-
-    // Optimistic update
-    queryClient.setQueryData(['current-user'], { ...user, saved_properties: newSaved });
-
-    // Server update
-    updateUserMutation.mutate({ saved_properties: newSaved });
-
-    if (newSaved.includes(propertyId)) {
-      toast.success('Added to favorites');
-    } else {
-      toast.success('Removed from favorites');
-    }
+    if (!user) { toast.error('Please log in to save properties'); return; }
+    favoriteMutation.mutate();
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
     const url = `${window.location.origin}${createPageUrl('PropertyDetails')}?id=${propertyId}`;
-    navigator.clipboard.writeText(url);
-    toast.success('Property link copied to clipboard!');
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: property?.title, text: 'Check out this property on UNswap', url });
+      } catch { /* user cancelled */ }
+    } else {
+      navigator.clipboard.writeText(url);
+      toast.success('Link copied to clipboard!');
+    }
   };
 
-  const handleSwapSubmit = async () => {
-    const checkIn = new Date(swapData.check_in);
-    const checkOut = new Date(swapData.check_out);
-    const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
-    const totalPoints = nights * (property?.nightly_points || 200);
-
-    await createSwapMutation.mutateAsync({
-      property_id: propertyId,
-      property_title: property?.title,
-      requester_id: user?.id,
-      requester_email: user?.email,
-      requester_name: user?.full_name,
-      host_id: property?.owner_id,
-      host_email: property?.owner_email,
-      swap_type: swapData.swap_type,
-      reciprocal_property_id: swapData.reciprocal_property_id,
-      check_in: swapData.check_in,
-      check_out: swapData.check_out,
-      guests_count: swapData.guests_count,
-      total_points: totalPoints,
-      message: swapData.message,
-      status: 'pending',
-    });
-  };
-
-  const isFavorite = user?.saved_properties?.includes(propertyId);
   const isOwner = user?.email === property?.owner_email;
 
   if (isLoading) {

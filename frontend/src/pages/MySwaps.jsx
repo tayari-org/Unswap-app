@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { AvatarUI } from '@/lib/utils';
 import {
   ArrowLeftRight, Calendar, Clock, CheckCircle, XCircle,
   Video, MessageSquare, Coins, ChevronRight, Home, AlertCircle, Plus,
@@ -66,13 +67,7 @@ export default function MySwaps() {
     queryFn: () => api.auth.me(),
   });
 
-  const { data: verification } = useQuery({
-    queryKey: ['user-verification', user?.email],
-    queryFn: () => api.entities.Verification.filter({ user_email: user?.email }),
-    enabled: !!user?.email,
-  });
-
-  const isVerified = verification?.[0]?.status === 'approved';
+  const isVerified = user?.verification_status === 'verified' || user?.role === 'admin';
 
   const handleNewSwapRequest = () => {
     navigate(createPageUrl('FindProperties'));
@@ -228,7 +223,7 @@ export default function MySwaps() {
               { id: 'overview', label: 'Overview', icon: LayoutDashboard },
               { id: 'incoming', label: 'Incoming', icon: ArrowLeftRight, badge: incomingRequests.filter(r => r.status === 'pending').length },
               { id: 'outgoing', label: 'Outgoing', icon: ArrowLeftRight },
-              { id: 'upcoming', label: 'Upcoming', icon: CalendarDays },
+              { id: 'approved', label: 'Approved', icon: CheckCircle },
               { id: 'video-calls', label: 'Video Calls', icon: Video },
               { id: 'completed', label: 'History', icon: History }
             ].map((item) => (
@@ -255,14 +250,10 @@ export default function MySwaps() {
         {/* User Info & Sign Out at bottom */}
         <div className="px-3 pb-6 mt-auto border-t border-white/10 pt-4 space-y-2">
             <div className="px-3 flex items-center gap-3 mb-4">
-              {user?.avatar_url ? (
-                  <img src={user?.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover border border-white/20" />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white font-bold text-xs">
-                    {(user?.full_name || user?.username || user?.email || 'U')[0].toUpperCase()}
-                  </div>
-                )}
-                <div className="min-w-0 flex-1">
+              <div className="w-8 h-8 rounded-full border border-white/20 overflow-hidden flex-shrink-0">
+                <AvatarUI user={user} className="w-full h-full text-white text-[10px] bg-white/10" />
+              </div>
+              <div className="min-w-0 flex-1">
                   <p className="text-[13px] font-medium text-white truncate">
                     {user?.full_name || user?.username || user?.email?.split('@')[0] || '—'}
                   </p>
@@ -290,7 +281,7 @@ export default function MySwaps() {
             { id: 'overview', label: 'Overview', icon: LayoutDashboard },
             { id: 'incoming', label: 'Incoming', icon: ArrowLeftRight, badge: incomingRequests.filter(r => r.status === 'pending').length },
             { id: 'outgoing', label: 'Outgoing', icon: ArrowLeftRight },
-            { id: 'upcoming', label: 'Upcoming', icon: CalendarDays },
+            { id: 'approved', label: 'Approved', icon: CheckCircle },
             { id: 'video-calls', label: 'Video Calls', icon: Video },
             { id: 'completed', label: 'History', icon: History }
           ].map((item) => (
@@ -367,7 +358,7 @@ export default function MySwaps() {
                   <div className="bg-white p-12 border border-stone-100 rounded-none border-l-4 border-l-unswap-blue-deep">
                     <h3 className="text-xl font-light tracking-tight text-slate-900 mb-4 italic font-serif">Overview</h3>
                     <p className="text-stone-500 text-sm font-light leading-relaxed max-w-2xl">
-                      Manage your swap requests and track their status. Use the sidebar to navigate through your incoming, outgoing, and upcoming swaps.
+                      Manage your swap requests and track their status. Use the sidebar to navigate through your incoming, outgoing, and approved swaps.
                     </p>
                   </div>
                 </motion.div>
@@ -391,6 +382,7 @@ export default function MySwaps() {
                         <SwapRequestCard
                           key={request.id}
                           request={request} isIncoming user={user}
+                          property={properties.find(p => p.id === request.property_id)}
                           onApprove={handleApprove} onReject={setSelectedRequest}
                           onCounterPropose={setShowCounterDialog} onScheduleVideo={handleScheduleVideo}
                           onMessage={setShowMessaging} onCompleteSwap={setShowCompleteDialog}
@@ -420,6 +412,7 @@ export default function MySwaps() {
                         <SwapRequestCard
                           key={request.id}
                           request={request} isIncoming={false} user={user}
+                          property={properties.find(p => p.id === request.property_id)}
                           onApprove={handleApprove} onReject={setSelectedRequest}
                           onCounterPropose={setShowCounterDialog} onScheduleVideo={handleScheduleVideo}
                           onMessage={setShowMessaging} onCompleteSwap={setShowCompleteDialog}
@@ -431,24 +424,25 @@ export default function MySwaps() {
                 </motion.div>
               )}
 
-              {activeTab === 'upcoming' && (
+              {activeTab === 'approved' && (
                 <motion.div
-                  key="upcoming"
+                  key="approved"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.4 }}
                   className="space-y-6"
                 >
-                  {swapRequests.filter(r => r.status === 'approved' && new Date(r.check_in) > new Date()).length === 0 ? (
-                    <EmptyState message="No upcoming swaps scheduled" onCreateNew={handleNewSwapRequest} />
+                  {swapRequests.filter(r => ['approved', 'video_scheduled', 'pending_guest_approval', 'guest_agreed'].includes(r.status)).length === 0 ? (
+                    <EmptyState message="No approved swaps" onCreateNew={handleNewSwapRequest} />
                   ) : (
                     swapRequests
-                      .filter(r => r.status === 'approved' && new Date(r.check_in) > new Date())
+                      .filter(r => ['approved', 'video_scheduled', 'pending_guest_approval', 'guest_agreed'].includes(r.status))
                       .map(request => (
                         <SwapRequestCard
                           key={request.id}
                           request={request} isIncoming={request.host_email === user?.email} user={user}
+                          property={properties.find(p => p.id === request.property_id)}
                           onApprove={handleApprove} onReject={setSelectedRequest}
                           onCounterPropose={setShowCounterDialog} onScheduleVideo={handleScheduleVideo}
                           onMessage={setShowMessaging} onCompleteSwap={setShowCompleteDialog}
@@ -502,6 +496,7 @@ export default function MySwaps() {
                         <SwapRequestCard
                           key={request.id}
                           request={request} isIncoming={request.host_email === user?.email} user={user}
+                          property={properties.find(p => p.id === request.property_id)}
                           onApprove={handleApprove} onReject={setSelectedRequest}
                           onCounterPropose={setShowCounterDialog} onScheduleVideo={setShowVideoScheduler}
                           onMessage={setShowMessaging} onCompleteSwap={setShowCompleteDialog}

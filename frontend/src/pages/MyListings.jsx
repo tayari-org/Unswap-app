@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { api } from '@/api/apiClient';
+import { AvatarUI } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Home, Eye, Heart, Edit, Trash2, MoreVertical, AlertCircle, CheckCircle, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -57,13 +58,6 @@ export default function MyListings() {
 
   const isVerified = user?.verification_status === 'verified' || user?.role === 'admin';
 
-  // Check verification on page load
-  React.useEffect(() => {
-    if (user && !isVerified) {
-      setShowVerificationDialog(true);
-    }
-  }, [user, isVerified, showVerificationDialog]);
-
   const handleAddProperty = () => {
     if (!isVerified) {
       setShowVerificationDialog(true);
@@ -82,7 +76,6 @@ export default function MyListings() {
   const createMutation = useMutation({
     mutationFn: (data) => api.entities.Property.create({
       ...data,
-      owner_id: user?.id,
       owner_email: user?.email,
     }),
     onSuccess: () => {
@@ -133,24 +126,6 @@ export default function MyListings() {
     await updateMutation.mutateAsync({ id: property.id, data: { status: newStatus } });
   };
 
-  // Don't render content if not verified
-  if (user && !isVerified && showVerificationDialog) {
-    return (
-      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
-        <VerificationRequiredDialog
-          open={showVerificationDialog}
-          onOpenChange={(open) => {
-            setShowVerificationDialog(open);
-            if (!open) {
-              window.history.back();
-            }
-          }}
-          action="access My Listings"
-        />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen flex bg-[#FDF8F4]">
       {/* SIDEBAR NAVIGATION (Desktop) */}
@@ -159,8 +134,8 @@ export default function MyListings() {
         <div className="px-6 pt-8 pb-6">
           <h1 className="text-lg font-bold text-white tracking-tight font-display">My Listings</h1>
           <Badge variant="outline" className={`mt-2 flex items-center gap-1.5 px-2.5 py-0.5 w-fit rounded-full text-[9px] border-white/20 bg-white/10 text-white/80`}>
-             <span className={`w-1.5 h-1.5 rounded-full ${isVerified ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-             {isVerified ? 'VERIFIED' : 'PENDING'}
+            <span className={`w-1.5 h-1.5 rounded-full ${isVerified ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+            {isVerified ? 'VERIFIED' : 'PENDING'}
           </Badge>
         </div>
 
@@ -197,23 +172,19 @@ export default function MyListings() {
 
         {/* User Info & Sign Out at bottom */}
         <div className="px-3 pb-6 mt-auto border-t border-white/10 pt-4 space-y-2">
-            <div className="px-3 flex items-center gap-3 mb-4">
-              {user?.avatar_url ? (
-                  <img src={user?.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover border border-white/20" />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white font-bold text-xs">
-                    {(user?.full_name || user?.username || user?.email || 'U')[0].toUpperCase()}
-                  </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-medium text-white truncate">
-                    {user?.full_name || user?.username || user?.email?.split('@')[0] || '—'}
-                  </p>
-                </div>
+          <div className="px-3 flex items-center gap-3 mb-4">
+            <div className="w-8 h-8 rounded-full border border-white/20 overflow-hidden flex-shrink-0">
+              <AvatarUI user={user} className="w-full h-full text-white text-[10px] bg-white/10" />
             </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-medium text-white truncate">
+                {user?.full_name || user?.username || user?.email?.split('@')[0] || '—'}
+              </p>
+            </div>
+          </div>
 
           <Button variant="ghost" size="sm" asChild className="w-full justify-start text-white/50 hover:text-white hover:bg-white/5 transition-all font-semibold text-[11px] tracking-wide gap-2 h-9 rounded-sm">
-             <Link to="/Dashboard"><LayoutDashboard className="w-3.5 h-3.5" /> Back to Dashboard</Link>
+            <Link to="/Dashboard"><LayoutDashboard className="w-3.5 h-3.5" /> Back to Dashboard</Link>
           </Button>
         </div>
       </aside>
@@ -249,7 +220,7 @@ export default function MyListings() {
         </div>
       </div>
 
-       {/* MAIN CONTENT AREA */}
+      {/* MAIN CONTENT AREA */}
       <main className="flex-1 min-w-0 overflow-y-auto lg:pt-0 pt-28">
         <div className="max-w-6xl mx-auto px-6 lg:px-10 py-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
@@ -272,182 +243,182 @@ export default function MyListings() {
 
           <div className="space-y-8">
 
-          {/* Main Content Area */}
-          <div className="flex-1">
-            <AnimatePresence mode="wait">
-              {activeTab === 'overview' && (
-                <motion.div
-                  key="overview"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.4 }}
-                  className="space-y-12"
-                >
-                  {/* Stats Grid - High Contrast */}
-                  <div className="grid grid-cols-2 gap-6">
-                    {[
-                      { label: 'Total Listings', value: properties.length, icon: Home },
-                      { label: 'Active Listings', value: properties.filter(p => p.status === 'active').length, icon: CheckCircle },
-                      { label: 'Total Views', value: properties.reduce((sum, p) => sum + (p.views_count || 0), 0), icon: Eye },
-                      { label: 'Favorites', value: properties.reduce((sum, p) => sum + (p.favorites_count || 0), 0), icon: Heart },
-                    ].map((stat, index) => (
-                      <Card key={index} className="rounded-none border-stone-200 shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-500 border-l-4 border-l-unswap-blue-deep/5 hover:border-l-unswap-blue-deep">
-                        <CardContent className="p-8 flex items-center gap-6">
-                          <div className="w-12 h-12 bg-stone-50 border border-stone-100 rounded-none flex items-center justify-center transition-all duration-500 group-hover:bg-unswap-blue-deep group-hover:text-white">
-                            <stat.icon className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">{stat.label}</p>
-                            <p className="text-3xl font-extralight text-slate-900 tracking-tighter leading-none">{stat.value}</p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-
-                  <div className="bg-white p-12 border border-stone-100 rounded-none border-l-4 border-l-unswap-blue-deep">
-                    <h3 className="text-xl font-light tracking-tight text-slate-900 mb-4 italic font-serif">Properties Overview</h3>
-                    <p className="text-stone-500 text-sm font-light leading-relaxed max-w-2xl">
-                      Manage your property portfolio and track performance across your listings. View engagement metrics and manage the lifecycle of each property in your collection.
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-
-              {activeTab === 'properties' && (
-                <motion.div
-                  key="properties"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.4 }}
-                  className="space-y-8"
-                >
-                  {/* Properties List - Architectural Cards */}
-                  {isLoading ? (
-                    <div className="text-center py-20">
-                      <div className="inline-block w-8 h-8 border-2 border-unswap-blue-deep/20 border-t-unswap-blue-deep rounded-full animate-spin" />
-                      <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400">Loading...</p>
+            {/* Main Content Area */}
+            <div className="flex-1">
+              <AnimatePresence mode="wait">
+                {activeTab === 'overview' && (
+                  <motion.div
+                    key="overview"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.4 }}
+                    className="space-y-12"
+                  >
+                    {/* Stats Grid - High Contrast */}
+                    <div className="grid grid-cols-2 gap-6">
+                      {[
+                        { label: 'Total Listings', value: properties.length, icon: Home },
+                        { label: 'Active Listings', value: properties.filter(p => p.status === 'active').length, icon: CheckCircle },
+                        { label: 'Total Views', value: properties.reduce((sum, p) => sum + (p.views_count || 0), 0), icon: Eye },
+                        { label: 'Favorites', value: properties.reduce((sum, p) => sum + (p.favorites_count || 0), 0), icon: Heart },
+                      ].map((stat, index) => (
+                        <Card key={index} className="rounded-none border-stone-200 shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-500 border-l-4 border-l-unswap-blue-deep/5 hover:border-l-unswap-blue-deep">
+                          <CardContent className="p-8 flex items-center gap-6">
+                            <div className="w-12 h-12 bg-stone-50 border border-stone-100 rounded-none flex items-center justify-center transition-all duration-500 group-hover:bg-unswap-blue-deep group-hover:text-white">
+                              <stat.icon className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">{stat.label}</p>
+                              <p className="text-3xl font-extralight text-slate-900 tracking-tighter leading-none">{stat.value}</p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
-                  ) : properties.length === 0 ? (
-                    <div className="text-center py-32 border-2 border-dashed border-stone-200">
-                      <div className="w-20 h-20 bg-stone-50 rounded-none flex items-center justify-center mx-auto mb-8 border border-stone-100">
-                        <Home className="w-8 h-8 text-slate-200" />
+
+                    <div className="bg-white p-12 border border-stone-100 rounded-none border-l-4 border-l-unswap-blue-deep">
+                      <h3 className="text-xl font-light tracking-tight text-slate-900 mb-4 italic font-serif">Properties Overview</h3>
+                      <p className="text-stone-500 text-sm font-light leading-relaxed max-w-2xl">
+                        Manage your property portfolio and track performance across your listings. View engagement metrics and manage the lifecycle of each property in your collection.
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+
+                {activeTab === 'properties' && (
+                  <motion.div
+                    key="properties"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.4 }}
+                    className="space-y-8"
+                  >
+                    {/* Properties List - Architectural Cards */}
+                    {isLoading ? (
+                      <div className="text-center py-20">
+                        <div className="inline-block w-8 h-8 border-2 border-unswap-blue-deep/20 border-t-unswap-blue-deep rounded-full animate-spin" />
+                        <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400">Loading...</p>
                       </div>
-                      <h3 className="text-2xl font-light text-slate-900 tracking-tight mb-2">No properties yet</h3>
-                      <p className="text-stone-500 text-sm font-light mb-8 max-w-sm mx-auto">List your first property to start swapping with colleagues</p>
-                      <Button onClick={handleAddProperty} className="bg-unswap-blue-deep hover:bg-slate-900 text-white rounded-none h-14 px-10 text-[10px] font-bold uppercase tracking-[0.3em] transition-all shadow-xl">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Your First Property
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-6">
-                      <AnimatePresence>
-                        {properties.map((property, index) => (
-                          <motion.div
-                            key={property.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ delay: index * 0.05, duration: 0.5 }}
-                          >
-                            <Card className="rounded-none border-stone-200 overflow-hidden group hover:shadow-2xl transition-all duration-500">
-                              <CardContent className="p-0">
-                                <div className="flex flex-col md:flex-row min-h-[220px]">
-                                  {/* Image - Architectural Zoom */}
-                                  <div className="w-full md:w-64 lg:w-80 h-48 md:h-auto flex-shrink-0 relative overflow-hidden">
-                                    <img
-                                      src={property.images?.[0] || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400'}
-                                      alt={property.title}
-                                      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                                    />
-                                    <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-transparent transition-colors duration-500" />
-                                  </div>
+                    ) : properties.length === 0 ? (
+                      <div className="text-center py-32 border-2 border-dashed border-stone-200">
+                        <div className="w-20 h-20 bg-stone-50 rounded-none flex items-center justify-center mx-auto mb-8 border border-stone-100">
+                          <Home className="w-8 h-8 text-slate-200" />
+                        </div>
+                        <h3 className="text-2xl font-light text-slate-900 tracking-tight mb-2">No properties yet</h3>
+                        <p className="text-stone-500 text-sm font-light mb-8 max-w-sm mx-auto">List your first property to start swapping with colleagues</p>
+                        <Button onClick={handleAddProperty} className="bg-unswap-blue-deep hover:bg-slate-900 text-white rounded-none h-14 px-10 text-[10px] font-bold uppercase tracking-[0.3em] transition-all shadow-xl">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add Your First Property
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        <AnimatePresence>
+                          {properties.map((property, index) => (
+                            <motion.div
+                              key={property.id}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -20 }}
+                              transition={{ delay: index * 0.05, duration: 0.5 }}
+                            >
+                              <Card className="rounded-none border-stone-200 overflow-hidden group hover:shadow-2xl transition-all duration-500">
+                                <CardContent className="p-0">
+                                  <div className="flex flex-col md:flex-row min-h-[220px]">
+                                    {/* Image - Architectural Zoom */}
+                                    <div className="w-full md:w-64 lg:w-80 h-48 md:h-auto flex-shrink-0 relative overflow-hidden">
+                                      <img
+                                        src={property.images?.[0] || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400'}
+                                        alt={property.title}
+                                        className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                                      />
+                                      <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-transparent transition-colors duration-500" />
+                                    </div>
 
-                                  {/* Content area */}
-                                  <div className="flex-1 flex flex-col p-8 lg:p-10">
-                                    <div className="flex items-start justify-between">
-                                      <div className="space-y-3">
-                                        <div className="flex items-center gap-2">
-                                          <Badge className={`rounded-none px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest shadow-sm ${statusColors[property.status]}`}>
-                                            {property.status}
-                                          </Badge>
-                                          {property.is_verified && (
-                                            <Badge className="rounded-none px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest bg-unswap-blue-deep/10 text-unswap-blue-deep border-unswap-blue-deep/20 border">Verified</Badge>
-                                          )}
-                                        </div>
-                                        <h3 className="text-2xl font-light text-slate-900 tracking-tight leading-tight group-hover:text-unswap-blue-deep transition-colors duration-300">
-                                          {property.title}
-                                        </h3>
-                                        <div className="flex items-center gap-2 text-stone-400">
-                                          <p className="text-[10px] font-bold uppercase tracking-[0.1em]">{property.location}</p>
-                                        </div>
-                                      </div>
-
-                                      <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                          <Button variant="ghost" size="icon" className="h-10 w-10 p-0 rounded-none hover:bg-stone-100">
-                                            <MoreVertical className="w-4 h-4 text-stone-400" />
-                                          </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" className="rounded-none border-stone-200 w-48 shadow-xl">
-                                          <DropdownMenuItem onClick={() => handleEdit(property)} className="cursor-pointer py-3 rounded-none">
-                                            <Edit className="w-3.5 h-3.5 mr-3 text-stone-400" />
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Edit</span>
-                                          </DropdownMenuItem>
-                                          <DropdownMenuItem onClick={() => handleToggleStatus(property)} className="cursor-pointer py-3 rounded-none focus:bg-stone-50">
-                                            {property.status === 'active' ? (
-                                              <>
-                                                <AlertCircle className="w-3.5 h-3.5 mr-3 text-amber-400" />
-                                                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Pause Listing</span>
-                                              </>
-                                            ) : (
-                                              <>
-                                                <CheckCircle className="w-3.5 h-3.5 mr-3 text-emerald-400" />
-                                                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Activate Listing</span>
-                                              </>
+                                    {/* Content area */}
+                                    <div className="flex-1 flex flex-col p-8 lg:p-10">
+                                      <div className="flex items-start justify-between">
+                                        <div className="space-y-3">
+                                          <div className="flex items-center gap-2">
+                                            <Badge className={`rounded-none px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest shadow-sm ${statusColors[property.status]}`}>
+                                              {property.status}
+                                            </Badge>
+                                            {property.is_verified && (
+                                              <Badge className="rounded-none px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest bg-unswap-blue-deep/10 text-unswap-blue-deep border-unswap-blue-deep/20 border">Verified</Badge>
                                             )}
-                                          </DropdownMenuItem>
-                                          <DropdownMenuItem
-                                            onClick={() => setDeleteId(property.id)}
-                                            className="text-red-600 cursor-pointer py-3 rounded-none focus:bg-rose-50"
-                                          >
-                                            <Trash2 className="w-3.5 h-3.5 mr-3 text-red-400" />
-                                            <span className="text-[10px] font-bold uppercase tracking-widest">Delete</span>
-                                          </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                      </DropdownMenu>
-                                    </div>
+                                          </div>
+                                          <h3 className="text-2xl font-light text-slate-900 tracking-tight leading-tight group-hover:text-unswap-blue-deep transition-colors duration-300">
+                                            {property.title}
+                                          </h3>
+                                          <div className="flex items-center gap-2 text-stone-400">
+                                            <p className="text-[10px] font-bold uppercase tracking-[0.1em]">{property.location}</p>
+                                          </div>
+                                        </div>
 
-                                    <div className="mt-auto pt-8 border-t border-stone-50 flex items-center justify-between">
-                                      <div className="flex items-center gap-8">
-                                        <div className="flex items-center gap-2 text-stone-500">
-                                          <Eye className="w-3.5 h-3.5 text-unswap-blue-deep/30" />
-                                          <span className="text-[10px] font-bold uppercase tracking-widest">{property.views_count || 0} views</span>
-                                        </div>
-                                        <div className="flex items-center gap-2 text-stone-500">
-                                          <Heart className="w-3.5 h-3.5 text-rose-300" />
-                                          <span className="text-[10px] font-bold uppercase tracking-widest">{property.favorites_count || 0} favorites</span>
-                                        </div>
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-10 w-10 p-0 rounded-none hover:bg-stone-100">
+                                              <MoreVertical className="w-4 h-4 text-stone-400" />
+                                            </Button>
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent align="end" className="rounded-none border-stone-200 w-48 shadow-xl">
+                                            <DropdownMenuItem onClick={() => handleEdit(property)} className="cursor-pointer py-3 rounded-none">
+                                              <Edit className="w-3.5 h-3.5 mr-3 text-stone-400" />
+                                              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Edit</span>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => handleToggleStatus(property)} className="cursor-pointer py-3 rounded-none focus:bg-stone-50">
+                                              {property.status === 'active' ? (
+                                                <>
+                                                  <AlertCircle className="w-3.5 h-3.5 mr-3 text-amber-400" />
+                                                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Pause Listing</span>
+                                                </>
+                                              ) : (
+                                                <>
+                                                  <CheckCircle className="w-3.5 h-3.5 mr-3 text-emerald-400" />
+                                                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Activate Listing</span>
+                                                </>
+                                              )}
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                              onClick={() => setDeleteId(property.id)}
+                                              className="text-red-600 cursor-pointer py-3 rounded-none focus:bg-rose-50"
+                                            >
+                                              <Trash2 className="w-3.5 h-3.5 mr-3 text-red-400" />
+                                              <span className="text-[10px] font-bold uppercase tracking-widest">Delete</span>
+                                            </DropdownMenuItem>
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
                                       </div>
-                                      <div>
-                                        <span className="text-sm font-bold text-unswap-blue-deep tracking-wider">{property.nightly_points || 200}</span>
-                                        <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-stone-400 ml-1.5">pts / night</span>
+
+                                      <div className="mt-auto pt-8 border-t border-stone-50 flex items-center justify-between">
+                                        <div className="flex items-center gap-8">
+                                          <div className="flex items-center gap-2 text-stone-500">
+                                            <Eye className="w-3.5 h-3.5 text-unswap-blue-deep/30" />
+                                            <span className="text-[10px] font-bold uppercase tracking-widest">{property.views_count || 0} views</span>
+                                          </div>
+                                          <div className="flex items-center gap-2 text-stone-500">
+                                            <Heart className="w-3.5 h-3.5 text-rose-300" />
+                                            <span className="text-[10px] font-bold uppercase tracking-widest">{property.favorites_count || 0} favorites</span>
+                                          </div>
+                                        </div>
+                                        <div>
+                                          <span className="text-sm font-bold text-unswap-blue-deep tracking-wider">{property.nightly_points || 200}</span>
+                                          <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-stone-400 ml-1.5">pts / night</span>
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          </motion.div>
-                        ))}
-                      </AnimatePresence>
-                    </div>
-                  )}
-                </motion.div>
-              )}
+                                </CardContent>
+                              </Card>
+                            </motion.div>
+                          ))}
+                        </AnimatePresence>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
               </AnimatePresence>
             </div>
           </div>
@@ -456,16 +427,22 @@ export default function MyListings() {
 
       {/* Property Form Dialog - Architectural refinement */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-none border-0 shadow-2xl p-0">
-          <div className="p-8 border-b bg-stone-50">
-            <DialogTitle className="text-3xl font-extralight tracking-tighter text-slate-900">
-              {editingProperty ? 'Edit Property' : 'Add New Property'}
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto rounded-none border-0 shadow-[0_100px_150px_-30px_rgba(0,0,0,0.2)] p-0">
+          <div className="p-12 border-b bg-stone-50/80">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-[2px] bg-unswap-blue-deep" />
+              <p className="text-unswap-blue-deep font-bold tracking-[0.5em] uppercase text-[10px]">
+                {editingProperty ? 'Edit Property' : 'Add Property'}
+              </p>
+            </div>
+            <DialogTitle className="text-5xl font-extralight tracking-tighter text-slate-900 mb-6">
+              {editingProperty ? 'Edit' : 'Add'} <span className="italic font-serif">New Listing</span>
             </DialogTitle>
-            <DialogDescription className="text-stone-500 text-xs font-light mt-1 uppercase tracking-widest">
-              Provide the details of your property to list it on the platform.
+            <DialogDescription className="text-[13px] text-slate-500 font-light max-w-xl leading-relaxed">
+              {editingProperty ? 'Update your property details below.' : 'Fill in the details below to list your property on UNswap.'}
             </DialogDescription>
           </div>
-          <div className="p-8">
+          <div className="p-12 bg-white">
             <PropertyForm
               property={editingProperty}
               onSubmit={handleSubmit}

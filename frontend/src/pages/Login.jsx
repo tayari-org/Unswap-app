@@ -8,99 +8,82 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Shield, Globe, ArrowRight, Loader2 } from 'lucide-react';
+import { Shield, Globe, ArrowRight, Loader2, Linkedin } from 'lucide-react';
+import { useAuth } from '@/lib/AuthContext';
 
-// Google Client ID — set VITE_GOOGLE_CLIENT_ID in frontend/.env
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
-// Google Client ID loaded from env
-
-// Divider between Google and email/password
-function OrDivider() {
+// ── LinkedIn icon (lucide doesn’t have X/Twitter, so we use inline SVG)
+function XIcon({ className }) {
     return (
-        <div className="flex items-center gap-4 my-8">
-            <div className="flex-1 h-px bg-unswap-blue-deep/10" />
-            <span className="text-[10px] text-unswap-blue-deep/40 font-bold uppercase tracking-[0.4em]">or</span>
-            <div className="flex-1 h-px bg-unswap-blue-deep/10" />
+        <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.261 5.638 5.903-5.638Zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+        </svg>
+    );
+}
+
+
+function GoogleIcon({ className }) {
+    return (
+        <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+    );
+}
+
+/** Social sign-in buttons: Google, LinkedIn & X, rendered with their brand colors */
+function SocialButtons({ disabled, onGoogle, onLinkedIn, onX }) {
+    return (
+        <div className="flex flex-col gap-3 w-full">
+            {/* Google */}
+            <button
+                type="button"
+                disabled={disabled}
+                onClick={onGoogle}
+                className="w-full flex items-center gap-3 h-12 px-4 rounded-none border border-slate-200 bg-white hover:bg-slate-50 transition-all group disabled:opacity-50 disabled:pointer-events-none"
+            >
+                <GoogleIcon className="w-5 h-5 shrink-0" />
+                <span className="flex-1 text-center text-[10px] font-bold uppercase tracking-[0.3em] text-slate-600 group-hover:text-slate-900">
+                    Continue with Google
+                </span>
+            </button>
+
+            {/* LinkedIn */}
+            <button
+                type="button"
+                disabled={disabled}
+                onClick={onLinkedIn}
+                className="w-full flex items-center gap-3 h-12 px-4 rounded-none border border-transparent bg-[#0A66C2] hover:bg-[#004182] transition-all group disabled:opacity-50 disabled:pointer-events-none"
+            >
+                <Linkedin className="w-5 h-5 text-white shrink-0 fill-current" />
+                <span className="flex-1 text-center text-[10px] font-bold uppercase tracking-[0.3em] text-white">
+                    Continue with LinkedIn
+                </span>
+            </button>
+
+            {/* X (Twitter) */}
+            <button
+                type="button"
+                disabled={disabled}
+                onClick={onX}
+                className="w-full flex items-center gap-3 h-12 px-4 rounded-none border border-transparent bg-black hover:bg-slate-900 transition-all group disabled:opacity-50 disabled:pointer-events-none"
+            >
+                <XIcon className="w-4 h-4 text-white shrink-0" />
+                <span className="flex-1 text-center text-[10px] font-bold uppercase tracking-[0.3em] text-white">
+                    Continue with X
+                </span>
+            </button>
         </div>
     );
 }
 
-// Renders the official Google sign-in button via the GSI SDK
-function GoogleButton({ onCredential, disabled }) {
-    const containerRef = useRef(null);
-    const [scriptLoaded, setScriptLoaded] = useState(false);
 
-    useEffect(() => {
-        if (!GOOGLE_CLIENT_ID) return;
-
-        // Function to initialize and render the button
-        const initGoogleButton = () => {
-            if (!window.google?.accounts?.id || !containerRef.current) return;
-
-            window.google.accounts.id.initialize({
-                client_id: GOOGLE_CLIENT_ID,
-                callback: (response) => {
-                    if (response.credential) onCredential(response.credential);
-                },
-            });
-
-            // Clear & render the button each time the component mounts
-            containerRef.current.innerHTML = '';
-            window.google.accounts.id.renderButton(containerRef.current, {
-                type: 'standard',
-                theme: 'outline',
-                size: 'large',
-                width: 360,
-                text: 'continue_with',
-                shape: 'pill',
-                logo_alignment: 'left',
-            });
-        };
-
-        // If SDK already exists, immediately init
-        if (window.google?.accounts?.id) {
-            initGoogleButton();
-            setScriptLoaded(true);
-            return;
-        }
-
-        // Otherwise dynamically load the SDK
-        const script = document.createElement('script');
-        script.src = 'https://accounts.google.com/gsi/client';
-        script.async = true;
-        script.defer = true;
-        script.onload = () => {
-            setScriptLoaded(true);
-            initGoogleButton();
-        };
-        document.body.appendChild(script);
-
-        return () => {
-            if (document.body.contains(script)) {
-                document.body.removeChild(script);
-            }
-        };
-    }, [onCredential]);
-
-    if (!GOOGLE_CLIENT_ID) {
-        return (
-            <div className="w-full py-3 px-4 rounded-xl bg-orange-50 border border-orange-100 text-orange-600 text-[10px] font-bold uppercase tracking-widest text-center">
-                Configuration Required: missing Client ID
-            </div>
-        );
-    }
-
-    return (
-        <div
-            ref={containerRef}
-            className={`w-full flex justify-center transition-opacity py-2 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
-        />
-    );
-}
 
 export default function Login() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
+    const { checkAppState } = useAuth();
     const returnUrl = searchParams.get('from') || '/Dashboard';
 
     const [tab, setTab] = useState('login');
@@ -124,6 +107,9 @@ export default function Login() {
 
     const [refCode, setRefCode] = useState(searchParams.get('ref') || '');
 
+    // OAuth error returned from provider redirect
+    const oauthError = searchParams.get('oauthError') || '';
+
     useEffect(() => {
         const ref = searchParams.get('ref');
         if (ref) setRefCode(ref);
@@ -135,6 +121,7 @@ export default function Login() {
         setLoading(true);
         try {
             await api.auth.login(loginEmail, loginPassword);
+            await checkAppState(); // sync AuthContext before routing
             navigate(returnUrl);
         } catch (err) {
             setError(err.message || 'Login failed. Please check your credentials.');
@@ -159,6 +146,7 @@ export default function Login() {
                 institution: regInstitution || undefined,
                 referred_by: refCode || undefined,
             });
+            await checkAppState(); // sync AuthContext before routing
             navigate(returnUrl);
         } catch (err) {
             setError(err.message || 'Registration failed.');
@@ -182,17 +170,28 @@ export default function Login() {
         }
     }
 
-    async function handleGoogleCredential(credential) {
-        setError('');
-        setLoading(true);
-        try {
-            await api.auth.googleLogin(credential, refCode);
-            navigate(returnUrl);
-        } catch (err) {
-            setError(err.message || 'Google sign-in failed. Please try again.');
-        } finally {
-            setLoading(false);
-        }
+
+    function handleGoogleLogin() {
+        api.auth.googleLogin({ returnUrl, refCode });
+    }
+
+    function handleLinkedInLogin() {
+        api.auth.linkedinLogin({ returnUrl, refCode });
+    }
+
+    function handleXLogin() {
+        api.auth.xLogin({ returnUrl, refCode });
+    }
+
+    // Divider between social and email/password
+    function OrDivider() {
+        return (
+            <div className="flex items-center gap-4 my-8">
+                <div className="flex-1 h-px bg-unswap-blue-deep/10" />
+                <span className="text-[10px] text-unswap-blue-deep/40 font-bold uppercase tracking-[0.4em]">or</span>
+                <div className="flex-1 h-px bg-unswap-blue-deep/10" />
+            </div>
+        );
     }
 
     return (
@@ -210,14 +209,8 @@ export default function Login() {
 
             <div className="relative w-full max-w-md">
                 {/* Brand Header */}
-                <div className="text-center mb-12">
-                    <div className="flex items-center justify-center gap-4">
-                        <img src={logo} alt="Unswap" className="w-10 h-10 object-contain" />
-                        <div className="flex flex-col items-start leading-none">
-                            <span className="text-4xl font-extralight text-slate-900 tracking-[-0.05em]">UN<span className="italic font-serif">swap</span></span>
-                            <div className="w-8 h-px bg-unswap-blue-deep/20 mt-1" />
-                        </div>
-                    </div>
+                <div className="text-center mb-12 flex justify-center">
+                    <img src={logo} alt="Unswap" className="h-14 w-auto object-contain" />
                 </div>
 
                 <Card className="bg-white border-slate-200 shadow-2xl rounded-none overflow-hidden relative">
@@ -242,6 +235,12 @@ export default function Login() {
                             </Alert>
                         )}
 
+                        {(error || oauthError) && (
+                            <Alert className="bg-rose-50 border-rose-100 text-rose-600 mb-6 rounded-2xl">
+                                <AlertDescription className="font-medium text-sm">{error || oauthError}</AlertDescription>
+                            </Alert>
+                        )}
+
                         <Tabs value={tab} onValueChange={(v) => { setTab(v); setError(''); setMessage(''); }}>
                             <TabsList className="w-full bg-white border-b border-slate-100 mb-10 p-0 rounded-none h-14 flex items-end">
                                 <TabsTrigger value="login" className="flex-1 h-full rounded-none font-bold text-[10px] uppercase tracking-[0.3em] bg-transparent data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-unswap-blue-deep data-[state=active]:text-unswap-blue-deep text-slate-400 border-b border-transparent transition-all">
@@ -254,7 +253,7 @@ export default function Login() {
 
                             {/* ── Login ── */}
                             <TabsContent value="login" className="space-y-6 focus-visible:outline-none">
-                                <GoogleButton onCredential={handleGoogleCredential} disabled={loading} />
+                                <SocialButtons disabled={loading} onGoogle={handleGoogleLogin} onLinkedIn={handleLinkedInLogin} onX={handleXLogin} />
                                 <OrDivider />
 
                                 <form onSubmit={handleLogin} className="space-y-5">
@@ -309,7 +308,7 @@ export default function Login() {
 
                             {/* ── Register ── */}
                             <TabsContent value="register" className="space-y-6 focus-visible:outline-none">
-                                <GoogleButton onCredential={handleGoogleCredential} disabled={loading} />
+                                <SocialButtons disabled={loading} onGoogle={handleGoogleLogin} onLinkedIn={handleLinkedInLogin} onX={handleXLogin} />
                                 <OrDivider />
 
                                 <form onSubmit={handleRegister} className="space-y-4">

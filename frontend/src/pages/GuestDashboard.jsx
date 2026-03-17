@@ -18,7 +18,7 @@ import GuestPointsWidget from '../components/points/GuestPointsWidget';
 import PointsRedemptionDialog from '../components/points/PointsRedemptionDialog';
 
 export default function GuestDashboard() {
-  const [activeTab, setActiveTab] = useState('upcoming');
+  const [activeTab, setActiveTab] = useState('approved');
   const [showRedeemDialog, setShowRedeemDialog] = useState(false);
 
   // Fetch current user
@@ -47,6 +47,12 @@ export default function GuestDashboard() {
     enabled: !!user?.saved_properties,
   });
 
+  // Fetch all properties to get images
+  const { data: properties = [] } = useQuery({
+    queryKey: ['all-properties'],
+    queryFn: () => api.entities.Property.list(),
+  });
+
   // Fetch reviews left by the guest
   const { data: myReviews = [] } = useQuery({
     queryKey: ['my-reviews', user?.email],
@@ -57,9 +63,8 @@ export default function GuestDashboard() {
   });
 
   // Categorize swaps
-  const upcomingSwaps = mySwaps.filter(s => 
-    (s.status === 'approved' || s.status === 'video_scheduled') && 
-    s.check_in && isFuture(new Date(s.check_in))
+  const approvedSwaps = mySwaps.filter(s => 
+    ['approved', 'video_scheduled', 'pending_guest_approval', 'guest_agreed'].includes(s.status)
   );
 
   const currentSwaps = mySwaps.filter(s => 
@@ -149,8 +154,8 @@ export default function GuestDashboard() {
                   <Calendar className="w-8 h-8 text-blue-500" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-slate-900">{upcomingSwaps.length}</p>
-                  <p className="text-sm text-slate-600 mt-1">Upcoming Stays</p>
+                  <p className="text-2xl font-bold text-slate-900">{approvedSwaps.length}</p>
+                  <p className="text-sm text-slate-600 mt-1">Approved Stays</p>
                 </div>
               </CardContent>
             </Card>
@@ -199,11 +204,11 @@ export default function GuestDashboard() {
           <div className="lg:col-span-2">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-5">
-            <TabsTrigger value="upcoming">
-              <Calendar className="w-4 h-4 mr-2" />
-              Upcoming
-              {upcomingSwaps.length > 0 && (
-                <Badge className="ml-2 bg-blue-500">{upcomingSwaps.length}</Badge>
+            <TabsTrigger value="approved">
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Approved
+              {approvedSwaps.length > 0 && (
+                <Badge className="ml-2 bg-blue-500">{approvedSwaps.length}</Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="pending">
@@ -227,65 +232,85 @@ export default function GuestDashboard() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Upcoming Bookings */}
-          <TabsContent value="upcoming" className="space-y-4">
+          {/* Approved Bookings */}
+          <TabsContent value="approved" className="space-y-4">
             {currentSwaps.length > 0 && (
               <Card className="border-blue-500 border-2">
                 <CardHeader className="bg-blue-50">
                   <CardTitle className="text-blue-900">Currently Staying</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
-                  {currentSwaps.map(swap => (
-                    <div key={swap.id} className="p-4 bg-white rounded-lg border-2 border-blue-200">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-slate-900 text-lg">{swap.property_title}</h3>
-                          <p className="text-sm text-slate-600 mt-1">
-                            {format(new Date(swap.check_in), 'MMM d')} - {format(new Date(swap.check_out), 'MMM d, yyyy')}
-                          </p>
-                          <Badge className="mt-2 bg-blue-500">Active Stay</Badge>
+                  {currentSwaps.map(swap => {
+                    const property = properties.find(p => p.id === swap.property_id);
+                    return (
+                      <div key={swap.id} className="p-4 bg-white rounded-lg border-2 border-blue-200 overflow-hidden">
+                        <div className="flex flex-col sm:flex-row gap-4">
+                          {property?.images?.[0] && (
+                            <div className="w-full sm:w-32 h-24 shrink-0 rounded-md overflow-hidden bg-slate-100">
+                              <img src={property.images[0]} alt="" className="w-full h-full object-cover" />
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-slate-900 text-lg">{swap.property_title}</h3>
+                            <p className="text-sm text-slate-600 mt-1">
+                              {format(new Date(swap.check_in), 'MMM d')} - {format(new Date(swap.check_out), 'MMM d, yyyy')}
+                            </p>
+                            <div className="flex items-center justify-between mt-3">
+                              <Badge className="bg-blue-500">Active Stay</Badge>
+                              <Link to={createPageUrl('MySwaps')}>
+                                <Button size="sm">View Details</Button>
+                              </Link>
+                            </div>
+                          </div>
                         </div>
-                        <Link to={createPageUrl('MySwaps')}>
-                          <Button size="sm">View Details</Button>
-                        </Link>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </CardContent>
               </Card>
             )}
 
-            {upcomingSwaps.length > 0 ? (
+            {approvedSwaps.filter(s => !currentSwaps.find(c => c.id === s.id)).length > 0 ? (
               <div className="space-y-4">
-                {upcomingSwaps.map(swap => (
-                  <Card key={swap.id}>
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-slate-900 text-lg">{swap.property_title}</h3>
-                          <div className="flex items-center gap-4 mt-2 text-slate-600">
-                            <div className="flex items-center gap-1">
-                              <Calendar className="w-4 h-4" />
-                              {format(new Date(swap.check_in), 'MMM d')} - {format(new Date(swap.check_out), 'MMM d, yyyy')}
+                {approvedSwaps.filter(s => !currentSwaps.find(c => c.id === s.id)).map(swap => {
+                  const property = properties.find(p => p.id === swap.property_id);
+                  return (
+                    <Card key={swap.id}>
+                      <CardContent className="p-6">
+                        <div className="flex flex-col sm:flex-row gap-6">
+                          {property?.images?.[0] && (
+                            <div className="w-full sm:w-40 h-28 shrink-0 rounded-md overflow-hidden bg-slate-100">
+                              <img src={property.images[0]} alt="" className="w-full h-full object-cover" />
                             </div>
-                            <Badge variant="outline">
-                              {swap.swap_type === 'reciprocal' ? 'Reciprocal' : `${swap.total_points} pts`}
-                            </Badge>
+                          )}
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-slate-900 text-lg">{swap.property_title}</h3>
+                            <div className="flex flex-wrap items-center gap-4 mt-2 text-slate-600">
+                              <div className="flex items-center gap-1.5 text-sm">
+                                <Calendar className="w-4 h-4 text-blue-500" />
+                                {format(new Date(swap.check_in), 'MMM d')} - {format(new Date(swap.check_out), 'MMM d, yyyy')}
+                              </div>
+                              <Badge variant="outline" className="border-blue-100 bg-blue-50 text-blue-700">
+                                {swap.swap_type === 'reciprocal' ? 'Reciprocal' : `${swap.total_points} pts`}
+                              </Badge>
+                            </div>
+                            <div className="mt-4 flex justify-end">
+                              <Link to={createPageUrl('MySwaps')}>
+                                <Button variant="outline" size="sm">Manage</Button>
+                              </Link>
+                            </div>
                           </div>
                         </div>
-                        <Link to={createPageUrl('MySwaps')}>
-                          <Button variant="outline" size="sm">Manage</Button>
-                        </Link>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             ) : (
               <Card>
                 <CardContent className="py-12 text-center">
                   <Calendar className="w-12 h-12 mx-auto mb-4 text-slate-300" />
-                  <p className="text-slate-600 mb-4">No upcoming stays</p>
+                  <p className="text-slate-600 mb-4">No approved stays</p>
                   <Link to={createPageUrl('FindProperties')}>
                     <Button className="bg-amber-500 hover:bg-amber-600">
                       <Search className="w-4 h-4 mr-2" />
@@ -300,34 +325,44 @@ export default function GuestDashboard() {
           {/* Pending Requests */}
           <TabsContent value="pending" className="space-y-4">
             {pendingSwaps.length > 0 ? (
-              pendingSwaps.map(swap => (
-                <Card key={swap.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-semibold text-slate-900 text-lg">{swap.property_title}</h3>
-                          <Badge className="bg-amber-100 text-amber-700">
-                            {swap.status === 'counter_proposed' ? 'Counter Offer' : 'Pending'}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-2 text-slate-600">
-                          <Calendar className="w-4 h-4" />
-                          {format(new Date(swap.check_in), 'MMM d')} - {format(new Date(swap.check_out), 'MMM d, yyyy')}
-                        </div>
-                        {swap.status === 'counter_proposed' && swap.counter_check_in && (
-                          <p className="text-sm text-amber-700 mt-2">
-                            Host proposed: {format(new Date(swap.counter_check_in), 'MMM d')} - {format(new Date(swap.counter_check_out), 'MMM d, yyyy')}
-                          </p>
+              pendingSwaps.map(swap => {
+                const property = properties.find(p => p.id === swap.property_id);
+                return (
+                  <Card key={swap.id}>
+                    <CardContent className="p-6">
+                      <div className="flex flex-col sm:flex-row gap-6">
+                        {property?.images?.[0] && (
+                          <div className="w-full sm:w-40 h-28 shrink-0 rounded-md overflow-hidden bg-slate-100">
+                            <img src={property.images[0]} alt="" className="w-full h-full object-cover" />
+                          </div>
                         )}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-semibold text-slate-900 text-lg">{swap.property_title}</h3>
+                            <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">
+                              {swap.status === 'counter_proposed' ? 'Counter Offer' : 'Pending'}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-2 text-slate-600 text-sm">
+                            <Calendar className="w-4 h-4 text-amber-500" />
+                            {format(new Date(swap.check_in), 'MMM d')} - {format(new Date(swap.check_out), 'MMM d, yyyy')}
+                          </div>
+                          {swap.status === 'counter_proposed' && swap.counter_check_in && (
+                            <p className="text-sm text-amber-700 mt-2 font-medium">
+                              Host proposed: {format(new Date(swap.counter_check_in), 'MMM d')} - {format(new Date(swap.counter_check_out), 'MMM d, yyyy')}
+                            </p>
+                          )}
+                          <div className="mt-4 flex justify-end">
+                            <Link to={createPageUrl('MySwaps')}>
+                              <Button size="sm">Review</Button>
+                            </Link>
+                          </div>
+                        </div>
                       </div>
-                      <Link to={createPageUrl('MySwaps')}>
-                        <Button size="sm">Review</Button>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
+                    </CardContent>
+                  </Card>
+                );
+              })
             ) : (
               <Card>
                 <CardContent className="py-12 text-center">
@@ -342,35 +377,43 @@ export default function GuestDashboard() {
           <TabsContent value="past" className="space-y-4">
             {pastSwaps.length > 0 ? (
               pastSwaps.map(swap => {
+                const property = properties.find(p => p.id === swap.property_id);
                 const hasReviewed = myReviews.some(r => r.swap_request_id === swap.id);
                 return (
                   <Card key={swap.id}>
                     <CardContent className="p-6">
-                      <div className="flex items-start justify-between">
+                      <div className="flex flex-col sm:flex-row gap-6">
+                        {property?.images?.[0] && (
+                          <div className="w-full sm:w-40 h-28 shrink-0 rounded-md overflow-hidden bg-slate-100">
+                            <img src={property.images[0]} alt="" className="w-full h-full object-cover" />
+                          </div>
+                        )}
                         <div className="flex-1">
                           <h3 className="font-semibold text-slate-900 text-lg">{swap.property_title}</h3>
-                          <div className="flex items-center gap-2 mt-2 text-slate-600">
-                            <Calendar className="w-4 h-4" />
+                          <div className="flex items-center gap-2 mt-2 text-slate-600 text-sm">
+                            <Calendar className="w-4 h-4 text-slate-400" />
                             {format(new Date(swap.check_in), 'MMM d')} - {format(new Date(swap.check_out), 'MMM d, yyyy')}
                           </div>
-                          {hasReviewed ? (
-                            <Badge className="mt-2 bg-green-100 text-green-700">Reviewed</Badge>
-                          ) : (
-                            <Badge className="mt-2 bg-slate-100 text-slate-700">Review Pending</Badge>
-                          )}
-                        </div>
-                        <div className="flex gap-2">
-                          {!hasReviewed && (
-                            <Link to={createPageUrl('MySwaps')}>
-                              <Button size="sm" className="bg-amber-500 hover:bg-amber-600">
-                                <Star className="w-4 h-4 mr-2" />
-                                Leave Review
-                              </Button>
+                          <div className="mt-2">
+                            {hasReviewed ? (
+                              <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Reviewed</Badge>
+                            ) : (
+                              <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-100 border-slate-200">Review Pending</Badge>
+                            )}
+                          </div>
+                          <div className="mt-4 flex flex-wrap gap-2 justify-end">
+                            {!hasReviewed && (
+                              <Link to={createPageUrl('MySwaps')}>
+                                <Button size="sm" className="bg-amber-500 hover:bg-amber-600">
+                                  <Star className="w-4 h-4 mr-2" />
+                                  Leave Review
+                                </Button>
+                              </Link>
+                            )}
+                            <Link to={createPageUrl(`PropertyDetails?id=${swap.property_id}`)}>
+                              <Button variant="outline" size="sm">View Property</Button>
                             </Link>
-                          )}
-                          <Link to={createPageUrl(`PropertyDetails?id=${swap.property_id}`)}>
-                            <Button variant="outline" size="sm">View Property</Button>
-                          </Link>
+                          </div>
                         </div>
                       </div>
                     </CardContent>

@@ -111,37 +111,39 @@ async function sendFullNotification({
 }
 
 export async function notifyNewMessage({ recipientEmail, senderName, senderEmail, conversationId }) {
+  const displayName = senderName || 'UNswap Member';
   return sendFullNotification({
     userEmail: recipientEmail,
     type: 'message',
     title: 'New Message',
-    message: `${senderName || senderEmail} sent you a message`,
+    message: `${displayName} sent you a message`,
     link: `/Messages`,
     relatedId: conversationId,
-    senderName,
+    senderName: displayName,
     senderEmail,
     emailSubject: 'New Message',
     emailBody: `
       <h2>You have a new message on UNswap</h2>
-      <p><strong>${senderName || senderEmail}</strong> sent you a message.</p>
+      <p><strong>${displayName}</strong> sent you a message.</p>
       <p>Log in to UNswap to read and reply: <a href="${window.location.origin}/Messages">View Messages</a></p>
     `
   });
 }
 
 export async function notifySwapRequest({ hostEmail, requesterName, propertyTitle, swapRequestId }) {
+  const displayName = requesterName || 'UNswap Member';
   return sendFullNotification({
     userEmail: hostEmail,
     type: 'swap_pending',
     title: 'New Swap Request',
-    message: `${requesterName} wants to swap for "${propertyTitle}"`,
+    message: `${displayName} wants to swap for "${propertyTitle}"`,
     link: `/MySwaps?tab=incoming`,
     relatedId: swapRequestId,
-    senderName: requesterName,
+    senderName: displayName,
     emailSubject: 'New Swap Request',
     emailBody: `
       <h2>You have a new swap request!</h2>
-      <p><strong>${requesterName}</strong> is interested in staying at your property "${propertyTitle}".</p>
+      <p><strong>${displayName}</strong> is interested in staying at your property "${propertyTitle}".</p>
       <p>Review and respond to the request: <a href="${window.location.origin}/MySwaps">View Swap Requests</a></p>
       <p>Quick response increases your acceptance rate and member trust.</p>
     `
@@ -149,18 +151,19 @@ export async function notifySwapRequest({ hostEmail, requesterName, propertyTitl
 }
 
 export async function notifySwapApproved({ requesterEmail, hostName, propertyTitle, swapRequestId }) {
+  const displayName = hostName || 'UNswap Member';
   return sendFullNotification({
     userEmail: requesterEmail,
     type: 'swap_approved',
     title: 'Swap Request Approved!',
-    message: `Your request for "${propertyTitle}" has been approved by ${hostName}`,
+    message: `Your request for "${propertyTitle}" has been approved by ${displayName}`,
     link: `/MySwaps?tab=outgoing`,
     relatedId: swapRequestId,
-    senderName: hostName,
+    senderName: displayName,
     emailSubject: 'Swap Request Approved! 🎉',
     emailBody: `
       <h2>Great news! Your swap request has been approved</h2>
-      <p><strong>${hostName}</strong> has accepted your request to stay at "${propertyTitle}".</p>
+      <p><strong>${displayName}</strong> has accepted your request to stay at "${propertyTitle}".</p>
       <p><strong>Next Steps:</strong></p>
       <ul>
         <li>Complete the mandatory video call verification</li>
@@ -174,18 +177,19 @@ export async function notifySwapApproved({ requesterEmail, hostName, propertyTit
 }
 
 export async function notifySwapRejected({ requesterEmail, hostName, propertyTitle, swapRequestId }) {
+  const displayName = hostName || 'UNswap Member';
   return sendFullNotification({
     userEmail: requesterEmail,
     type: 'swap_rejected',
     title: 'Swap Request Declined',
-    message: `Your request for "${propertyTitle}" was declined by ${hostName}`,
+    message: `Your request for "${propertyTitle}" was declined by ${displayName}`,
     link: `/MySwaps?tab=outgoing`,
     relatedId: swapRequestId,
-    senderName: hostName,
+    senderName: displayName,
     emailSubject: 'Swap Request Update',
     emailBody: `
       <h2>Swap Request Update</h2>
-      <p>Your request for "${propertyTitle}" was declined by ${hostName}.</p>
+      <p>Your request for "${propertyTitle}" was declined by ${displayName}.</p>
       <p>Don't worry! There are many other great properties available:</p>
       <p><a href="${window.location.origin}/FindProperties">Browse Available Properties</a></p>
     `
@@ -193,18 +197,19 @@ export async function notifySwapRejected({ requesterEmail, hostName, propertyTit
 }
 
 export async function notifySwapCounterProposal({ requesterEmail, hostName, propertyTitle, swapRequestId, newDates }) {
+  const displayName = hostName || 'UNswap Member';
   return sendFullNotification({
     userEmail: requesterEmail,
     type: 'swap_counter',
     title: 'Counter-Proposal Received',
-    message: `${hostName} sent a counter-proposal for "${propertyTitle}"`,
+    message: `${displayName} sent a counter-proposal for "${propertyTitle}"`,
     link: `/MySwaps?tab=outgoing`,
     relatedId: swapRequestId,
-    senderName: hostName,
+    senderName: displayName,
     emailSubject: 'Counter-Proposal for Your Swap Request',
     emailBody: `
       <h2>Counter-Proposal Received</h2>
-      <p><strong>${hostName}</strong> has proposed alternative dates for your request to stay at "${propertyTitle}".</p>
+      <p><strong>${displayName}</strong> has proposed alternative dates for your request to stay at "${propertyTitle}".</p>
       ${newDates ? `<p><strong>Proposed Dates:</strong> ${newDates}</p>` : ''}
       <p>Review the counter-proposal and respond: <a href="${window.location.origin}/MySwaps">View Counter-Proposal</a></p>
     `

@@ -16,6 +16,8 @@ import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { createPageUrl } from '@/utils';
+import { AvatarUI } from '@/lib/utils';
 import { toast } from 'sonner';
 
 import EmailOtpVerification from '../components/verification/EmailOtpVerification';
@@ -51,6 +53,7 @@ export default function Settings() {
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [profileData, setProfileData] = useState({
     username: '',
+    full_name: '',
     phone: '',
     bio: '',
     organization: '',
@@ -98,9 +101,10 @@ export default function Settings() {
     if (user) {
       setProfileData({
         username: user?.username || '',
+        full_name: user?.full_name || '',
         phone: user?.phone || '',
         bio: user?.bio || '',
-        organization: user?.organization || '',
+        organization: user?.organization || user?.institution || '',
         staff_grade: user?.staff_grade || '',
         duty_station: user?.duty_station || '',
       });
@@ -244,13 +248,7 @@ export default function Settings() {
                     <div className="relative -top-12 mb-[-32px] flex flex-col sm:flex-row items-end gap-4">
                       <div className="relative group">
                         <div className="w-24 h-24 rounded-2xl border-4 border-white overflow-hidden bg-stone-100 shadow-md">
-                          {user?.avatar_url ? (
-                            <img src={user.avatar_url} alt="Profile" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-stone-300">
-                              <User className="w-10 h-10" />
-                            </div>
-                          )}
+                          <AvatarUI user={user} className="w-full h-full text-stone-300 text-3xl" />
                         </div>
                         <label className="absolute inset-0 flex items-center justify-center bg-blue-900/40 text-white rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                           {uploading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Camera className="w-6 h-6" />}
@@ -268,9 +266,16 @@ export default function Settings() {
                     <div className="grid gap-6 mt-10">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
+                          <Label htmlFor="full_name">Full Name</Label>
+                          <Input id="full_name" className="focus-visible:ring-blue-500" value={profileData.full_name} onChange={(e) => handleProfileChange('full_name', e.target.value)} placeholder="Your full name" />
+                        </div>
+                        <div className="space-y-2">
                           <Label htmlFor="username">Username</Label>
                           <Input id="username" className="focus-visible:ring-blue-500" value={profileData.username} onChange={(e) => handleProfileChange('username', e.target.value)} placeholder="@username" />
                         </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="phone">Phone Number</Label>
                           <Input id="phone" className="focus-visible:ring-blue-500" value={profileData.phone} onChange={(e) => handleProfileChange('phone', e.target.value)} placeholder="+1..." />

@@ -38,6 +38,7 @@ router.get('/stats', requireAuth, async (req, res) => {
             milestoneRequirement = verifiedCount;
         }
 
+        if (!process.env.FRONTEND_URL) throw new Error('FRONTEND_URL is not defined in .env');
         const stats = {
             referral_code: user.referral_code,
             verified_referrals_count: verifiedCount,
@@ -47,7 +48,7 @@ router.get('/stats', requireAuth, async (req, res) => {
             is_lifetime_waiver: user.subscription_status === 'lifetime_waiver',
             next_milestone: nextMilestone,
             milestone_requirement: milestoneRequirement,
-            referral_link: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?ref=${user.referral_code}`
+            referral_link: `${process.env.FRONTEND_URL}/login?ref=${user.referral_code}`
         };
 
         res.json(stats);

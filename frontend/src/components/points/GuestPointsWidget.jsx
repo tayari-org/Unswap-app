@@ -49,7 +49,7 @@ export default function GuestPointsWidget({ user, onRedeem }) {
           <div className="flex items-start justify-between mb-4">
             <div>
               <p className="text-amber-100 text-sm font-medium mb-1">Your Balance</p>
-              <p className="text-4xl font-bold">{user?.guest_points || 500}</p>
+              <p className="text-4xl font-bold">{user?.guest_points ?? 500}</p>
               <p className="text-amber-100 text-sm mt-1">GuestPoints</p>
             </div>
             <Coins className="w-12 h-12 text-amber-200 opacity-50" />

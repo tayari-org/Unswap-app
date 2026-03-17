@@ -25,45 +25,60 @@ export default function PropertyCard({ property, variant = 'default', index = 0 
     queryFn: () => api.auth.me(),
   });
 
-  const isFavorite = currentUser?.saved_properties?.includes(property.id);
+  const savedProperties = React.useMemo(() => {
+    try {
+      const sp = currentUser?.saved_properties;
+      return Array.isArray(sp) ? sp : JSON.parse(sp || '[]');
+    } catch { return []; }
+  }, [currentUser?.saved_properties]);
 
-  const updateUserMutation = useMutation({
-    mutationFn: (data) => api.auth.updateMe(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['current-user']);
+  const isFavorite = savedProperties.includes(property.id);
+
+  const favoriteMutation = useMutation({
+    mutationFn: () => api.favorites.toggle(property.id),
+    onMutate: async () => {
+      // Optimistic update
+      const newSaved = isFavorite
+        ? savedProperties.filter(id => id !== property.id)
+        : [...savedProperties, property.id];
+      queryClient.setQueryData(['current-user'], prev => prev ? { ...prev, saved_properties: newSaved } : prev);
+      return { previousSaved: savedProperties };
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(['current-user'], prev => prev ? { ...prev, saved_properties: data.saved_properties } : prev);
+      queryClient.invalidateQueries(['property', property.id]);
+      toast.success(data.isFavorite ? 'Added to favorites' : 'Removed from favorites');
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousSaved) {
+        queryClient.setQueryData(['current-user'], prev => prev ? { ...prev, saved_properties: context.previousSaved } : prev);
+      }
+      toast.error('Could not update favorites');
     },
   });
 
   const toggleFavorite = (e) => {
     e.preventDefault();
     e.stopPropagation();
-
     if (!currentUser) {
       toast.error('Please log in to save properties');
       return;
     }
-
-    const saved = currentUser.saved_properties || [];
-    const newSaved = saved.includes(property.id)
-      ? saved.filter(id => id !== property.id)
-      : [...saved, property.id];
-
-    queryClient.setQueryData(['current-user'], { ...currentUser, saved_properties: newSaved });
-    updateUserMutation.mutate({ saved_properties: newSaved });
-
-    if (newSaved.includes(property.id)) {
-      toast.success('Added to favorites');
-    } else {
-      toast.success('Removed from favorites');
-    }
+    favoriteMutation.mutate();
   };
 
-  const handleShare = (e) => {
+  const handleShare = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     const url = `${window.location.origin}${createPageUrl('PropertyDetails')}?id=${property.id}`;
-    navigator.clipboard.writeText(url);
-    toast.success('Property link copied to clipboard!');
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: property.title, text: `Check out this property on UNswap`, url });
+      } catch { /* user cancelled */ }
+    } else {
+      navigator.clipboard.writeText(url);
+      toast.success('Link copied to clipboard!');
+    }
   };
 
   const isCurrentUserVerified = currentUser?.verification_status === 'verified' || currentUser?.role === 'admin';

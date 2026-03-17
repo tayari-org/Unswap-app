@@ -11,10 +11,6 @@ import { awardReviewPoints } from '../points/PointsEarningHelper';
 export default function ReviewForm({ swapRequest, onSuccess }) {
   const queryClient = useQueryClient();
   const [rating, setRating] = useState(5);
-  const [cleanliness, setCleanliness] = useState(5);
-  const [communication, setCommunication] = useState(5);
-  const [accuracy, setAccuracy] = useState(5);
-  const [location, setLocation] = useState(5);
   const [reviewText, setReviewText] = useState('');
   const [hoveredRating, setHoveredRating] = useState(0);
 
@@ -22,10 +18,15 @@ export default function ReviewForm({ swapRequest, onSuccess }) {
     mutationFn: async (reviewData) => {
       return await api.entities.Review.create(reviewData);
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ['reviews'] });
       queryClient.invalidateQueries({ queryKey: ['properties'] });
-      toast.success('Review submitted successfully!');
+      
+      // Award points for leaving a review
+      const user = await api.auth.me();
+      await awardReviewPoints(user.email, data.id);
+      
+      toast.success('Review submitted successfully! +25 GuestPoints awarded.');
       onSuccess?.();
     },
     onError: () => {
@@ -42,16 +43,10 @@ export default function ReviewForm({ swapRequest, onSuccess }) {
       swap_request_id: swapRequest.id,
       property_id: swapRequest.property_id,
       property_title: swapRequest.property_title,
-      host_id: swapRequest.host_id,
-      host_email: swapRequest.host_email,
-      reviewer_id: user.id,
-      reviewer_email: user.email,
-      reviewer_name: user.full_name,
+      author_email: user.email,
+      reviewer_name: user.full_name || user.username || user.email,
+      target_email: swapRequest.host_email,
       rating,
-      cleanliness_rating: cleanliness,
-      communication_rating: communication,
-      accuracy_rating: accuracy,
-      location_rating: location,
       review_text: reviewText,
       stay_date: swapRequest.check_in,
       status: 'approved'
@@ -97,28 +92,6 @@ export default function ReviewForm({ swapRequest, onSuccess }) {
             label="Overall Rating" 
           />
           
-          <div className="grid md:grid-cols-2 gap-4">
-            <StarRating 
-              value={cleanliness} 
-              onChange={setCleanliness} 
-              label="Cleanliness" 
-            />
-            <StarRating 
-              value={communication} 
-              onChange={setCommunication} 
-              label="Communication" 
-            />
-            <StarRating 
-              value={accuracy} 
-              onChange={setAccuracy} 
-              label="Accuracy" 
-            />
-            <StarRating 
-              value={location} 
-              onChange={setLocation} 
-              label="Location" 
-            />
-          </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700">

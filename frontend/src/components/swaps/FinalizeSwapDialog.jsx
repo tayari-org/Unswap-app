@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { format } from 'date-fns';
@@ -101,214 +102,221 @@ export default function FinalizeSwapDialog({ open, onOpenChange, swapRequest, us
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="p-10 border-b bg-slate-50">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-8 h-px bg-emerald-500/20" />
-            <p className="text-emerald-600 font-bold tracking-[0.4em] uppercase text-[9px]">Final Validation</p>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-none border-0 shadow-2xl p-0">
+        <DialogHeader className="p-12 border-b bg-stone-50/80">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-[2px] bg-unswap-blue-deep" />
+            <p className="text-unswap-blue-deep font-bold tracking-[0.5em] uppercase text-[10px]">Finalize Details</p>
           </div>
-          <DialogTitle className="text-3xl font-extralight text-slate-900 tracking-tighter leading-tight">
-            Approve <span className="italic font-serif">Stay.</span>
+          <DialogTitle className="text-5xl font-extralight text-slate-900 tracking-tighter leading-none mb-6">
+            Finalize <span className="italic font-serif">Stay Details.</span>
           </DialogTitle>
-          <DialogDescription className="text-slate-500 text-sm font-light mt-4 leading-relaxed">
-            Review the final details and confirm the stay dates. This action will formalize the swap agreement.
+          <DialogDescription className="text-[13px] text-slate-500 font-light max-w-xl leading-relaxed">
+            Please provide the final logistics and contact information for the guest to finalize the swap.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-12 p-12">
           {/* Phase Indicator */}
-          <Card className="bg-gradient-to-r from-emerald-50 to-blue-50 border-emerald-200">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                {[
-                  { icon: Shield, label: 'Security ✓', done: true },
-                  { icon: FileText, label: 'Waiver ✓', done: true },
-                  { icon: Key, label: 'Concierge', done: false },
-                  { icon: Building, label: 'Insurance', done: false }
-                ].map((phase, i) => (
-                  <div key={i} className="flex flex-col items-center">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${phase.done ? 'bg-emerald-500' : 'bg-blue-500'
-                      }`}>
-                      <phase.icon className="w-5 h-5 text-white" />
-                    </div>
-                    <p className="text-xs mt-1 text-slate-700">{phase.label}</p>
-                  </div>
-                ))}
+          <div className="flex items-center justify-between bg-stone-50 p-8 border border-slate-100 rounded-none shadow-inner">
+            {[
+              { icon: Shield, label: 'SECURITY ✓', done: true },
+              { icon: FileText, label: 'WAIVER ✓', done: true },
+              { icon: Key, label: 'CONCIERGE', done: false },
+              { icon: Building, label: 'INSURANCE', done: false }
+            ].map((phase, i) => (
+              <div key={i} className="flex flex-col items-center gap-3 group">
+                <div className={`w-12 h-12 rounded-none rotate-45 border flex items-center justify-center transition-all duration-500 ${phase.done 
+                  ? 'bg-unswap-blue-deep border-unswap-blue-deep text-white shadow-lg' 
+                  : 'bg-white border-slate-200 text-slate-300'
+                }`}>
+                  <phase.icon className={`w-5 h-5 -rotate-45 ${phase.done ? 'text-white' : 'text-slate-300'}`} />
+                </div>
+                <p className={`text-[9px] font-bold tracking-widest mt-2 ${phase.done ? 'text-unswap-blue-deep' : 'text-slate-400'}`}>{phase.label}</p>
               </div>
-            </CardContent>
-          </Card>
+            ))}
+          </div>
 
           {/* Key Handoff */}
           <div>
-            <Label className="text-base font-semibold">Key Handoff Method *</Label>
-            <p className="text-sm text-slate-600 mb-3">How will your guest access the property?</p>
+          {/* Key Handoff */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 font-semibold">Key Handoff</Label>
+            </div>
 
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
-                { value: 'in_person', label: 'In Person', desc: 'Meet guest personally' },
-                { value: 'lockbox', label: 'Lockbox', desc: 'Secure key storage with code' },
-                { value: 'property_manager', label: 'Property Manager', desc: 'Through property management' },
-                { value: 'doorman', label: 'Doorman/Concierge', desc: 'Pick up from building staff' },
-                { value: 'neighbor', label: 'Trusted Neighbor', desc: 'Collect from neighbor' }
+                { value: 'in_person', label: 'In Person', desc: 'Direct exchange' },
+                { value: 'lockbox', label: 'Lockbox', desc: 'Secure digital access' },
+                { value: 'property_manager', label: 'Staff', desc: 'Building management' },
+                { value: 'doorman', label: 'Concierge', desc: 'Lobby pickup' },
+                { value: 'neighbor', label: 'Neighbor', desc: 'Trusted contact' }
               ].map((method) => (
                 <label
                   key={method.value}
-                  className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-slate-50 transition ${keyHandoffMethod === method.value ? 'border-amber-500 bg-amber-50' : 'border-slate-200'
-                    }`}
+                  className={`flex items-start gap-4 p-5 rounded-none cursor-pointer transition-all duration-300 border ${keyHandoffMethod === method.value 
+                    ? 'border-unswap-blue-deep bg-unswap-blue-deep/5 shadow-md' 
+                    : 'border-slate-100 bg-stone-50/50 hover:bg-white hover:shadow-sm'
+                  }`}
                 >
+                  <div className={`mt-0.5 w-4 h-4 rounded-none border flex items-center justify-center transition-colors ${keyHandoffMethod === method.value ? 'border-unswap-blue-deep bg-unswap-blue-deep' : 'border-slate-300 bg-white'}`}>
+                    {keyHandoffMethod === method.value && <div className="w-1.5 h-1.5 bg-white rounded-none" />}
+                  </div>
                   <input
                     type="radio"
                     name="keyHandoff"
                     value={method.value}
                     checked={keyHandoffMethod === method.value}
                     onChange={(e) => setKeyHandoffMethod(e.target.value)}
-                    className="mt-1"
+                    className="hidden"
                   />
-                  <div className="flex-1">
-                    <p className="font-medium text-slate-900">{method.label}</p>
-                    <p className="text-sm text-slate-600">{method.desc}</p>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-900 uppercase tracking-widest leading-none mb-2">{method.label}</p>
+                    <p className="text-[11px] text-slate-500 font-light">{method.desc}</p>
                   </div>
                 </label>
               ))}
             </div>
 
-            {keyHandoffMethod === 'lockbox' && (
-              <div className="mt-3">
-                <Label>Lockbox Code</Label>
-                <Input
-                  type="text"
-                  value={lockboxCode}
-                  onChange={(e) => setLockboxCode(e.target.value)}
-                  placeholder="Enter 4-6 digit code"
-                  className="mt-1"
-                />
-              </div>
-            )}
+            <AnimatePresence>
+              {keyHandoffMethod === 'lockbox' && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-4 overflow-hidden"
+                >
+                  <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-2 block">Lockbox Code</Label>
+                  <Input
+                    type="text"
+                    value={lockboxCode}
+                    onChange={(e) => setLockboxCode(e.target.value)}
+                    placeholder="Enter 4-6 digit numeric code"
+                    className="h-12 rounded-none border-slate-200 bg-white focus:ring-0 focus:border-slate-400"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
           </div>
 
           <Separator />
 
           {/* Emergency Contact */}
-          <div>
-            <Label className="text-base font-semibold">Emergency Contact *</Label>
-            <p className="text-sm text-slate-600 mb-3">Who should the guest contact for urgent issues?</p>
-            <div className="grid md:grid-cols-2 gap-3">
-              <div>
-                <Label>Full Name</Label>
+          <div className="space-y-8 pt-6 border-t border-slate-50">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 font-semibold">Emergency Contact</Label>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">Contact Name</Label>
                 <Input
                   type="text"
                   value={emergencyContactName}
                   onChange={(e) => setEmergencyContactName(e.target.value)}
-                  placeholder="John Doe"
-                  className="mt-1"
+                  placeholder="Full Name"
+                  className="h-12 rounded-none border-slate-200 bg-white focus:ring-0 focus:border-slate-400"
                 />
               </div>
-              <div>
-                <Label>Phone Number</Label>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">Phone Number</Label>
                 <Input
                   type="tel"
                   value={emergencyContactPhone}
                   onChange={(e) => setEmergencyContactPhone(e.target.value)}
-                  placeholder="+1 234 567 8900"
-                  className="mt-1"
+                  placeholder="+ International format"
+                  className="h-12 rounded-none border-slate-200 bg-white focus:ring-0 focus:border-slate-400"
                 />
               </div>
             </div>
-          </div>
 
-          {/* Special Instructions */}
-          <div>
-            <Label>Special Instructions (Optional)</Label>
-            <Textarea
-              value={specialInstructions}
-              onChange={(e) => setSpecialInstructions(e.target.value)}
-              placeholder="Alarm codes, parking details, wifi password, plant care, etc."
-              rows={4}
-              className="mt-1"
-            />
+            <div className="space-y-2">
+              <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">Special Instructions</Label>
+              <Textarea
+                value={specialInstructions}
+                onChange={(e) => setSpecialInstructions(e.target.value)}
+                placeholder="Include critical building protocols, digital credentials, security procedures..."
+                rows={4}
+                className="rounded-none border-slate-200 bg-white focus:ring-0 focus:border-slate-400 resize-none p-4"
+              />
+            </div>
           </div>
 
           <Separator />
 
-          {/* Insurance Activation */}
-          <Card className="bg-blue-50 border-blue-200">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <Shield className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
+          {/* Insurance & Legal Status */}
+          <div className="grid lg:grid-cols-2 gap-6 pt-6 border-t border-slate-50">
+            <div className="bg-blue-50/50 border border-blue-100 p-8 rounded-none">
+              <div className="flex items-start gap-4">
+                <Shield className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-semibold text-blue-900 mb-2">Automatic Insurance Activation</h4>
-                  <p className="text-sm text-blue-800 mb-3">
-                    Upon finalization, Clements Worldwide will automatically activate comprehensive coverage:
-                  </p>
-                  <ul className="text-sm text-blue-800 space-y-1">
-                    <li>• Property damage protection: up to $2,000,000</li>
-                    <li>• Guest cancellation coverage: up to $350/night</li>
-                    <li>• 24/7 claims support</li>
-                    <li>• Coverage period: {swapRequest.check_in} to {swapRequest.check_out}</li>
+                  <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-900 mb-4">Insurance Coverage</h4>
+                  <ul className="space-y-3 text-[11px] text-blue-800/80 font-light leading-relaxed uppercase tracking-widest">
+                    <li className="flex items-center gap-2">
+                       <div className="w-1 h-1 bg-blue-400 rounded-full" />
+                       Asset Protection: $2M USD
+                    </li>
+                    <li className="flex items-center gap-2">
+                       <div className="w-1 h-1 bg-blue-400 rounded-full" />
+                       Guarantee: $350/Night
+                    </li>
+                    <li className="flex items-center gap-2 opacity-50">
+                       <div className="w-1 h-1 bg-blue-400 rounded-full" />
+                       Clements Worldwide Integrated
+                    </li>
                   </ul>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* Digital Housing Authorization Preview */}
-          <Card className="bg-slate-50 border-slate-200">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="font-semibold text-slate-900">Digital Housing Authorization</h4>
-                <FileText className="w-5 h-5 text-slate-600" />
-              </div>
-              <p className="text-sm text-slate-600 mb-3">
-                Both parties will receive a comprehensive document including:
-              </p>
-              <div className="grid grid-cols-2 gap-2 text-sm text-slate-700">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  Property addresses
-                </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4" />
-                  Host contacts
-                </div>
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4" />
-                  Arbitration agreement
-                </div>
-                <div className="flex items-center gap-2">
-                  <Shield className="w-4 h-4" />
-                  Insurance certificate
+            <div className="bg-stone-50/50 border border-slate-100 p-8 rounded-none">
+              <div className="flex items-start gap-4">
+                <FileText className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-900 mb-4">Terms & Agreements</h4>
+                  <p className="text-[11px] text-slate-500 font-light leading-relaxed mb-4">
+                    The following legal instruments will be notarized upon finalization:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {['Arbitration Agreement', 'Verification Bond', 'Safe Passage Cert'].map(tag => (
+                      <span key={tag} className="text-[9px] font-bold uppercase tracking-widest px-2 py-1 bg-white border border-slate-100 text-slate-400">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
-        <div className="p-10 flex border-t border-slate-100 bg-slate-50/50 gap-6">
+        <div className="p-12 flex border-t border-slate-100 bg-stone-50/50 gap-8">
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="flex-1 rounded-none h-14 text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 hover:text-slate-900 transition-colors"
+            className="flex-1 rounded-none h-16 text-[10px] font-bold uppercase tracking-[0.4em] text-slate-400 hover:text-slate-900 transition-colors"
           >
-            Return
+            Cancel
           </Button>
           <Button
             onClick={() => finalizeSwapMutation.mutate()}
             disabled={!isComplete || finalizeSwapMutation.isPending}
-            className={`flex-1 rounded-none h-14 text-[10px] font-bold uppercase tracking-[0.4em] transition-all shadow-xl ${!isComplete || finalizeSwapMutation.isPending
-                ? 'bg-slate-200 text-slate-400'
-                : 'bg-emerald-600 text-white hover:bg-slate-900'
+            className={`flex-1 rounded-none h-16 text-[10px] font-bold uppercase tracking-[0.5em] transition-all shadow-xl ${!isComplete || finalizeSwapMutation.isPending
+                ? 'bg-slate-100 text-slate-300'
+                : 'bg-unswap-blue-deep text-white hover:bg-slate-900 active:scale-95'
               }`}
           >
             {finalizeSwapMutation.isPending ? (
               <>
                 <Loader2 className="w-3.5 h-3.5 mr-3 animate-spin" />
-                Finalizing...
+                Authorizing...
               </>
             ) : (
-              <>
-                <CheckCircle className="w-3.5 h-3.5 mr-3 opacity-60" />
-                Authorize Stay
-              </>
+              'Finalize Stay'
             )}
           </Button>
         </div>

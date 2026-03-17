@@ -85,12 +85,6 @@ export default function ReviewList({ propertyId, hostEmail, showModeration = fal
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : 0;
 
-  const categoryAverages = reviews.length > 0 ? {
-    cleanliness: (reviews.reduce((sum, r) => sum + (r.cleanliness_rating || 0), 0) / reviews.length).toFixed(1),
-    communication: (reviews.reduce((sum, r) => sum + (r.communication_rating || 0), 0) / reviews.length).toFixed(1),
-    accuracy: (reviews.reduce((sum, r) => sum + (r.accuracy_rating || 0), 0) / reviews.length).toFixed(1),
-    location: (reviews.reduce((sum, r) => sum + (r.location_rating || 0), 0) / reviews.length).toFixed(1),
-  } : null;
 
   if (reviews.length === 0) {
     return (
@@ -122,22 +116,6 @@ export default function ReviewList({ propertyId, hostEmail, showModeration = fal
               <div className="text-sm text-slate-500 mt-1">{reviews.length} reviews</div>
             </div>
 
-            {categoryAverages && (
-              <div className="flex-1 space-y-2">
-                {Object.entries(categoryAverages).map(([category, avg]) => (
-                  <div key={category} className="flex items-center gap-2">
-                    <span className="text-sm text-slate-600 capitalize w-32">{category}</span>
-                    <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-amber-400 rounded-full"
-                        style={{ width: `${(avg / 5) * 100}%` }}
-                      />
-                    </div>
-                    <span className="text-sm font-medium text-slate-700 w-8">{avg}</span>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
@@ -175,25 +153,6 @@ export default function ReviewList({ propertyId, hostEmail, showModeration = fal
 
             <p className="text-slate-700 mb-4">{review.review_text}</p>
 
-            {/* Category Ratings */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 text-sm">
-              <div>
-                <span className="text-slate-500">Cleanliness:</span>
-                <span className="ml-1 font-medium">{review.cleanliness_rating}/5</span>
-              </div>
-              <div>
-                <span className="text-slate-500">Communication:</span>
-                <span className="ml-1 font-medium">{review.communication_rating}/5</span>
-              </div>
-              <div>
-                <span className="text-slate-500">Accuracy:</span>
-                <span className="ml-1 font-medium">{review.accuracy_rating}/5</span>
-              </div>
-              <div>
-                <span className="text-slate-500">Location:</span>
-                <span className="ml-1 font-medium">{review.location_rating}/5</span>
-              </div>
-            </div>
 
             {/* Host Response */}
             {review.response_from_host && (

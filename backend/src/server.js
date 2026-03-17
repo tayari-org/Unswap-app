@@ -13,18 +13,26 @@ const uploadsRouter = require('./routes/uploads');
 const emailRouter = require('./routes/email');
 const webhookRouter = require('./routes/webhook');
 const referralsRouter = require('./routes/referrals');
+const favoritesRouter = require('./routes/favorites');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
+if (!PORT) {
+    console.error('\x1b[31m%s\x1b[0m', 'CRITICAL ERROR: PORT is not defined in .env');
+}
 
 // ─── Security ──────────────────────────────────────────────────────────────────
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: process.env.FRONTEND_URL,
     credentials: true,
 }));
+
+if (!process.env.FRONTEND_URL) {
+    console.error('\x1b[31m%s\x1b[0m', 'CRITICAL ERROR: FRONTEND_URL is not defined in .env');
+}
 
 // Rate limiting
 const limiter = rateLimit({
@@ -51,6 +59,7 @@ app.use('/api/functions', functionsRouter);
 app.use('/api/upload', uploadsRouter);
 app.use('/api/email', emailRouter);
 app.use('/api/referrals', referralsRouter);
+app.use('/api/favorites', favoritesRouter);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
@@ -64,15 +73,37 @@ app.use((req, res) => {
 
 // ─── Global error handler ─────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
-    console.error('Unhandled error:', err);
+    const errorInfo = {
+        timestamp: new Date().toISOString(),
+        message: err.message,
+        stack: err.stack,
+        path: req.path,
+        method: req.method,
+        body: req.body,
+        query: req.query,
+    };
+    
+    console.error('[Global Error]', errorInfo);
+
+    // Also write to a file for easier debugging if console is hard to read
+    try {
+        const fs = require('fs');
+        const path = require('path');
+        const logPath = path.join(__dirname, '..', 'error_log.txt');
+        fs.appendFileSync(logPath, JSON.stringify(errorInfo, null, 2) + '\n---\n');
+    } catch (e) {
+        console.error('Failed to write to error_log.txt', e);
+    }
+
     res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
 });
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 connectDB().then(() => {
     app.listen(PORT, () => {
-        console.log(`\n🚀 Unswap backend running on http://localhost:${PORT}`);
-        console.log(`   Health: http://localhost:${PORT}/api/health\n`);
+        const url = process.env.BACKEND_URL || `http://localhost:${PORT}`;
+        console.log(`\n🚀 Unswap backend running on ${url}`);
+        console.log(`   Health: ${url}/api/health\n`);
     });
 });
 

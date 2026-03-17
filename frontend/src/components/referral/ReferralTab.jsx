@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { toast } from 'sonner';
 
 const TIERS = [
-    { count: 1, label: '100 GuestPoints', desc: 'Awarded per verified referral', icon: Coins, color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200' },
+    { count: 1, label: '1,000 GuestPoints', desc: 'Awarded per verified referral', icon: Coins, color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200' },
     { count: 3, label: '500 Bonus Points', desc: 'Bonus for 3 verified referrals', icon: Star, color: 'text-purple-500', bg: 'bg-purple-50', border: 'border-purple-200' },
     { count: 5, label: 'Lifetime Fee Waiver', desc: 'Never pay subscription fees again', icon: Infinity, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
     { count: 10, label: 'VIP Status', desc: 'Priority support + exclusive perks', icon: Crown, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200' },
@@ -27,19 +27,22 @@ const rankIcon = (rank) => {
 export default function ReferralTab({ user }) {
     const [copied, setCopied] = useState(false);
 
-    const referralCode = user?.referral_code || ('UNSWAP' + (user?.id?.slice(0, 6) || '').toUpperCase());
-    const referralLink = `${window.location.origin}/login?ref=${referralCode}`;
-    const verifiedCount = user?.referred_users_verified_count || 0;
+    const { data: referralStats } = useQuery({
+        queryKey: ['referral-stats', user?.email],
+        queryFn: () => api.referrals.getStats(),
+        enabled: !!user?.email,
+    });
+
+    const referralCode = referralStats?.referral_code || user?.referral_code || ('UNSWAP' + (user?.id?.slice(0, 6) || '').toUpperCase());
+    const referralLink = referralStats?.referral_link || `${window.location.origin}/login?ref=${referralCode}`;
+    const verifiedCount = referralStats?.verified_referrals_count ?? user?.referred_users_verified_count ?? 0;
     const totalPoints = user?.referral_earnings || 0;
-    const hasLifetimeWaiver = user?.subscription_status === 'lifetime_waiver';
+    const hasLifetimeWaiver = user?.subscription_status === 'lifetime_waiver' || referralStats?.is_lifetime_waiver;
     const isVIP = user?.is_founders_circle || false;
 
     const { data: leaderboardData, isLoading: leaderboardLoading } = useQuery({
         queryKey: ['referral-leaderboard'],
-        queryFn: async () => {
-            const res = await api.referrals.getLeaderboard();
-            return res;
-        },
+        queryFn: () => api.referrals.getLeaderboard(),
         enabled: !!user,
     });
 

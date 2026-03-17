@@ -6,7 +6,13 @@
  */
 const express = require('express');
 const nodemailer = require('nodemailer');
+const dns = require('dns');
 const { requireAuth } = require('../middleware/auth');
+
+// Force Node.js to prefer IPv4 for DNS resolution to avoid EDNS issues with Gmail SMTP
+if (typeof dns.setDefaultResultOrder === 'function') {
+    dns.setDefaultResultOrder('ipv4first');
+}
 
 const router = express.Router();
 

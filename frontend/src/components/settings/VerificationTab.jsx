@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { Shield, Check, Loader2 } from 'lucide-react';
@@ -9,6 +9,7 @@ import DocumentUploadVerification from '../verification/DocumentUploadVerificati
 
 export default function VerificationTab({ user }) {
     const queryClient = useQueryClient();
+    const [emailJustVerified, setEmailJustVerified] = useState(false);
 
     const { data: verification } = useQuery({
         queryKey: ['my-verification', user?.email],
@@ -67,11 +68,14 @@ export default function VerificationTab({ user }) {
             <div className="grid lg:grid-cols-2 gap-6">
                 <EmailOtpVerification
                     user={user}
-                    onVerified={() => queryClient.invalidateQueries(['current-user'])}
+                    onVerified={() => {
+                        setEmailJustVerified(true);
+                        queryClient.invalidateQueries(['current-user']);
+                    }}
                 />
                 <DocumentUploadVerification
                     user={user}
-                    emailVerified={user?.institutional_email_verified}
+                    emailVerified={user?.institutional_email_verified || emailJustVerified}
                     existingVerification={verification?.[0]}
                 />
             </div>

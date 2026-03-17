@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import {
   Users, Home, ArrowLeftRight, Shield, TrendingUp, Eye, CheckCircle,
   XCircle, Clock, Search, Filter, MoreVertical, UserCheck, AlertTriangle, Star, Flag, FileText, Trash2, Rocket,
-  LayoutDashboard, LogOut
+  LayoutDashboard, LogOut, Trophy
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -86,6 +86,13 @@ export default function AdminDashboard() {
     queryFn: () => api.entities.Review.list('-created_date', 100),
     enabled: currentUser?.role === 'admin',
   });
+
+  const { data: adminLeaderboard } = useQuery({
+    queryKey: ['admin-referral-leaderboard'],
+    queryFn: () => api.referrals.getLeaderboard(),
+    enabled: currentUser?.role === 'admin',
+  });
+
 
   const { data: platformSettings = [] } = useQuery({
     queryKey: ['platform-settings'],
@@ -305,6 +312,7 @@ export default function AdminDashboard() {
       count: stats.flaggedReviews > 0 ? stats.flaggedReviews : 0,
       countColor: 'bg-red-500',
     },
+    { id: 'referrals', label: 'Referrals', icon: Trophy },
   ];
 
   return (
@@ -807,8 +815,140 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <ReviewList showModeration={true} />
+                <CardContent className="p-0">
+                  {reviews.length === 0 ? (
+                    <div className="text-center py-20 text-stone-400">No reviews yet.</div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Reviewer</TableHead>
+                          <TableHead>Property</TableHead>
+                          <TableHead>Rating</TableHead>
+                          <TableHead>Review</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {reviews.map(review => (
+                          <TableRow key={review.id}>
+                            <TableCell>
+                              <p className="font-medium text-sm">{review.reviewer_name || review.author_email}</p>
+                              <p className="text-xs text-stone-400">{review.author_email}</p>
+                            </TableCell>
+                            <TableCell>
+                              <p className="text-sm font-medium">{review.property_title || '—'}</p>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1">
+                                {[1, 2, 3, 4, 5].map(n => (
+                                  <Star key={n} className={`w-3.5 h-3.5 ${n <= review.rating ? 'fill-amber-400 text-amber-400' : 'text-stone-200'}`} />
+                                ))}
+                                <span className="text-xs text-stone-500 ml-1">{review.rating}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="max-w-xs">
+                              <p className="text-sm text-stone-600 line-clamp-2">{review.review_text || review.content || '—'}</p>
+                            </TableCell>
+                            <TableCell>
+                              <Badge className={
+                                review.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                                review.status === 'flagged' ? 'bg-red-100 text-red-700' :
+                                'bg-amber-100 text-amber-700'
+                              }>
+                                {review.status || 'pending'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-sm text-stone-500">
+                              {review.created_at ? format(new Date(review.created_at), 'MMM d, yyyy') : '—'}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1">
+                                {review.status !== 'approved' && (
+                                  <Button size="sm" variant="ghost"
+                                    className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 h-7 px-2 text-xs"
+                                    onClick={() => updateReviewMutation.mutate({ id: review.id, data: { status: 'approved' } })}
+                                  >
+                                    <CheckCircle className="w-3.5 h-3.5 mr-1" /> Approve
+                                  </Button>
+                                )}
+                                {review.status !== 'flagged' && (
+                                  <Button size="sm" variant="ghost"
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50 h-7 px-2 text-xs"
+                                    onClick={() => updateReviewMutation.mutate({ id: review.id, data: { status: 'flagged' } })}
+                                  >
+                                    <Flag className="w-3.5 h-3.5 mr-1" /> Flag
+                                  </Button>
+                                )}
+                                {review.status === 'approved' && (
+                                  <Button size="sm" variant="ghost"
+                                    className="text-stone-500 hover:bg-stone-100 h-7 px-2 text-xs"
+                                    onClick={() => updateReviewMutation.mutate({ id: review.id, data: { status: 'pending' } })}
+                                  >
+                                    <XCircle className="w-3.5 h-3.5 mr-1" /> Unpublish
+                                  </Button>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Referrals Tab */}
+            {activeTab === 'referrals' && (
+              <Card className="bg-white border border-stone-100 shadow-sm rounded-2xl overflow-hidden">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-amber-500" />
+                    <CardTitle>Referral Leaderboard — Top 10</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {!adminLeaderboard ? (
+                    <p className="text-center text-stone-400 py-12">Loading leaderboard…</p>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-12">Rank</TableHead>
+                          <TableHead>User</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead className="text-right">Verified Referrals</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {(adminLeaderboard.top5 || []).map((entry, i) => {
+                          const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : null;
+                          return (
+                            <TableRow key={entry.rank} className={i < 3 ? 'bg-amber-50/40' : ''}>
+                              <TableCell className="font-bold text-center">
+                                {medal ? <span className="text-lg">{medal}</span> : <span className="text-stone-400">#{entry.rank}</span>}
+                              </TableCell>
+                              <TableCell>
+                                <p className="font-medium text-slate-900">{entry.name}</p>
+                              </TableCell>
+                              <TableCell className="text-stone-500 text-sm">{entry.email}</TableCell>
+                              <TableCell className="text-right">
+                                <Badge className="bg-blue-100 text-blue-700 font-semibold">{entry.verified}</Badge>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                        {(adminLeaderboard.top5 || []).length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={4} className="text-center text-stone-400 py-12">No referrals recorded yet.</TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  )}
                 </CardContent>
               </Card>
             )}

@@ -51,10 +51,13 @@ export const AuthProvider = ({ children }) => {
     api.auth.redirectToLogin(window.location.href);
   };
 
+  const isVerified = user?.verification_status === 'verified' || user?.role === 'admin';
+
   return (
     <AuthContext.Provider value={{
       user,
       isAuthenticated,
+      isVerified,
       isLoadingAuth,
       isLoadingPublicSettings: false, // no longer async — always false
       authError,
