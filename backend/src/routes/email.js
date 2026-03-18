@@ -5,27 +5,14 @@
  * POST /api/email/send
  */
 const express = require('express');
-const nodemailer = require('nodemailer');
-const dns = require('dns');
+const { Resend } = require('resend');
 const { requireAuth } = require('../middleware/auth');
-
-// Force Node.js to prefer IPv4 for DNS resolution to avoid EDNS issues with Gmail SMTP
-if (typeof dns.setDefaultResultOrder === 'function') {
-    dns.setDefaultResultOrder('ipv4first');
-}
 
 const router = express.Router();
 
-// ─── Nodemailer transporter ────────────────────────────────────────────────────
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT) || 587,
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-    },
-});
+// Only initialize Resend if the API key is present. 
+// This prevents the app from crashing on startup if the key is missing.
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 /**
  * Shared sendEmail helper — can be imported by other modules
@@ -36,18 +23,33 @@ const transporter = nodemailer.createTransport({
  * @param {string} [options.html] - Optional HTML body
  */
 async function sendEmail({ to, subject, body, html }) {
-    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-        console.warn('[Email] SMTP not configured — skipping email to:', to);
+    if (!process.env.RESEND_API_KEY) {
+        console.warn('[Email] Resend API key not configured — skipping email to:', to);
         return { skipped: true };
     }
-    const info = await transporter.sendMail({
-        from: process.env.EMAIL_FROM || 'Unswap <noreply@unswap.app>',
-        to,
-        subject,
-        text: body,
-        html: html || `<p>${body.replace(/\n/g, '<br>')}</p>`,
-    });
-    return { messageId: info.messageId };
+    
+    // Use the verified domain from the environment, defaulting to app.unswap.net
+    const fromAddress = process.env.EMAIL_FROM || 'Unswap <noreply@app.unswap.net>';
+
+    try {
+        const { data, error } = await resend.emails.send({
+            from: fromAddress,
+            to: typeof to === 'string' ? [to] : to,
+            subject,
+            text: body,
+            html: html || `<p>${body.replace(/\n/g, '<br>')}</p>`,
+        });
+
+        if (error) {
+            console.error('[Email] Resend API Error:', error);
+            throw new Error(error.message);
+        }
+
+        return { messageId: data.id };
+    } catch (err) {
+        console.error('[Email] Failed to send via Resend:', err);
+        throw err;
+    }
 }
 
 // ─── POST /api/email/send ─────────────────────────────────────────────────────
