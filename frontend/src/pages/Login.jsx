@@ -86,7 +86,7 @@ export default function Login() {
     const { checkAppState } = useAuth();
     const returnUrl = searchParams.get('from') || '/Dashboard';
 
-    const [tab, setTab] = useState('login');
+    const [tab, setTab] = useState(searchParams.get('tab') || 'login');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 

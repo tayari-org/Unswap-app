@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import logo from '@/assets/logo.png';
 import {
   Home, Search, List, LayoutDashboard, Settings, MessageSquare, Shield,
-  Menu, X, User, LogIn, LogOut, Coins, ChevronDown, Bell
+  Menu, X, User, LogIn, LogOut, Coins, ChevronDown, Bell, ArrowLeftRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -63,7 +63,7 @@ export default function Layout({ children, currentPageName }) {
   ).length;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] font-sans">
+    <div className="min-h-screen bg-[#F8FAFC] font-display">
       {/* Navigation */}
       <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled || !isHomePage
         ? 'bg-white/80 backdrop-blur-xl border-b border-slate-100 shadow-sm'
@@ -87,31 +87,32 @@ export default function Layout({ children, currentPageName }) {
                 <Link
                   key={item.path}
                   to={createPageUrl(item.path)}
-                  className={`px-4 py-1.5 rounded-lg text-[11px] font-semibold uppercase tracking-[0.15em] transition-all duration-300 ${currentPageName === item.path
+                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-sm border-b-2 text-[13px] tracking-wide transition-all duration-300 ${currentPageName === item.path
                     ? scrolled || !isHomePage
-                      ? 'text-unswap-blue-deep bg-blue-50'
-                      : 'text-white bg-white/10'
+                      ? 'border-unswap-blue-deep text-unswap-blue-deep font-semibold'
+                      : 'border-white text-white font-semibold'
                     : scrolled || !isHomePage
-                      ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
-                      : 'text-white/60 hover:text-white hover:bg-white/5'
+                      ? 'border-transparent text-slate-500 font-medium hover:text-slate-900 hover:border-slate-300'
+                      : 'border-transparent text-white/60 font-medium hover:text-white hover:border-white/30'
                     }`}
                 >
+                  <item.icon className="w-4 h-4 flex-shrink-0" />
                   {item.name}
                 </Link>
               ))}
               {user && (
                 <Link
                   to={createPageUrl('Dashboard')}
-                  className={`px-4 py-1.5 rounded-lg text-[11px] font-semibold uppercase tracking-[0.15em] flex items-center gap-2 transition-all duration-300 ${currentPageName === 'Dashboard'
+                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-sm border-b-2 text-[13px] tracking-wide transition-all duration-300 ${currentPageName === 'Dashboard'
                     ? scrolled || !isHomePage
-                      ? 'text-unswap-blue-deep bg-blue-50'
-                      : 'text-white bg-white/10'
+                      ? 'border-unswap-blue-deep text-unswap-blue-deep font-semibold'
+                      : 'border-white text-white font-semibold'
                     : scrolled || !isHomePage
-                      ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
-                      : 'text-white/60 hover:text-white hover:bg-white/5'
+                      ? 'border-transparent text-slate-500 font-medium hover:text-slate-900 hover:border-slate-300'
+                      : 'border-transparent text-white/60 font-medium hover:text-white hover:border-white/30'
                     }`}
                 >
-                  <LayoutDashboard className="w-3.5 h-3.5" />
+                  <LayoutDashboard className="w-4 h-4 flex-shrink-0" />
                   Dashboard
                 </Link>
               )}
@@ -119,28 +120,30 @@ export default function Layout({ children, currentPageName }) {
                 <>
                   <Link
                     to={createPageUrl('MyListings')}
-                    className={`px-4 py-1.5 rounded-lg text-[11px] font-semibold uppercase tracking-[0.15em] transition-all duration-300 ${currentPageName === 'MyListings'
+                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-sm border-b-2 text-[13px] tracking-wide transition-all duration-300 ${currentPageName === 'MyListings'
                       ? scrolled || !isHomePage
-                        ? 'text-unswap-blue-deep bg-blue-50'
-                        : 'text-white bg-white/10'
+                        ? 'border-unswap-blue-deep text-unswap-blue-deep font-semibold'
+                        : 'border-white text-white font-semibold'
                       : scrolled || !isHomePage
-                        ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
-                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                        ? 'border-transparent text-slate-500 font-medium hover:text-slate-900 hover:border-slate-300'
+                        : 'border-transparent text-white/60 font-medium hover:text-white hover:border-white/30'
                       }`}
                   >
+                    <List className="w-4 h-4 flex-shrink-0" />
                     My Listings
                   </Link>
                   <Link
                     to={createPageUrl('MySwaps')}
-                    className={`px-4 py-1.5 rounded-lg text-[11px] font-semibold uppercase tracking-[0.15em] transition-all duration-300 ${currentPageName === 'MySwaps'
+                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-sm border-b-2 text-[13px] tracking-wide transition-all duration-300 ${currentPageName === 'MySwaps'
                       ? scrolled || !isHomePage
-                        ? 'text-unswap-blue-deep bg-blue-50'
-                        : 'text-white bg-white/10'
+                        ? 'border-unswap-blue-deep text-unswap-blue-deep font-semibold'
+                        : 'border-white text-white font-semibold'
                       : scrolled || !isHomePage
-                        ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
-                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                        ? 'border-transparent text-slate-500 font-medium hover:text-slate-900 hover:border-slate-300'
+                        : 'border-transparent text-white/60 font-medium hover:text-white hover:border-white/30'
                       }`}
                   >
+                    <ArrowLeftRight className="w-4 h-4 flex-shrink-0" />
                     My Swaps
                   </Link>
                 </>
@@ -248,20 +251,21 @@ export default function Layout({ children, currentPageName }) {
                   </DropdownMenu>
                 </>
               ) : (
-                <div className="hidden md:flex items-center gap-4">
+                <div className="hidden md:flex items-center gap-3">
                   <Button
                     variant="ghost"
                     onClick={() => api.auth.redirectToLogin()}
-                    className={`rounded-lg font-semibold text-[11px] uppercase tracking-[0.15em] transition-colors ${scrolled || !isHomePage ? 'text-slate-600 hover:text-slate-900' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+                    className={`rounded-sm font-medium text-[13px] tracking-wide transition-colors ${scrolled || !isHomePage ? 'text-slate-600 hover:text-slate-900' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
                   >
+                    <LogIn className="w-4 h-4 mr-1.5" />
                     Log In
                   </Button>
-                  <Button
-                    onClick={() => api.auth.redirectToLogin()}
-                    className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-6 h-10 text-[11px] font-semibold uppercase tracking-[0.15em] shadow-lg shadow-blue-600/20 transition-all"
+                  <Link
+                    to="/login?tab=register"
+                    className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-5 h-9 text-[13px] font-medium tracking-wide shadow-lg shadow-blue-600/20 transition-all"
                   >
                     Sign Up
-                  </Button>
+                  </Link>
                 </div>
               )}
 
@@ -288,32 +292,32 @@ export default function Layout({ children, currentPageName }) {
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
               className="lg:hidden bg-white/95 backdrop-blur-xl border-t border-slate-100 shadow-2xl overflow-hidden"
             >
-              <nav className="p-6 space-y-2">
+              <nav className="p-4 space-y-1">
                 {navItems.map((item) => (
                   <Link
                     key={item.path}
                     to={createPageUrl(item.path)}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center gap-4 px-5 py-4 transition-all duration-300 ${currentPageName === item.path
-                      ? 'bg-slate-50 border-l-4 border-unswap-blue-deep text-unswap-blue-deep'
-                      : 'text-slate-500 hover:bg-slate-50'
+                    className={`flex items-center gap-3 px-4 py-3 rounded-sm border-l-[3px] transition-all duration-300 ${currentPageName === item.path
+                      ? 'border-unswap-blue-deep bg-blue-50/60 text-unswap-blue-deep'
+                      : 'border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                   >
-                    <item.icon className="w-4 h-4 capitalize" />
-                    <span className="text-[11px] font-bold uppercase tracking-widest">{item.name}</span>
+                    <item.icon className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-[13px] font-medium tracking-wide">{item.name}</span>
                   </Link>
                 ))}
                 {user && (
                   <Link
                     to={createPageUrl('Dashboard')}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center gap-4 px-5 py-4 transition-all duration-300 ${currentPageName === 'Dashboard'
-                      ? 'bg-slate-50 border-l-4 border-unswap-blue-deep text-unswap-blue-deep'
-                      : 'text-slate-500 hover:bg-slate-50'
+                    className={`flex items-center gap-3 px-4 py-3 rounded-sm border-l-[3px] transition-all duration-300 ${currentPageName === 'Dashboard'
+                      ? 'border-unswap-blue-deep bg-blue-50/60 text-unswap-blue-deep'
+                      : 'border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                   >
-                    <LayoutDashboard className="w-4 h-4" />
-                    <span className="text-[11px] font-bold uppercase tracking-widest">Dashboard</span>
+                    <LayoutDashboard className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-[13px] font-medium tracking-wide">Dashboard</span>
                   </Link>
                 )}
                 {user && (
@@ -321,24 +325,24 @@ export default function Layout({ children, currentPageName }) {
                     <Link
                       to={createPageUrl('MyListings')}
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-4 px-5 py-4 transition-all duration-300 ${currentPageName === 'MyListings'
-                        ? 'bg-slate-50 border-l-4 border-unswap-blue-deep text-unswap-blue-deep'
-                        : 'text-slate-500 hover:bg-slate-50'
+                      className={`flex items-center gap-3 px-4 py-3 rounded-sm border-l-[3px] transition-all duration-300 ${currentPageName === 'MyListings'
+                        ? 'border-unswap-blue-deep bg-blue-50/60 text-unswap-blue-deep'
+                        : 'border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                         }`}
                     >
-                      <List className="w-4 h-4" />
-                      <span className="text-[11px] font-bold uppercase tracking-widest">My Listings</span>
+                      <List className="w-4 h-4 flex-shrink-0" />
+                      <span className="text-[13px] font-medium tracking-wide">My Listings</span>
                     </Link>
                     <Link
                       to={createPageUrl('MySwaps')}
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-4 px-5 py-4 transition-all duration-300 ${currentPageName === 'MySwaps'
-                        ? 'bg-slate-50 border-l-4 border-unswap-blue-deep text-unswap-blue-deep'
-                        : 'text-slate-500 hover:bg-slate-50'
+                      className={`flex items-center gap-3 px-4 py-3 rounded-sm border-l-[3px] transition-all duration-300 ${currentPageName === 'MySwaps'
+                        ? 'border-unswap-blue-deep bg-blue-50/60 text-unswap-blue-deep'
+                        : 'border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                         }`}
                     >
-                      <MessageSquare className="w-4 h-4" />
-                      <span className="text-[11px] font-bold uppercase tracking-widest">My Swaps</span>
+                      <ArrowLeftRight className="w-4 h-4 flex-shrink-0" />
+                      <span className="text-[13px] font-medium tracking-wide">My Swaps</span>
                     </Link>
                   </>
                 )}
@@ -361,20 +365,18 @@ export default function Layout({ children, currentPageName }) {
                         setMobileMenuOpen(false);
                         api.auth.redirectToLogin();
                       }}
-                      className="justify-start h-14 rounded-none font-bold text-[10px] uppercase tracking-widest text-slate-600 hover:bg-slate-50"
+                      className="justify-start h-12 rounded-lg font-medium text-[13px] tracking-wide text-slate-600 hover:bg-slate-50"
                     >
                       <LogIn className="w-4 h-4 mr-3 text-slate-400" />
                       Log In
                     </Button>
-                    <Button
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        api.auth.redirectToLogin();
-                      }}
-                      className="w-full bg-unswap-blue-deep hover:bg-slate-900 text-white h-14 rounded-none text-xs font-bold uppercase tracking-[0.3em] shadow-xl"
+                    <Link
+                      to="/login?tab=register"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center justify-center w-full bg-unswap-blue-deep hover:bg-slate-900 text-white h-12 rounded-lg text-[13px] font-medium tracking-wide shadow-xl"
                     >
                       Sign Up
-                    </Button>
+                    </Link>
                   </div>
                 )}
               </nav>
@@ -388,60 +390,68 @@ export default function Layout({ children, currentPageName }) {
         {children}
       </main>
 
-      {/* Footer - Institutional Legacy Styling */}
+      {/* Footer */}
       {
         !['Home', 'Messages', 'Dashboard', 'AdminDashboard', 'MyListings', 'MySwaps', 'Settings', 'HostProfile', 'GuestDashboard'].includes(currentPageName) && (
-          <footer className="bg-slate-900 text-white py-20 px-6 border-t border-white/5">
+          <footer className="bg-[#05080f] border-t border-white/5 pt-24 pb-12 px-6">
             <div className="max-w-7xl mx-auto">
-              <div className="grid md:grid-cols-4 gap-16">
-                <div className="space-y-6">
-                  <div className="flex items-center gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 mb-16">
+                <div className="col-span-2">
+                  <div className="flex items-center gap-3 mb-6">
                     <img
                       src={logo}
-                      alt="UNswap"
-                      className="w-10 h-10 object-contain opacity-80"
+                      alt="UNswap Logo"
+                      className="w-10 h-10 grayscale brightness-200"
                     />
-                    <span className="text-xl font-bold uppercase tracking-widest text-white">UNSWAP</span>
+                    <span className="text-xl font-bold tracking-tighter text-white uppercase">UNSWAP</span>
                   </div>
-                  <p className="text-slate-400 text-[10px] uppercase font-bold tracking-[0.15em] leading-loose">
-                    A secure home exchange network for international civil servants.
+                  <p className="text-slate-500 text-sm leading-relaxed max-w-sm font-light">
+                    The exclusive mobility protocol for the international civil service.
+                    Securing home exchanges across 193 member states.
                   </p>
                 </div>
 
                 <div>
-                  <h4 className="text-[10px] font-bold uppercase tracking-[0.3em] text-unswap-blue-deep mb-8">Platform</h4>
-                  <div className="space-y-4 text-[10px] font-medium uppercase tracking-widest text-slate-400">
-                    <Link to={createPageUrl('FindProperties')} className="block hover:text-white transition-colors">Find Properties</Link>
+                  <h4 className="text-[10px] tracking-[0.3em] uppercase text-blue-500 font-bold mb-6">Platform</h4>
+                  <ul className="space-y-4 text-sm font-light text-slate-400">
+                    <li><Link to={createPageUrl('FindProperties')} className="hover:text-white transition-colors">Asset Discovery</Link></li>
                     {showVerifiedUI && (
                       <>
-                        <Link to={createPageUrl('MyListings')} className="block hover:text-white transition-colors">List Your Property</Link>
-                        <Link to={createPageUrl('Dashboard')} className="block hover:text-white transition-colors">Dashboard</Link>
+                        <li><Link to={createPageUrl('MyListings')} className="hover:text-white transition-colors">List Residence</Link></li>
+                        <li><Link to={createPageUrl('Dashboard')} className="hover:text-white transition-colors">Mission Control</Link></li>
                       </>
                     )}
-                  </div>
+                  </ul>
                 </div>
 
                 <div>
-                  <h4 className="text-[10px] font-bold uppercase tracking-[0.3em] text-unswap-blue-deep mb-8">Support</h4>
-                  <div className="space-y-4 text-[10px] font-medium uppercase tracking-widest text-slate-400">
-                    <a href="#" className="block hover:text-white transition-colors">Help Center</a>
-                    <a href="#" className="block hover:text-white transition-colors">Trust & Safety</a>
-                    <a href="#" className="block hover:text-white transition-colors">Contact Us</a>
-                  </div>
+                  <h4 className="text-[10px] tracking-[0.3em] uppercase text-blue-500 font-bold mb-6">Governance</h4>
+                  <ul className="space-y-4 text-sm font-light text-slate-400">
+                    <li><a href="#" className="hover:text-white transition-colors">Security Protocol</a></li>
+                    <li><a href="#" className="hover:text-white transition-colors">Arbitration</a></li>
+                    <li><a href="#" className="hover:text-white transition-colors">Insurance Policy</a></li>
+                  </ul>
                 </div>
 
                 <div>
-                  <h4 className="text-[10px] font-bold uppercase tracking-[0.3em] text-unswap-blue-deep mb-8">Legal</h4>
-                  <div className="space-y-4 text-[10px] font-medium uppercase tracking-widest text-slate-400">
-                    <a href="#" className="block hover:text-white transition-colors">Terms of Service</a>
-                    <a href="#" className="block hover:text-white transition-colors">Privacy Policy</a>
-                    <a href="#" className="block hover:text-white transition-colors">Insurance Info</a>
-                  </div>
+                  <h4 className="text-[10px] tracking-[0.3em] uppercase text-blue-500 font-bold mb-6">Agency</h4>
+                  <ul className="space-y-4 text-sm font-light text-slate-400">
+                    <li><a href="#" className="hover:text-white transition-colors">Staff Innovation</a></li>
+                    <li><a href="#" className="hover:text-white transition-colors">Directory</a></li>
+                    <li><a href="#" className="hover:text-white transition-colors">Press Office</a></li>
+                  </ul>
                 </div>
               </div>
 
-              <div className="border-t border-white/5 mt-20 pt-8 text-center text-[9px] font-bold uppercase tracking-[0.4em] text-slate-500">
-                © {new Date().getFullYear()} UNswap. All rights reserved. Built by staff, for staff.
+              <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-white/5 gap-4">
+                <div className="text-[10px] tracking-widest text-slate-600 uppercase font-mono">
+                  © {new Date().getFullYear()} UNswap Protocol // Inviolability Ensured
+                </div>
+                <div className="flex gap-8 text-[10px] tracking-widest text-slate-600 uppercase font-mono">
+                  <a href="#" className="hover:text-blue-500 transition-colors">Privacy</a>
+                  <a href="#" className="hover:text-blue-500 transition-colors">Terms</a>
+                  <a href="#" className="hover:text-blue-500 transition-colors">Nodes</a>
+                </div>
               </div>
             </div>
           </footer>

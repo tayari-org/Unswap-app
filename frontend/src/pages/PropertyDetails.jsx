@@ -421,6 +421,15 @@ export default function PropertyDetails() {
                       <p className="font-semibold text-slate-900">{hostAvgRating}</p>
                     </div>
                   </div>
+                  <div className="mt-4 pt-4 border-t border-slate-200">
+                    <Link
+                      to={createPageUrl('GuestProfile') + `?email=${property.owner_email}`}
+                      className="inline-flex items-center gap-2 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] border border-unswap-border bg-white text-slate-700 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all duration-300"
+                    >
+                      <User className="w-3.5 h-3.5" />
+                      View Host Profile
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
