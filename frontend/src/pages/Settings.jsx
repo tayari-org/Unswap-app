@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  User, Shield, Bell, Users, Camera, LogOut,
+  User, Shield, Bell, Users, Camera, LogOut, Sparkles,
   Check, AlertCircle, Loader2, ChevronRight, Mail, Globe, Briefcase
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 import EmailOtpVerification from '../components/verification/EmailOtpVerification';
 import DocumentUploadVerification from '../components/verification/DocumentUploadVerification';
 import NotificationPreferences from '../components/notifications/NotificationPreferences';
+import GuestPointsTab from '../components/settings/GuestPointsTab';
 
 const ORGANIZATIONS = [
   'United Nations Secretariat', 'UNDP', 'UNICEF', 'WHO', 'WFP', 'UNHCR',
@@ -111,6 +112,15 @@ export default function Settings() {
     }
   }, [user]);
 
+  // Detect successful Stripe redirect and refresh user data
+  useEffect(() => {
+    const isSuccess = searchParams.get('success') === 'true';
+    if (isSuccess) {
+      queryClient.invalidateQueries({ queryKey: ['current-user'] });
+      setActiveTab('guest-points');
+    }
+  }, []);
+
   const handleProfileChange = (field, value) => {
     setProfileData(prev => ({ ...prev, [field]: value }));
   };
@@ -143,6 +153,7 @@ export default function Settings() {
     { id: 'profile', label: 'Public Profile', icon: User, desc: 'Personal info & bio' },
     { id: 'verification', label: 'Verification', icon: Shield, desc: 'Identity & documents' },
     { id: 'notifications', label: 'Notifications', icon: Bell, desc: 'Alerts & emails' },
+    { id: 'guest-points', label: 'Guest Points', icon: Sparkles, desc: 'Balance & purchases' },
     { id: 'security', label: 'Account Security', icon: Shield, desc: 'Password & Privacy' },
   ];
 
@@ -379,6 +390,11 @@ export default function Settings() {
             {/* NOTIFICATIONS TAB */}
             <TabsContent value="notifications" className="m-0">
               <NotificationPreferences user={user} />
+            </TabsContent>
+
+            {/* GUEST POINTS TAB */}
+            <TabsContent value="guest-points" className="m-0 focus-visible:outline-none">
+              <GuestPointsTab user={user} />
             </TabsContent>
 
             {/* SECURITY TAB */}

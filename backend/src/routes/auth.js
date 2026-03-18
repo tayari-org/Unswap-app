@@ -52,58 +52,136 @@ function sanitizeUser(user) {
     return obj;
 }
 
-// ─── POST /api/auth/register ──────────────────────────────────────────────────
-router.post('/register', async (req, res) => {
+// ─── OTP store for pending registrations (10-min TTL) ───────────────────────
+// Keyed by lowercased email; stores { email, password, full_name, institution, referred_by, otp, expiresAt }
+const pendingRegistrations = new Map();
+setInterval(() => {
+    const now = Date.now();
+    for (const [key, val] of pendingRegistrations) {
+        if (val.expiresAt < now) pendingRegistrations.delete(key);
+    }
+}, 60 * 1000);
+
+function generateOtp() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// ─── POST /api/auth/register/initiate ────────────────────────────────────────
+// Validates data, sends OTP to email, stores pending registration
+router.post('/register/initiate', async (req, res) => {
     try {
         const { email, password, full_name, institution, referred_by } = req.body;
 
         if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
         if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
 
-        const existing = await prisma.user.findUnique({
-            where: { email: email.toLowerCase() }
-        });
+        const normalizedEmail = email.toLowerCase();
+
+        const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
         if (existing) return res.status(409).json({ error: 'An account with this email already exists' });
 
-        const password_hash = await bcrypt.hash(password, 12);
+        const otp = generateOtp();
+        pendingRegistrations.set(normalizedEmail, {
+            email: normalizedEmail,
+            password,
+            full_name: full_name || null,
+            institution: institution || null,
+            referred_by: referred_by || null,
+            otp,
+            expiresAt: Date.now() + 10 * 60 * 1000,
+        });
+
+        const { sendEmail } = require('./email');
+        await sendEmail({
+            to: normalizedEmail,
+            subject: 'UNswap — Your verification code',
+            body: `Your UNswap verification code is: ${otp}. It expires in 10 minutes.`,
+            html: `
+                <div style="font-family: sans-serif; padding: 32px; max-width: 480px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px;">
+                    <div style="margin-bottom: 24px;">
+                        <div style="width: 40px; height: 4px; background: #1e293b; margin-bottom: 16px;"></div>
+                        <h2 style="color: #1e293b; font-weight: 300; font-size: 24px; margin: 0;">Verify your email</h2>
+                    </div>
+                    <p style="color: #64748b; font-size: 14px; line-height: 1.6;">Enter the code below to complete your UNswap registration. It expires in <strong>10 minutes</strong>.</p>
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 24px; text-align: center; margin: 24px 0;">
+                        <span style="font-family: monospace; font-size: 36px; font-weight: 700; letter-spacing: 12px; color: #1e293b;">${otp}</span>
+                    </div>
+                    <p style="color: #94a3b8; font-size: 12px;">If you didn't request this, you can safely ignore this email.</p>
+                </div>
+            `
+        });
+
+        console.log(`[Auth] OTP sent to ${normalizedEmail}`);
+        res.status(200).json({ success: true, message: 'Verification code sent to your email.' });
+    } catch (err) {
+        console.error('Register initiate error:', err);
+        res.status(500).json({ error: 'Failed to send verification code' });
+    }
+});
+
+// ─── POST /api/auth/register/verify ──────────────────────────────────────────
+// Verifies OTP, creates the user account, returns JWT token
+router.post('/register/verify', async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        if (!email || !otp) return res.status(400).json({ error: 'Email and verification code are required' });
+
+        const normalizedEmail = email.toLowerCase();
+        const pending = pendingRegistrations.get(normalizedEmail);
+
+        if (!pending) return res.status(400).json({ error: 'No pending registration found. Please start over.' });
+        if (Date.now() > pending.expiresAt) {
+            pendingRegistrations.delete(normalizedEmail);
+            return res.status(400).json({ error: 'Verification code has expired. Please register again.' });
+        }
+        if (pending.otp !== otp.trim()) {
+            return res.status(400).json({ error: 'Incorrect verification code. Please try again.' });
+        }
+
+        // OTP valid — create the account
+        pendingRegistrations.delete(normalizedEmail);
+
+        const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+        if (existing) return res.status(409).json({ error: 'An account with this email already exists' });
+
+        const password_hash = await bcrypt.hash(pending.password, 12);
         const referral_code = generateReferralCode();
-        const institutional_email_verified = isInstitutionalEmail(email);
+        const institutional_email_verified = isInstitutionalEmail(normalizedEmail);
 
         const user = await prisma.user.create({
             data: {
-                email: email.toLowerCase(),
+                email: normalizedEmail,
                 password_hash,
-                full_name: full_name || null,
-                institution: institution || null,
+                full_name: pending.full_name,
+                institution: pending.institution,
                 referral_code,
-                referred_by: referred_by || null,
+                referred_by: pending.referred_by,
                 institutional_email_verified,
                 guest_points: 500,
-                ...(email.toLowerCase() === 'webdev@jacquelinetsuma.com' ? { role: 'admin' } : {})
+                ...(normalizedEmail === 'webdev@jacquelinetsuma.com' ? { role: 'admin' } : {})
             },
         });
 
-        if (referred_by) {
-            const referrer = await prisma.user.findUnique({
-                where: { referral_code: referred_by }
-            });
+        if (pending.referred_by) {
+            const referrer = await prisma.user.findUnique({ where: { referral_code: pending.referred_by } });
             if (referrer) {
                 await prisma.referral.create({
                     data: {
                         referrer_email: referrer.email,
                         referred_email: user.email,
-                        referred_name: full_name || null,
+                        referred_name: pending.full_name || null,
                         referred_user_status: 'registered',
                     },
                 });
             }
         }
 
+        console.log(`[Auth] Account created via email OTP: ${normalizedEmail}`);
         const token = signToken(user.id);
         res.status(201).json({ token, user: sanitizeUser(user) });
     } catch (err) {
-        console.error('Register error:', err);
-        res.status(500).json({ error: 'Registration failed' });
+        console.error('Register verify error:', err);
+        res.status(500).json({ error: 'Account creation failed' });
     }
 });
 

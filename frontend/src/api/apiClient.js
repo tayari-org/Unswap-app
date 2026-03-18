@@ -122,6 +122,16 @@ const auth = {
         return data.user;
     },
 
+    async registerInitiate(userData) {
+        return post('/api/auth/register/initiate', userData);
+    },
+
+    async registerVerify({ email, otp }) {
+        const data = await post('/api/auth/register/verify', { email, otp });
+        setToken(data.token);
+        return data.user;
+    },
+
     async updateMe(updates) {
         return patch('/api/auth/me', updates);
     },

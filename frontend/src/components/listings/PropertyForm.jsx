@@ -61,7 +61,6 @@ export default function PropertyForm({ property, onSubmit, onCancel }) {
     available_to: property?.available_to || '',
     swap_preference: property?.swap_preference || 'both',
     swap_types_accepted: property?.swap_types_accepted || [],
-    nightly_points: property?.nightly_points || 200,
     status: property?.status || 'draft',
     host_phone: property?.host_phone || '',
     handoff_method: property?.handoff_method || 'in_person',

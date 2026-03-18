@@ -108,7 +108,7 @@ export default function FeaturedProperties({ properties = [] }) {
                   {property.is_verified && (
                     <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-indigo-600 text-white px-2.5 py-1 rounded-lg shadow-lg">
                       <ShieldCheck className="w-3 h-3" />
-                      <span className="text-[9px] font-bold uppercase tracking-wider">Vault Verified</span>
+                      <span className="text-[9px] font-bold uppercase tracking-wider">Verified</span>
                     </div>
                   )}
 

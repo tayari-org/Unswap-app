@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Shield, Globe, ArrowRight, Loader2, Linkedin } from 'lucide-react';
+import { Shield, Globe, ArrowRight, Loader2, Linkedin, Mail, RotateCcw, ChevronLeft } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 
 // ── LinkedIn icon (lucide doesn’t have X/Twitter, so we use inline SVG)
@@ -100,6 +100,11 @@ export default function Login() {
     const [regName, setRegName] = useState('');
     const [regInstitution, setRegInstitution] = useState('');
 
+    // OTP verification state
+    const [regStep, setRegStep] = useState('form'); // 'form' | 'verify'
+    const [regOtp, setRegOtp] = useState('');
+    const otpInputRef = useRef(null);
+
     // Forgot password state
     const [forgotStep, setForgotStep] = useState('email');
     const [resetEmail, setResetEmail] = useState('');
@@ -139,17 +144,54 @@ export default function Login() {
         }
         setLoading(true);
         try {
-            await api.auth.register({
+            await api.auth.registerInitiate({
                 email: regEmail,
                 password: regPassword,
                 full_name: regName,
                 institution: regInstitution || undefined,
                 referred_by: refCode || undefined,
             });
-            await checkAppState(); // sync AuthContext before routing
-            navigate(returnUrl);
+            setRegStep('verify');
+            setRegOtp('');
+            setTimeout(() => otpInputRef.current?.focus(), 100);
         } catch (err) {
             setError(err.message || 'Registration failed.');
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    async function handleVerifyOtp(e) {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+        try {
+            await api.auth.registerVerify({ email: regEmail, otp: regOtp });
+            await checkAppState();
+            navigate(returnUrl);
+        } catch (err) {
+            setError(err.message || 'Verification failed.');
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    async function handleResendOtp() {
+        setError('');
+        setLoading(true);
+        try {
+            await api.auth.registerInitiate({
+                email: regEmail,
+                password: regPassword,
+                full_name: regName,
+                institution: regInstitution || undefined,
+                referred_by: refCode || undefined,
+            });
+            setRegOtp('');
+            setMessage('A new code has been sent to your email.');
+            setTimeout(() => { setMessage(''); otpInputRef.current?.focus(); }, 3000);
+        } catch (err) {
+            setError(err.message || 'Failed to resend code.');
         } finally {
             setLoading(false);
         }
@@ -308,75 +350,146 @@ export default function Login() {
 
                             {/* ── Register ── */}
                             <TabsContent value="register" className="space-y-6 focus-visible:outline-none">
-                                <SocialButtons disabled={loading} onGoogle={handleGoogleLogin} onLinkedIn={handleLinkedInLogin} onX={handleXLogin} />
-                                <OrDivider />
+                                {regStep === 'form' ? (
+                                    <>
+                                        <SocialButtons disabled={loading} onGoogle={handleGoogleLogin} onLinkedIn={handleLinkedInLogin} onX={handleXLogin} />
+                                        <OrDivider />
 
-                                <form onSubmit={handleRegister} className="space-y-4">
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 ml-1">Full Name</Label>
-                                        <Input
-                                            placeholder="John Doe"
-                                            value={regName}
-                                            onChange={e => setRegName(e.target.value)}
-                                            className="bg-slate-50/30 border-slate-200 text-slate-900 placeholder:text-slate-200 h-12 rounded-none focus-visible:ring-unswap-blue-deep font-light"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 ml-1">Email</Label>
-                                        <Input
-                                            type="email"
-                                            placeholder="name@un.org"
-                                            value={regEmail}
-                                            onChange={e => setRegEmail(e.target.value)}
-                                            required
-                                            className="bg-slate-50/30 border-slate-200 text-slate-900 placeholder:text-slate-200 h-12 rounded-none focus-visible:ring-unswap-blue-deep font-mono text-xs"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 ml-1">Institution</Label>
-                                        <Input
-                                            placeholder="Institution (UN, IMF, etc.)"
-                                            value={regInstitution}
-                                            onChange={e => setRegInstitution(e.target.value)}
-                                            className="bg-slate-50/30 border-slate-200 text-slate-900 placeholder:text-slate-200 h-12 rounded-none focus-visible:ring-unswap-blue-deep"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 ml-1">Password</Label>
-                                        <Input
-                                            type="password"
-                                            placeholder="••••••••"
-                                            value={regPassword}
-                                            onChange={e => setRegPassword(e.target.value)}
-                                            required
-                                            className="bg-slate-50/30 border-slate-200 text-slate-900 placeholder:text-slate-200 h-12 rounded-none focus-visible:ring-unswap-blue-deep font-mono text-xs"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 ml-1">Referral Code <span className="text-slate-300 font-normal italic lowercase">(optional)</span></Label>
-                                        <Input
-                                            placeholder="UNSWAP-XXXXXX"
-                                            value={refCode}
-                                            onChange={e => setRefCode(e.target.value)}
-                                            className={`bg-slate-50/30 border-slate-200 text-slate-900 placeholder:text-slate-200 h-12 rounded-none focus-visible:ring-unswap-blue-deep font-mono text-[10px] uppercase tracking-wider ${refCode && searchParams.get('ref') ? 'opacity-40 grayscale pointer-events-none' : ''}`}
-                                        />
-                                    </div>
+                                        <form onSubmit={handleRegister} className="space-y-4">
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 ml-1">Full Name</Label>
+                                                <Input
+                                                    placeholder="John Doe"
+                                                    value={regName}
+                                                    onChange={e => setRegName(e.target.value)}
+                                                    className="bg-slate-50/30 border-slate-200 text-slate-900 placeholder:text-slate-200 h-12 rounded-none focus-visible:ring-unswap-blue-deep font-light"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 ml-1">Email</Label>
+                                                <Input
+                                                    type="email"
+                                                    placeholder="name@un.org"
+                                                    value={regEmail}
+                                                    onChange={e => setRegEmail(e.target.value)}
+                                                    required
+                                                    className="bg-slate-50/30 border-slate-200 text-slate-900 placeholder:text-slate-200 h-12 rounded-none focus-visible:ring-unswap-blue-deep font-mono text-xs"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 ml-1">Institution</Label>
+                                                <Input
+                                                    placeholder="Institution (UN, IMF, etc.)"
+                                                    value={regInstitution}
+                                                    onChange={e => setRegInstitution(e.target.value)}
+                                                    className="bg-slate-50/30 border-slate-200 text-slate-900 placeholder:text-slate-200 h-12 rounded-none focus-visible:ring-unswap-blue-deep"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 ml-1">Password</Label>
+                                                <Input
+                                                    type="password"
+                                                    placeholder="••••••••"
+                                                    value={regPassword}
+                                                    onChange={e => setRegPassword(e.target.value)}
+                                                    required
+                                                    className="bg-slate-50/30 border-slate-200 text-slate-900 placeholder:text-slate-200 h-12 rounded-none focus-visible:ring-unswap-blue-deep font-mono text-xs"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 ml-1">Referral Code <span className="text-slate-300 font-normal italic lowercase">(optional)</span></Label>
+                                                <Input
+                                                    placeholder="UNSWAP-XXXXXX"
+                                                    value={refCode}
+                                                    onChange={e => setRefCode(e.target.value)}
+                                                    className={`bg-slate-50/30 border-slate-200 text-slate-900 placeholder:text-slate-200 h-12 rounded-none focus-visible:ring-unswap-blue-deep font-mono text-[10px] uppercase tracking-wider ${refCode && searchParams.get('ref') ? 'opacity-40 grayscale pointer-events-none' : ''}`}
+                                                />
+                                            </div>
 
-                                    {error && (
-                                        <Alert variant="destructive" className="bg-rose-50 border-rose-100 text-rose-600 rounded-none animate-in fade-in slide-in-from-top-1">
-                                            <AlertDescription className="text-[10px] font-bold uppercase tracking-widest">{error}</AlertDescription>
-                                        </Alert>
-                                    )}
+                                            {error && (
+                                                <Alert variant="destructive" className="bg-rose-50 border-rose-100 text-rose-600 rounded-none animate-in fade-in slide-in-from-top-1">
+                                                    <AlertDescription className="text-[10px] font-bold uppercase tracking-widest">{error}</AlertDescription>
+                                                </Alert>
+                                            )}
 
-                                    <Button
-                                        type="submit"
-                                        disabled={loading}
-                                        className="w-full bg-unswap-blue-deep hover:bg-slate-900 text-white h-16 rounded-none font-bold text-[10px] uppercase tracking-[0.4em] transition-all shadow-2xl border-none outline-none group mt-6"
-                                    >
-                                        {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Globe className="w-3.5 h-3.5 mr-2 transition-transform group-hover:rotate-180 duration-1000" />}
-                                        {loading ? 'Creating account...' : 'Create Account'}
-                                    </Button>
-                                </form>
+                                            <Button
+                                                type="submit"
+                                                disabled={loading}
+                                                className="w-full bg-unswap-blue-deep hover:bg-slate-900 text-white h-16 rounded-none font-bold text-[10px] uppercase tracking-[0.4em] transition-all shadow-2xl border-none outline-none group mt-6"
+                                            >
+                                                {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Globe className="w-3.5 h-3.5 mr-2 transition-transform group-hover:rotate-180 duration-1000" />}
+                                                {loading ? 'Sending code...' : 'Continue'}
+                                            </Button>
+                                        </form>
+                                    </>
+                                ) : (
+                                    /* ── OTP Verify Step ── */
+                                    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                        <div className="flex justify-center mb-6">
+                                            <div className="w-14 h-14 rounded-none bg-unswap-blue-deep/5 border border-unswap-blue-deep/10 flex items-center justify-center">
+                                                <Mail className="w-6 h-6 text-unswap-blue-deep" />
+                                            </div>
+                                        </div>
+                                        <p className="text-center text-slate-500 text-sm font-light mb-1">We sent a 6-digit code to</p>
+                                        <p className="text-center font-mono text-sm font-bold text-slate-800 mb-8 tracking-wide">{regEmail}</p>
+
+                                        <form onSubmit={handleVerifyOtp} className="space-y-4">
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 ml-1">Verification Code</Label>
+                                                <Input
+                                                    ref={otpInputRef}
+                                                    type="text"
+                                                    inputMode="numeric"
+                                                    pattern="[0-9]*"
+                                                    maxLength={6}
+                                                    placeholder="000000"
+                                                    value={regOtp}
+                                                    onChange={e => setRegOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                                    required
+                                                    className="bg-slate-50/30 border-slate-200 text-slate-900 placeholder:text-slate-200 h-16 rounded-none focus-visible:ring-unswap-blue-deep font-mono text-2xl tracking-[0.5em] text-center"
+                                                />
+                                            </div>
+
+                                            {message && (
+                                                <Alert className="bg-emerald-50 border-emerald-100 text-emerald-700 rounded-none">
+                                                    <AlertDescription className="text-[10px] font-bold uppercase tracking-widest">{message}</AlertDescription>
+                                                </Alert>
+                                            )}
+                                            {error && (
+                                                <Alert variant="destructive" className="bg-rose-50 border-rose-100 text-rose-600 rounded-none">
+                                                    <AlertDescription className="text-[10px] font-bold uppercase tracking-widest">{error}</AlertDescription>
+                                                </Alert>
+                                            )}
+
+                                            <Button
+                                                type="submit"
+                                                disabled={loading || regOtp.length < 6}
+                                                className="w-full bg-unswap-blue-deep hover:bg-slate-900 text-white h-16 rounded-none font-bold text-[10px] uppercase tracking-[0.4em] transition-all shadow-2xl border-none outline-none group mt-2"
+                                            >
+                                                {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Shield className="w-3.5 h-3.5 mr-2" />}
+                                                {loading ? 'Verifying...' : 'Verify & Create Account'}
+                                            </Button>
+                                        </form>
+
+                                        <div className="flex items-center justify-between mt-6">
+                                            <button
+                                                type="button"
+                                                onClick={() => { setRegStep('form'); setError(''); setRegOtp(''); }}
+                                                className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.3em] text-slate-400 hover:text-slate-700 transition-colors"
+                                            >
+                                                <ChevronLeft className="w-3 h-3" /> Back
+                                            </button>
+                                            <button
+                                                type="button"
+                                                disabled={loading}
+                                                onClick={handleResendOtp}
+                                                className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.3em] text-unswap-blue-deep hover:text-slate-900 transition-colors disabled:opacity-40"
+                                            >
+                                                <RotateCcw className="w-3 h-3" /> Resend code
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </TabsContent>
 
                             {/* ── Forgot Password ── */}
