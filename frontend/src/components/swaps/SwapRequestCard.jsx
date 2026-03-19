@@ -22,8 +22,6 @@ const statusStyles = {
   cancelled: 'bg-slate-50 text-slate-600 border-slate-100',
   completed: 'bg-indigo-50 text-indigo-700 border-indigo-100',
   counter_proposed: 'bg-violet-50 text-violet-700 border-violet-100',
-  pending_guest_approval: 'bg-orange-50 text-orange-700 border-orange-100',
-  guest_agreed: 'bg-emerald-100 text-emerald-800 border-emerald-200',
 };
 
 export default function SwapRequestCard({
@@ -76,9 +74,9 @@ export default function SwapRequestCard({
             <div className="mb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="space-y-1">
                 <div className="flex items-center gap-3">
-                  <div className={`w-1.5 h-1.5 rounded-full ${statusStyles[request.status].split(' ')[1].replace('text-', 'bg-')}`} />
-                  <span className={`text-[9px] font-bold uppercase tracking-[0.4em] ${statusStyles[request.status].split(' ')[1]}`}>
-                    {request.status.replace('_', ' ')}
+                  <div className={`w-1.5 h-1.5 rounded-full ${(statusStyles[request.status] || statusStyles.pending).split(' ')[1].replace('text-', 'bg-')}`} />
+                  <span className={`text-[9px] font-bold uppercase tracking-[0.4em] ${(statusStyles[request.status] || statusStyles.pending).split(' ')[1]}`}>
+                    {request.status.replace(/_/g, ' ')}
                   </span>
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900 tracking-tight leading-tight group-hover:text-unswap-blue-deep transition-colors duration-500">
@@ -185,10 +183,6 @@ export default function SwapRequestCard({
             )}
 
             {isIncoming && request.status === 'approved' && (
-              <Button onClick={() => onFinalizeSwap(request)} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-none h-10 text-[9px] font-bold uppercase tracking-[0.2em] shadow-sm mt-1">Finalize Stay</Button>
-            )}
-
-            {!isIncoming && request.status === 'approved' && (
               <Button onClick={() => onFinalizeSwap(request)} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-none h-10 text-[9px] font-bold uppercase tracking-[0.2em] shadow-sm mt-1">Finalize Stay</Button>
             )}
 

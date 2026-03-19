@@ -38,7 +38,7 @@ import CompleteSwapDialog from '../components/swaps/CompleteSwapDialog';
 import VerificationRequiredDialog from '../components/verification/VerificationRequiredDialog';
 import ReviewForm from '../components/reviews/ReviewForm';
 import FinalizeSwapDialog from '../components/swaps/FinalizeSwapDialog';
-import GuestFinalizeApprovalDialog from '../components/swaps/GuestFinalizeApprovalDialog';
+
 
 export default function MySwaps() {
   const queryClient = useQueryClient();
@@ -57,7 +57,6 @@ export default function MySwaps() {
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const [showReviewDialog, setShowReviewDialog] = useState(null);
   const [showFinalizeDialog, setShowFinalizeDialog] = useState(null);
-  const [showGuestApprovalDialog, setShowGuestApprovalDialog] = useState(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(null);
   const [editVideoCall, setEditVideoCall] = useState(null);
   const [deleteVideoCall, setDeleteVideoCall] = useState(null);
@@ -386,7 +385,7 @@ export default function MySwaps() {
                           onApprove={handleApprove} onReject={setSelectedRequest}
                           onCounterPropose={setShowCounterDialog} onScheduleVideo={handleScheduleVideo}
                           onMessage={setShowMessaging} onCompleteSwap={setShowCompleteDialog}
-                          onFinalizeSwap={setShowFinalizeDialog} onGuestApprovalNeeded={setShowGuestApprovalDialog}
+                          onFinalizeSwap={setShowFinalizeDialog}
                           onDelete={handleDelete}
                         />
                       ))
@@ -416,7 +415,7 @@ export default function MySwaps() {
                           onApprove={handleApprove} onReject={setSelectedRequest}
                           onCounterPropose={setShowCounterDialog} onScheduleVideo={handleScheduleVideo}
                           onMessage={setShowMessaging} onCompleteSwap={setShowCompleteDialog}
-                          onFinalizeSwap={setShowFinalizeDialog} onGuestApprovalNeeded={setShowGuestApprovalDialog}
+                          onFinalizeSwap={setShowFinalizeDialog}
                           onDelete={handleDelete}
                         />
                       ))
@@ -433,11 +432,11 @@ export default function MySwaps() {
                   transition={{ duration: 0.4 }}
                   className="space-y-6"
                 >
-                  {swapRequests.filter(r => ['approved', 'video_scheduled', 'pending_guest_approval', 'guest_agreed'].includes(r.status)).length === 0 ? (
+                  {swapRequests.filter(r => ['approved', 'video_scheduled'].includes(r.status)).length === 0 ? (
                     <EmptyState message="No approved swaps" onCreateNew={handleNewSwapRequest} />
                   ) : (
                     swapRequests
-                      .filter(r => ['approved', 'video_scheduled', 'pending_guest_approval', 'guest_agreed'].includes(r.status))
+                      .filter(r => ['approved', 'video_scheduled'].includes(r.status))
                       .map(request => (
                         <SwapRequestCard
                           key={request.id}
@@ -446,7 +445,7 @@ export default function MySwaps() {
                           onApprove={handleApprove} onReject={setSelectedRequest}
                           onCounterPropose={setShowCounterDialog} onScheduleVideo={handleScheduleVideo}
                           onMessage={setShowMessaging} onCompleteSwap={setShowCompleteDialog}
-                          onFinalizeSwap={setShowFinalizeDialog} onGuestApprovalNeeded={setShowGuestApprovalDialog}
+                          onFinalizeSwap={setShowFinalizeDialog}
                           onDelete={handleDelete}
                         />
                       ))
@@ -608,7 +607,6 @@ export default function MySwaps() {
         </DialogContent>
       </Dialog>
       {showFinalizeDialog && <FinalizeSwapDialog open={!!showFinalizeDialog} onOpenChange={() => setShowFinalizeDialog(null)} swapRequest={showFinalizeDialog} user={user} property={properties.find(p => p.id === showFinalizeDialog.property_id)} />}
-      {showGuestApprovalDialog && <GuestFinalizeApprovalDialog open={!!showGuestApprovalDialog} onOpenChange={() => setShowGuestApprovalDialog(null)} swapRequest={showGuestApprovalDialog} user={user} />}
     </div>
   );
 }

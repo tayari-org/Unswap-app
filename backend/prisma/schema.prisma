@@ -138,10 +138,6 @@ model SwapRequest {
   insurance_certificate_url String?
   finalized_at              DateTime?
 
-  // Guest approval fields
-  guest_agreed_to_terms Boolean   @default(false)
-  guest_agreed_at       DateTime?
-
   created_at            DateTime  @default(now())
   updated_at            DateTime  @updatedAt
 }

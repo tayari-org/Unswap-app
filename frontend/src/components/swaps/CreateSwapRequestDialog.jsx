@@ -167,8 +167,6 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
       party_size: guestsCount,
       total_points: swapType === 'guestpoints' ? totalPoints : 0,
       status: 'pending',
-      guest_agreed_to_terms: true,
-      guest_agreed_at: new Date().toISOString()
     };
 
     createSwapMutation.mutate({

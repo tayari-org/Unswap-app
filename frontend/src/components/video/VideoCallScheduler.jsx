@@ -59,17 +59,25 @@ export default function VideoCallScheduler({ swapRequest, user, onScheduled }) {
     const scheduledDateTime = new Date(`${scheduledDate}T${scheduledTime}`);
     const isHost = user?.email === swapRequest.host_email;
 
+    // Fetch the requester's name from the User table so the notification isn't 'undefined'
+    let guestDisplayName = swapRequest.requester_email;
+    try {
+      const requesterUsers = await api.entities.User.filter({ email: swapRequest.requester_email });
+      const requester = requesterUsers?.[0];
+      guestDisplayName = requester?.full_name || requester?.username || swapRequest.requester_email;
+    } catch (_) {}
+
     await createVideoCallMutation.mutateAsync({
       swap_request_id: swapRequest.id,
       host_id: swapRequest.host_id,
       host_email: swapRequest.host_email,
-      host_name: isHost ? user?.full_name : swapRequest.host_email,
+      host_name: isHost ? (user?.full_name || user?.username || user?.email) : swapRequest.host_email,
       guest_id: swapRequest.requester_id,
       guest_email: swapRequest.requester_email,
-      guest_name: swapRequest.requester_name,
+      guest_name: guestDisplayName,
       scheduled_time: scheduledDateTime.toISOString(),
       duration_minutes: 30,
-      room_id: '', // Will be set by backend function
+      room_id: '',
       status: 'scheduled',
     });
   };

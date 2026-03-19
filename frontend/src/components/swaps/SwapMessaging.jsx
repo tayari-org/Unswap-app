@@ -13,8 +13,8 @@ import ImageAttachment from '../messaging/ImageAttachment';
 
 export default function SwapMessaging({ swapRequest, user, onClose }) {
   const queryClient = useQueryClient();
-  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
   const conversationId = `swap_${swapRequest.id}`;
 
   const otherPartyEmail = swapRequest.host_email === user?.email ? swapRequest.requester_email : swapRequest.host_email;
@@ -24,6 +24,46 @@ export default function SwapMessaging({ swapRequest, user, onClose }) {
     queryKey: ['swap-messages', conversationId],
     queryFn: () => api.entities.Message.filter({ conversation_id: conversationId }, 'created_date'),
   });
+
+  // Poll the OTHER party's typing status every 2 seconds
+  const { data: otherTypingStatuses = [] } = useQuery({
+    queryKey: ['typing-status', conversationId, otherPartyEmail],
+    queryFn: () => api.entities.TypingStatus.filter({ conversation_id: conversationId, user_email: otherPartyEmail }),
+    refetchInterval: 2000,
+    enabled: !!otherPartyEmail,
+  });
+  const otherPartyIsTyping = otherTypingStatuses?.[0]?.is_typing === true;
+
+  // Update the current user's own typing status in the backend
+  const updateTypingMutation = useMutation({
+    mutationFn: async (isTyping) => {
+      const existing = await api.entities.TypingStatus.filter({ conversation_id: conversationId, user_email: user?.email });
+      if (existing?.[0]) {
+        return api.entities.TypingStatus.update(existing[0].id, { is_typing: isTyping });
+      } else {
+        return api.entities.TypingStatus.create({ conversation_id: conversationId, user_email: user?.email, is_typing: isTyping });
+      }
+    }
+  });
+
+  const handleTyping = (isTyping) => {
+    updateTypingMutation.mutate(isTyping);
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    if (isTyping) {
+      // Auto-clear after 3s of no new keystrokes
+      typingTimeoutRef.current = setTimeout(() => {
+        updateTypingMutation.mutate(false);
+      }, 3000);
+    }
+  };
+
+  // Clear own typing status when chat closes
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      updateTypingMutation.mutate(false);
+    };
+  }, []);
 
   useEffect(() => {
     if (!conversationId) return;
@@ -74,6 +114,7 @@ export default function SwapMessaging({ swapRequest, user, onClose }) {
   const handleSend = (content, attachments = []) => {
     if (!content.trim() && attachments.length === 0) return;
     sendMessageMutation.mutate({ content, attachments });
+    updateTypingMutation.mutate(false);
   };
 
   return (
@@ -154,9 +195,9 @@ export default function SwapMessaging({ swapRequest, user, onClose }) {
 
       {/* Input */}
       <div className="bg-white border-t border-slate-200 p-4">
-        <MessageInput onSend={handleSend} onTyping={setIsTyping} disabled={sendMessageMutation.isPending} />
-        {isTyping && <div className="mt-2"><TypingIndicator name={otherPartyName} /></div>}
+        <MessageInput onSend={handleSend} onTyping={handleTyping} disabled={sendMessageMutation.isPending} />
+        {otherPartyIsTyping && <div className="mt-2"><TypingIndicator name={otherPartyName} /></div>}
       </div>
-    </div >
+    </div>
   );
 }
