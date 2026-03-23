@@ -11,6 +11,15 @@ import {
 } from '@/components/ui/dropdown-menu';
 import ImageAttachment from './ImageAttachment';
 
+function MessageTick({ isRead }) {
+  if (isRead) {
+    // Double blue tick = read
+    return <CheckCheck className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />;
+  }
+  // Single grey tick = sent (not yet read)
+  return <Check className="w-3.5 h-3.5 text-white/30 flex-shrink-0" />;
+}
+
 export default function MessageGroup({ messages, isMe, user, onReply, onDelete, reactions = [], onReact }) {
   if (messages.length === 0) return null;
 
@@ -72,7 +81,22 @@ export default function MessageGroup({ messages, isMe, user, onReply, onDelete, 
                     )}
                   </div>
                 )}
-                {msg.content && <p className="text-sm font-light leading-relaxed tracking-tight whitespace-pre-wrap break-words">{msg.content}</p>}
+
+                {/* Content + inline timestamp + tick */}
+                <div className="flex items-end gap-2">
+                  {msg.content && (
+                    <p className="text-sm font-light leading-relaxed tracking-tight whitespace-pre-wrap break-words flex-1">
+                      {msg.content}
+                    </p>
+                  )}
+                  {/* Timestamp + tick — always shown inline, bottom-right of bubble */}
+                  <div className={`flex items-center gap-1 flex-shrink-0 ml-auto pl-2 ${isMe ? 'text-white/40' : 'text-slate-300'}`}>
+                    <span className="text-[10px] font-medium leading-none whitespace-nowrap">
+                      {format(new Date(msg.created_date), 'h:mm a')}
+                    </span>
+                    {isMe && <MessageTick isRead={msg.is_read} />}
+                  </div>
+                </div>
               </div>
 
               {/* Reactions - Architectural Pill */}
@@ -157,24 +181,8 @@ export default function MessageGroup({ messages, isMe, user, onReply, onDelete, 
             </div>
           </motion.div>
         ))}
-
-        {/* Timestamp and Status - Minimalist */}
-        <div
-          className={`flex items-center gap-4 text-[9px] font-bold uppercase tracking-[0.4em] mt-3 ${isMe ? 'justify-end text-slate-300' : 'justify-start text-slate-300 font-light'
-            }`}
-        >
-          <span>{format(new Date(messages[messages.length - 1].created_date), 'h:mm a')}</span>
-          {isMe && (
-            <span className="flex items-center">
-              {messages[messages.length - 1].is_read ? (
-                <CheckCheck className="w-3.5 h-3.5 text-unswap-blue-deep/40" />
-              ) : (
-                <Check className="w-3.5 h-3.5 text-slate-200" />
-              )}
-            </span>
-          )}
-        </div>
       </div>
     </div>
   );
 }
+

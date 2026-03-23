@@ -452,15 +452,12 @@ export default function Messages() {
     else if (hasImages && !content.trim()) messageType = 'image';
 
     sendMessageMutation.mutate({
-      sender_id: user?.id,
       sender_email: user?.email,
       sender_name: user?.full_name,
       recipient_email: selectedConversation,
       content: content || '',
-      attachments: attachments,
       is_read: false,
       message_type: messageType,
-      parent_message_id: replyingTo?.id || null,
     });
 
     // Update thread count if replying

@@ -20,10 +20,11 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { toast } from 'sonner';
 
 import VideoCallScheduler from '../components/video/VideoCallScheduler';
@@ -123,7 +124,12 @@ export default function MySwaps() {
     if (existingCall) {
       setActiveVideoCall(existingCall);
     } else {
-      setShowVideoScheduler(request);
+      const isHost = request.host_email === user?.email;
+      if (isHost) {
+        setShowVideoScheduler(request);
+      } else {
+        toast.error("Only the host can schedule video calls. Please wait for them to schedule.");
+      }
     }
   };
 
@@ -514,9 +520,10 @@ export default function MySwaps() {
 
       {/* Video Call Scheduler Dialog - Architectural refinement */}
       <Dialog open={!!showVideoScheduler} onOpenChange={() => setShowVideoScheduler(null)}>
-        <DialogContent className="max-w-2xl rounded-none border-0 shadow-2xl p-0 overflow-hidden">
+        <DialogContent className="max-w-2xl rounded-none border-0 shadow-2xl p-0 overflow-hidden" aria-describedby="dialog-desc-video">
           <div className="p-8 border-b bg-stone-50">
             <DialogTitle className="text-2xl font-extralight tracking-tight text-slate-900">Schedule Video Call</DialogTitle>
+            <p className="sr-only" id="dialog-desc-video">Schedule a video call</p>
             <p className="text-stone-400 text-[10px] font-bold uppercase tracking-widest mt-1">Video Call Verification</p>
           </div>
           <div className="p-8">
@@ -532,12 +539,13 @@ export default function MySwaps() {
 
       {/* Reject Dialog - High Contrast */}
       <Dialog open={!!selectedRequest} onOpenChange={() => setSelectedRequest(null)}>
-        <DialogContent className="rounded-none border-stone-200 shadow-2xl p-0 overflow-hidden">
+        <DialogContent className="rounded-none border-stone-200 shadow-2xl p-0 overflow-hidden" aria-describedby="dialog-desc-reject">
           <div className="p-8 border-b bg-rose-50/30">
             <DialogTitle className="text-2xl font-extralight tracking-tight text-slate-900 flex items-center gap-4">
               <XCircle className="w-6 h-6 text-red-500" />
               Decline Swap Request
             </DialogTitle>
+            <p className="sr-only" id="dialog-desc-reject">Decline swap</p>
           </div>
           <div className="p-8">
             <p className="text-stone-500 font-light mb-6 tracking-tight leading-relaxed">Please provide a reason for declining this request.</p>
@@ -558,6 +566,8 @@ export default function MySwaps() {
       {/* Messaging Sheet - Architectural Precision */}
       <Sheet open={!!showMessaging} onOpenChange={() => setShowMessaging(null)}>
         <SheetContent className="w-full sm:max-w-xl p-0 border-l border-stone-200 shadow-2xl rounded-none">
+          <SheetTitle className="sr-only">Messaging</SheetTitle>
+          <SheetDescription className="sr-only">Chat with partner</SheetDescription>
           {showMessaging && (
             <SwapMessaging swapRequest={showMessaging} user={user} onClose={() => setShowMessaging(null)} />
           )}
@@ -566,9 +576,10 @@ export default function MySwaps() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!showDeleteDialog} onOpenChange={() => setShowDeleteDialog(null)}>
-        <DialogContent className="rounded-none border-stone-200 shadow-2xl">
+        <DialogContent className="rounded-none border-stone-200 shadow-2xl" aria-describedby="dialog-desc-delete">
           <DialogHeader>
             <DialogTitle className="text-2xl font-extralight tracking-tight text-red-600">Delete Request</DialogTitle>
+            <p className="sr-only" id="dialog-desc-delete">Delete</p>
           </DialogHeader>
           <div className="py-8">
             <p className="text-stone-500 font-light tracking-tight leading-relaxed">Are you sure you want to delete this swap request? This action cannot be undone.</p>
@@ -590,15 +601,16 @@ export default function MySwaps() {
         </DialogContent>
       </Dialog>
 
-      {activeVideoCall && <VideoCallRoom videoCall={activeVideoCall} user={user} onCallEnd={() => { setActiveVideoCall(null); queryClient.invalidateQueries(['video-calls']); }} />}
+      {activeVideoCall && <VideoCallRoom videoCall={activeVideoCall} user={user} onCallEnd={() => { setActiveVideoCall(null); queryClient.invalidateQueries(['video-calls']); queryClient.invalidateQueries(['my-swaps']); }} />}
       <CreateSwapRequestDialog open={showCreateDialog} onOpenChange={setShowCreateDialog} user={user} isVerified={isVerified} />
       <VerificationRequiredDialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog} action="send swap requests" />
       <CounterProposalDialog open={!!showCounterDialog} onOpenChange={() => setShowCounterDialog(null)} request={showCounterDialog} user={user} />
       <CompleteSwapDialog open={!!showCompleteDialog} onOpenChange={() => setShowCompleteDialog(null)} request={showCompleteDialog} user={user} />
       <Dialog open={!!showReviewDialog} onOpenChange={() => setShowReviewDialog(null)}>
-        <DialogContent className="max-w-2xl rounded-none border-0 shadow-2xl p-0 overflow-hidden">
+        <DialogContent className="max-w-2xl rounded-none border-0 shadow-2xl p-0 overflow-hidden" aria-describedby="dialog-desc-review">
           <div className="p-8 border-b bg-stone-50">
             <DialogTitle className="text-2xl font-extralight tracking-tight text-slate-900">Review</DialogTitle>
+            <p className="sr-only" id="dialog-desc-review">Leave Review</p>
             <p className="text-stone-400 text-[10px] font-bold uppercase tracking-widest mt-1">Leave a Review</p>
           </div>
           <div className="p-8 max-h-[70vh] overflow-y-auto">

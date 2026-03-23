@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
-import { Clock, PhoneOff, Users, Loader2, Video } from 'lucide-react';
+import { Clock, PhoneOff, Users, Loader2, Video, ExternalLink, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
@@ -9,9 +9,7 @@ import { toast } from 'sonner';
 export default function VideoCallRoom({ videoCall, user, onCallEnd }) {
   const queryClient = useQueryClient();
   const [callDuration, setCallDuration] = useState(0);
-  const [dailyReady, setDailyReady] = useState(false);
   const [joinedCall, setJoinedCall] = useState(false);
-  const callFrameRef = useRef(null);
   const callStartTime = useRef(null);
 
   const isHost = user?.email === videoCall.host_email;
@@ -20,37 +18,6 @@ export default function VideoCallRoom({ videoCall, user, onCallEnd }) {
     mutationFn: ({ id, data }) => api.entities.VideoCall.update(id, data),
     onSuccess: () => queryClient.invalidateQueries(['video-calls']),
   });
-
-  // Load Daily.co script
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/@daily-co/daily-js';
-    script.async = true;
-    script.onload = () => {
-      setDailyReady(true);
-    };
-    document.body.appendChild(script);
-
-    return () => {
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
-    };
-  }, []);
-
-  // Initialize Daily.co call
-  useEffect(() => {
-    if (!dailyReady || !window.DailyIframe) return;
-
-    // Join if: status is in_progress OR user explicitly clicked join button
-    if (videoCall.status === 'in_progress' || joinedCall) {
-      initializeCall();
-    }
-    
-    return () => {
-      cleanup();
-    };
-  }, [dailyReady, joinedCall]);
 
   // Timer
   useEffect(() => {
@@ -62,64 +29,18 @@ export default function VideoCallRoom({ videoCall, user, onCallEnd }) {
     }
   }, [callStartTime.current]);
 
-  const initializeCall = async () => {
+  const handleJoinCall = async () => {
     try {
-      // Create Daily.co room URL (using room_id as the room name)
-      const dailyDomain = import.meta.env.VITE_DAILY_DOMAIN;
-      const roomUrl = `${dailyDomain}/${videoCall.room_id}`;
-
-      // Create Daily iframe
-      callFrameRef.current = window.DailyIframe.createFrame(
-        document.getElementById('daily-video-container'),
-        {
-          iframeStyle: {
-            position: 'fixed',
-            top: '0',
-            left: '0',
-            width: '100%',
-            height: '100%',
-            border: '0',
-          },
-          showLeaveButton: false,
-          showFullscreenButton: true,
-        }
-      );
-
-      // Join the call
-      await callFrameRef.current.join({ url: roomUrl });
-
-      // Update join status
-      const joinField = isHost ? 'host_joined' : 'guest_joined';
-      await updateVideoCallMutation.mutateAsync({
-        id: videoCall.id,
-        data: { 
-          [joinField]: true,
-          status: 'in_progress',
-          call_started_at: new Date().toISOString()
-        }
-      });
-
-      // After status update, fetch fresh data to update component
-      await queryClient.invalidateQueries(['video-calls']);
-      
       callStartTime.current = Date.now();
+      setJoinedCall(true);
 
-      // Listen for events
-      callFrameRef.current.on('left-meeting', () => {
-        endCall();
-      });
+      // Open Jitsi in new tab — no DB update needed at join time
+      window.open(videoCall.room_url, '_blank', 'noopener,noreferrer');
 
-      toast.success('Connected to video call');
+      toast.success('Call opened in new tab. Return here when done to mark it completed.');
     } catch (error) {
       console.error('Error joining call:', error);
-      toast.error('Could not join video call. Please try again.');
-    }
-  };
-
-  const cleanup = () => {
-    if (callFrameRef.current) {
-      callFrameRef.current.destroy();
-      callFrameRef.current = null;
+      toast.error('Could not open video call. Please try again.');
     }
   };
 
@@ -127,9 +48,8 @@ export default function VideoCallRoom({ videoCall, user, onCallEnd }) {
     await updateVideoCallMutation.mutateAsync({
       id: videoCall.id,
       data: {
-        status: 'completed',
-        call_ended_at: new Date().toISOString(),
         meeting_completed: true,
+        call_ended_at: new Date().toISOString(),
       }
     });
 
@@ -144,7 +64,6 @@ export default function VideoCallRoom({ videoCall, user, onCallEnd }) {
       }
     }
 
-    cleanup();
     onCallEnd?.();
   };
 
@@ -159,14 +78,15 @@ export default function VideoCallRoom({ videoCall, user, onCallEnd }) {
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 bg-slate-800/90 backdrop-blur-sm px-6 py-4 flex items-center justify-between z-10">
         <div className="flex items-center gap-4">
-          <Badge className="bg-red-500 text-white animate-pulse">
-            <div className="w-2 h-2 bg-white rounded-full mr-2" />
-            Live
+          <Badge className="bg-blue-500 text-white">
+            Meeting Coordinator
           </Badge>
-          <div className="flex items-center gap-2 text-white">
-            <Clock className="w-4 h-4" />
-            <span className="font-mono">{formatDuration(callDuration)}</span>
-          </div>
+          {joinedCall && (
+            <div className="flex items-center gap-2 text-white">
+              <Clock className="w-4 h-4" />
+              <span className="font-mono">{formatDuration(callDuration)}</span>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-2 text-white">
@@ -177,55 +97,68 @@ export default function VideoCallRoom({ videoCall, user, onCallEnd }) {
         </div>
 
         <Button
-          onClick={endCall}
+          onClick={() => onCallEnd?.()}
           variant="outline"
-          className="bg-red-500 hover:bg-red-600 text-white border-0"
+          className="bg-transparent text-white border-white/20 hover:bg-white/10"
         >
-          <PhoneOff className="w-4 h-4 mr-2" />
-          Leave Call
+          Close Window
         </Button>
       </div>
 
-      {/* Daily.co Video Container */}
-      {!dailyReady ? (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center text-white">
-            <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4" />
-            <p className="text-lg">Loading video call...</p>
-          </div>
-        </div>
-      ) : (
-        <div id="daily-video-container" className="flex-1" />
-      )}
-
-      {/* Join Call Button Overlay */}
-      {!joinedCall && dailyReady && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/95 text-white">
-          <Video className="w-24 h-24 mb-6 text-slate-400" />
-          <h2 className="text-2xl font-bold mb-2">Ready to join the call?</h2>
-          <p className="text-slate-300 mb-6">
-            {isHost ? videoCall.guest_name : videoCall.host_name} will be notified when you join.
-          </p>
-          <Button
-            onClick={() => setJoinedCall(true)}
-            className="bg-green-500 hover:bg-green-600 text-white text-lg px-8 py-3 rounded-full"
-          >
-            <Video className="w-5 h-5 mr-3" />
-            Join Call
-          </Button>
-        </div>
-      )}
-
-      {/* Waiting for Other Participant */}
-      {joinedCall && dailyReady && videoCall.status === 'in_progress' && !(videoCall.host_joined && videoCall.guest_joined) && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/95 text-white">
-          <Loader2 className="w-24 h-24 animate-spin mb-6 text-slate-400" />
-          <h2 className="text-2xl font-bold mb-2">Waiting for the other participant...</h2>
-          <p className="text-slate-300 mb-6">
-            {isHost ? videoCall.guest_name : videoCall.host_name} hasn't joined yet.
-          </p>
-        </div>
-      )}
+      {/* Main Content Status View */}
+      <div className="flex-1 flex flex-col items-center justify-center p-6 text-white text-center">
+        {!joinedCall ? (
+          <>
+            <Video className="w-20 h-20 mb-6 text-slate-400" />
+            <h2 className="text-3xl font-bold mb-3">Ready to join your secure video call?</h2>
+            <p className="text-slate-300 mb-8 max-w-lg">
+              To ensure the best and uninterrupted experience, your secure Jitsi video call will open in a new tab. When you are finished with your meeting, return here to mark the call as completed.
+            </p>
+            <Button
+              onClick={handleJoinCall}
+              className="bg-unswap-blue-deep hover:bg-blue-800 text-white text-lg px-8 py-6 rounded-md shadow-lg"
+            >
+              <ExternalLink className="w-5 h-5 mr-3" />
+              Join Call in New Tab
+            </Button>
+          </>
+        ) : (
+          <>
+            <Badge className="bg-amber-500 text-white animate-pulse mb-6 rounded-md px-3 py-1">
+              <div className="w-2 h-2 bg-white rounded-full mr-2" />
+              Call in Progress
+            </Badge>
+            <h2 className="text-3xl font-bold mb-3">Meeting opened in a new tab</h2>
+            <p className="text-slate-300 mb-8 max-w-lg">
+              Your video call is currently active in another tab. If you accidentally closed it, you can rejoin using the button below. Once your meet and greet is successfully completed, ensure you click 'Mark Call as Completed' to advance your swap request.
+            </p>
+            
+            <div className="flex gap-4">
+              <Button
+                onClick={() => window.open(videoCall.room_url, '_blank', 'noopener,noreferrer')}
+                variant="outline"
+                className="bg-white/5 border-white/20 text-white hover:bg-white/10 px-6 py-6"
+              >
+                <ExternalLink className="w-5 h-5 mr-2" />
+                Rejoin Tab
+              </Button>
+              {isHost ? (
+                <Button
+                  onClick={endCall}
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white text-lg px-8 py-6 rounded-md shadow-lg"
+                >
+                  <CheckCircle className="w-5 h-5 mr-3" />
+                  Mark Call as Completed
+                </Button>
+              ) : (
+                <div className="flex items-center text-amber-400 text-sm italic ml-4">
+                  Only the Host can mark the call as completed.
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
 
       {/* Footer Info */}
       <div className="absolute bottom-0 left-0 right-0 bg-slate-800/90 backdrop-blur-sm px-6 py-3 text-center">

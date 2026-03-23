@@ -57,7 +57,7 @@ export default function GuestDashboard() {
   const { data: myReviews = [] } = useQuery({
     queryKey: ['my-reviews', user?.email],
     queryFn: () => api.entities.Review.filter({ 
-      reviewer_email: user?.email 
+      author_email: user?.email 
     }),
     enabled: !!user?.email,
   });

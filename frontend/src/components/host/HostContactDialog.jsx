@@ -36,10 +36,8 @@ export default function HostContactDialog({ open, onOpenChange, host, currentUse
     mutationFn: async (content) => {
       return api.entities.Message.create({
         conversation_id: conversationId,
-        sender_id: currentUser?.id,
         sender_email: currentUser?.email,
         sender_name: currentUser?.full_name || currentUser?.email,
-        recipient_id: host?.id,
         recipient_email: host?.email,
         content,
         message_type: 'text',

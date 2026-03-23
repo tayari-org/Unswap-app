@@ -108,7 +108,7 @@ function App() {
           <AuthenticatedApp />
         </Router>
         <ToasterUI />
-        <Toaster position="top-right" richColors />
+        <Toaster position="top-right" richColors closeButton />
       </QueryClientProvider>
     </AuthProvider>
   )

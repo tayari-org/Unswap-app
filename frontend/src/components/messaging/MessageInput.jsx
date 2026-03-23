@@ -55,9 +55,6 @@ export default function MessageInput({
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
-      if (onTyping) {
-        onTyping(false);
-      }
     };
   }, [onTyping]);
 

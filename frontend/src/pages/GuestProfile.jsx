@@ -65,7 +65,7 @@ export default function GuestProfile() {
   const { data: reviewsLeftByGuest = [] } = useQuery({
     queryKey: ['guest-reviews-left', guestEmail],
     queryFn: () => api.entities.Review.filter({ 
-      reviewer_email: guestEmail,
+      author_email: guestEmail,
       status: 'approved'
     }),
     enabled: !!guestEmail,
@@ -75,7 +75,7 @@ export default function GuestProfile() {
   const { data: reviewsAboutGuest = [] } = useQuery({
     queryKey: ['guest-reviews-about', guestEmail],
     queryFn: () => api.entities.Review.filter({ 
-      host_email: guestEmail,
+      target_email: guestEmail,
       status: 'approved'
     }),
     enabled: !!guestEmail,

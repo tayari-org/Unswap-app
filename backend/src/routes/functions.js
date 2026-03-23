@@ -151,39 +151,20 @@ async function completeSwap(req, res) {
     return res.json({ success: true, message: 'Swap completed successfully', swap_request_id });
 }
 
-// ─── createDailyRoom ───────────────────────────────────────────────────────────
-async function createDailyRoom(req, res) {
+// ─── createJitsiRoom ───────────────────────────────────────────────────────────
+async function createJitsiRoom(req, res) {
     const { videoCallId } = req.body;
-    const apiKey = process.env.DAILY_API_KEY;
     if (!videoCallId) return res.status(400).json({ error: 'videoCallId is required' });
 
-    if (!apiKey || apiKey === "REPLACE_WITH_YOUR_DAILY_API_KEY") {
-        const mockRoomName = `unswap-mock-${videoCallId}`;
-        const mockRoomUrl = `https://unswap-mock.daily.co/${mockRoomName}`;
-        await prisma.videoCall.update({
-            where: { id: videoCallId },
-            data: { room_id: mockRoomName, room_url: mockRoomUrl }
-        });
-        return res.json({ roomUrl: mockRoomUrl, roomName: mockRoomName, success: true });
-    }
+    const roomName = `unswap-${videoCallId}-${Math.random().toString(36).substring(2, 8)}`;
+    const roomUrl = `https://meet.jit.si/${roomName}`;
 
-    const roomResponse = await fetch('https://api.daily.co/v1/rooms', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({ name: `unswap-${videoCallId}`, properties: { max_participants: 2, exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60 } }),
-    });
-
-    if (!roomResponse.ok) {
-        const err = await roomResponse.json();
-        return res.status(500).json({ error: 'Failed to create video room', details: err });
-    }
-
-    const roomData = await roomResponse.json();
     await prisma.videoCall.update({
         where: { id: videoCallId },
-        data: { room_id: roomData.name, room_url: roomData.url }
+        data: { room_id: roomName, room_url: roomUrl }
     });
-    return res.json({ roomUrl: roomData.url, roomName: roomData.name, success: true });
+    
+    return res.json({ roomUrl, roomName, success: true });
 }
 
 // ─── createStripeCheckoutSession ───────────────────────────────────────────────
@@ -521,7 +502,7 @@ async function deleteUserAndData(req, res) {
 const FUNCTION_MAP = {
     finalizeSwap,
     completeSwap,
-    createDailyRoom,
+    createJitsiRoom,
     createStripeCheckoutSession,
     createGuestPointsCheckoutSession,
     markVideoCallCompleted,

@@ -19,13 +19,13 @@ export default function VideoCallScheduler({ swapRequest, user, onScheduled }) {
     mutationFn: async (data) => {
       const videoCall = await api.entities.VideoCall.create(data);
       
-      // Create Daily.co room
+      // Create Jitsi Meet room
       try {
-        await api.functions.invoke('createDailyRoom', {
+        await api.functions.invoke('createJitsiRoom', {
           videoCallId: videoCall.id
         });
       } catch (error) {
-        console.error('Error creating Daily room:', error);
+        console.error('Error creating Jitsi room:', error);
         toast.error('Failed to create video room');
         throw error;
       }

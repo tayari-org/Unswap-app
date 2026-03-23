@@ -34,10 +34,8 @@ export default function CounterProposalDialog({ open, onOpenChange, request, use
       await api.entities.Message.create({
         conversation_id: `swap_${request.id}`,
         swap_request_id: request.id,
-        sender_id: user?.id,
         sender_email: user?.email,
         sender_name: user?.full_name,
-        recipient_id: request.requester_id,
         recipient_email: request.requester_email,
         content: `Counter-proposal: I'd like to suggest different dates.\n\nNew dates: ${format(checkIn, 'MMM d, yyyy')} - ${format(checkOut, 'MMM d, yyyy')} (${nights} nights)\n\n${message}`,
         message_type: 'system',
@@ -75,7 +73,7 @@ export default function CounterProposalDialog({ open, onOpenChange, request, use
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl rounded-none border-0 shadow-2xl p-0 overflow-hidden">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-none border-0 shadow-2xl p-0">
         <DialogHeader className="p-10 border-b bg-slate-50">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-8 h-px bg-violet-500/20" />

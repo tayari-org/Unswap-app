@@ -80,13 +80,10 @@ export default function SwapMessaging({ swapRequest, user, onClose }) {
       return api.entities.Message.create({
         conversation_id: conversationId,
         swap_request_id: swapRequest.id,
-        sender_id: user?.id,
         sender_email: user?.email,
         sender_name: user?.full_name,
-        recipient_id: swapRequest.host_email === user?.email ? swapRequest.requester_id : swapRequest.host_id,
         recipient_email: otherPartyEmail,
         content: content || '',
-        attachments: attachments,
         message_type: attachments.length > 0 && !content.trim() ? 'image' : 'text',
         is_read: false
       }).then(async (msg) => {
@@ -101,11 +98,16 @@ export default function SwapMessaging({ swapRequest, user, onClose }) {
     mutationFn: (id) => api.entities.Message.update(id, { is_read: true, read_at: new Date().toISOString() }),
   });
 
+  const processedReadMessagesRef = useRef(new Set());
+
   useEffect(() => {
     messages.filter(m => m.recipient_email === user?.email && !m.is_read)
       .forEach(m => {
-        markAsReadMutation.mutate(m.id);
-        queryClient.invalidateQueries(['user-notifications']);
+        if (!processedReadMessagesRef.current.has(m.id)) {
+          processedReadMessagesRef.current.add(m.id);
+          markAsReadMutation.mutate(m.id);
+          queryClient.invalidateQueries(['user-notifications']);
+        }
       });
   }, [messages, user?.email]);
 
@@ -183,7 +185,7 @@ export default function SwapMessaging({ swapRequest, user, onClose }) {
                   </div>
                   <div className={`flex items-center gap-1.5 px-1 text-[10px] font-semibold ${isMe ? 'justify-end text-slate-400' : 'text-slate-400'}`}>
                     <span>{format(new Date(msg.created_date), 'HH:mm')}</span>
-                    {isMe && (msg.is_read ? <CheckCheck className="w-3 h-3 text-blue-500" /> : <Check className="w-3 h-3" />)}
+                    {isMe && (msg.is_read ? <CheckCheck className="w-3 h-3 text-blue-400" /> : <Check className="w-3 h-3 text-white/30" />)}
                   </div>
                 </div>
               </motion.div>

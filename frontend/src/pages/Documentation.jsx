@@ -172,7 +172,7 @@ Base44 Backend-as-a-Service
     ↓
 External Integrations
 ├─ Stripe (Payments)
-├─ Daily.co (Video)
+├─ Jitsi Meet (Video)
 └─ Google/Outlook Calendar APIs`}</pre>
                   </div>
                 </section>
@@ -201,7 +201,7 @@ External Integrations
                       <p className="font-semibold text-slate-800 mb-2">Integrations</p>
                       <ul className="list-disc list-inside space-y-1 text-slate-700 text-sm">
                         <li>Stripe (payments)</li>
-                        <li>Daily.co (video)</li>
+                        <li>Jitsi Meet (video)</li>
                         <li>Calendar APIs</li>
                       </ul>
                     </div>
@@ -224,7 +224,7 @@ External Integrations
                       { name: 'Property', fields: 'Listings with availability, amenities, owner info, swap preferences' },
                       { name: 'SwapRequest', fields: 'Exchange records with status, dates, video call tracking' },
                       { name: 'Message', fields: 'Real-time chat with threading, reactions, attachments' },
-                      { name: 'VideoCall', fields: 'Vetting calls with Daily.co room IDs and attendance tracking' },
+                      { name: 'VideoCall', fields: 'Vetting calls with Jitsi Meet room IDs and attendance tracking' },
                       { name: 'PaymentTransaction', fields: 'Stripe integration with subscription tracking' },
                       { name: 'Verification', fields: 'Multi-level user verification with document uploads' },
                       { name: 'Review', fields: '5-star ratings with moderation and helpful metrics' },
@@ -247,7 +247,7 @@ External Integrations
                       <li><code>createStripeCheckoutSession</code> - Initialize payments</li>
                       <li><code>handleStripeWebhook</code> - Process Stripe events</li>
                       <li><code>syncSubscriptionPayments</code> - Verify completed payments</li>
-                      <li><code>createDailyRoom</code> - Generate video call rooms</li>
+                      <li><code>createJitsiRoom</code> - Generate video call rooms</li>
                       <li><code>processReferralRewards</code> - Handle referral completions</li>
                       <li><code>completeSwap</code> - Finalize swap records</li>
                       <li><code>checkFirstYearSwapGuarantee</code> - Verify guarantee eligibility</li>
@@ -323,7 +323,7 @@ External Integrations
 
                     <div className="bg-gradient-to-r from-amber-50 to-amber-100 p-4 rounded-lg">
                       <p className="font-semibold text-slate-800 mb-2">Phase 4: Video Vetting Call (Days 12-14)</p>
-                      <p className="text-slate-700 text-sm">Schedule call → Pre-call checklist → Join Daily.co room → Post-call rating</p>
+                      <p className="text-slate-700 text-sm">Schedule call → Pre-call checklist → Join Jitsi room → Post-call rating</p>
                       <p className="text-slate-600 text-xs mt-2">⏱️ 30-40 min call | Key metric: 95%+ completion rate</p>
                     </div>
 
@@ -367,7 +367,7 @@ External Integrations
 
                     <div className="bg-slate-50 p-4 rounded-lg border-l-4 border-amber-500">
                       <p className="font-semibold text-slate-800 mb-2">Video Vetting</p>
-                      <p className="text-slate-700 text-sm">Schedule video call → Pre-call preparation → Join call on Daily.co → Discuss logistics</p>
+                      <p className="text-slate-700 text-sm">Schedule video call → Pre-call preparation → Join call on Jitsi Meet → Discuss logistics</p>
                     </div>
 
                     <div className="bg-slate-50 p-4 rounded-lg border-l-4 border-red-500">

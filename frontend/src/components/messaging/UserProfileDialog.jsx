@@ -103,7 +103,7 @@ export default function UserProfileDialog({ open, onOpenChange, userEmail }) {
   const { data: reviews = [] } = useQuery({
     queryKey: ['user-reviews', userEmail],
     queryFn: () => api.entities.Review.filter({
-      host_email: userEmail,
+      target_email: userEmail,
       status: 'approved'
     }),
     enabled: open && !!userEmail,
