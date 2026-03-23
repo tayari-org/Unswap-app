@@ -235,6 +235,7 @@ export default function SubscriptionPlans({ isTab = false }) {
             const isLifetime = plan.type === 'lifetime';
             const isCurrentPlan = user?.subscription_plan_id === plan.id;
             const isProcessing = selectedPlan === plan.id && checkoutMutation.isPending;
+            const planFeatures = Array.isArray(plan.features) ? plan.features : [];
 
             return (
               <div
@@ -279,13 +280,13 @@ export default function SubscriptionPlans({ isTab = false }) {
 
                   {/* Features */}
                   <ul className="space-y-2.5 mb-6">
-                    {(plan.features || []).map((feature, idx) => (
+                    {planFeatures.map((feature, idx) => (
                       <li key={idx} className="flex items-start gap-2.5">
                         <Check className={`w-4 h-4 shrink-0 mt-0.5 ${thisColor(color, c, isLifetime)}`} />
                         <span className="text-slate-600 text-xs leading-relaxed">{feature}</span>
                       </li>
                     ))}
-                    {!plan.features?.some(f => f.toString().includes('exchange')) && plan.exchanges_per_year && (
+                    {!planFeatures.some(f => f.toString().includes('exchange')) && plan.exchanges_per_year && (
                       <li className="flex items-start gap-2.5">
                         <Check className={`w-4 h-4 shrink-0 mt-0.5 ${thisColor(color, c, isLifetime)}`} />
                         <span className="text-slate-600 text-xs">
@@ -295,7 +296,7 @@ export default function SubscriptionPlans({ isTab = false }) {
                         </span>
                       </li>
                     )}
-                    {!plan.features?.some(f => f.toString().includes('guarantee') || f.toString().includes('insurance')) && plan.property_guarantee_amount && (
+                    {!planFeatures.some(f => f.toString().includes('guarantee') || f.toString().includes('insurance')) && plan.property_guarantee_amount && (
                       <li className="flex items-start gap-2.5">
                         <Check className={`w-4 h-4 shrink-0 mt-0.5 ${thisColor(color, c, isLifetime)}`} />
                         <span className="text-slate-600 text-xs">

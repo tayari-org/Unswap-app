@@ -41,7 +41,6 @@ const PUBLIC_ENTITIES = ['Property', 'SubscriptionPlan', 'PlatformSettings', 'Ac
 // Entities only admins can write to
 const ADMIN_WRITE_ENTITIES = ['SubscriptionPlan', 'PlatformSettings'];
 
-// Mapping of entities and their JSON string fields for SQLite
 const JSON_FIELDS = {
     Property: ['amenities', 'photos', 'images', 'swap_types_accepted', 'availability', 'mobility_tags', 'security_checklist'],
     User: ['languages', 'notification_preferences', 'swap_preferences'],
@@ -51,6 +50,7 @@ const JSON_FIELDS = {
     Referral: ['reward_details'],
     ActivityLog: ['metadata'],
     PlatformSettings: ['institutional_email_domains', 'public_settings'],
+    SubscriptionPlan: ['features'],
 };
 
 /**
