@@ -13,7 +13,7 @@ const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
 
-const PUBLIC_PAGES = ['Home', 'FindProperties', 'Login', 'ResetPassword', 'PropertyDetails'];
+const PUBLIC_PAGES = ['Home', 'FindProperties', 'Login', 'ResetPassword', 'PropertyDetails', 'PaymentSuccess'];
 
 // Pages that require verification (logged-in but unverified → redirect to verification)
 const VERIFIED_PAGES = [
