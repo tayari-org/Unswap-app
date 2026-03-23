@@ -182,24 +182,18 @@ export default function SwapRequestCard({
                 <CheckCircle className="w-3 h-3 mr-2 opacity-70" /> Approve
               </Button>
               <Button variant="outline" onClick={() => onCounterPropose(request)} className="w-full bg-white border-slate-200 rounded-none h-10 text-[9px] font-bold uppercase tracking-[0.2em] text-slate-600 hover:bg-slate-50">Counter</Button>
-              <Button variant="outline" onClick={() => onMessage(request)} className="w-full bg-white border-slate-200 rounded-none h-10 text-[9px] font-bold uppercase tracking-[0.2em] text-slate-600 hover:bg-slate-50 shadow-sm">
-                <MessageSquare className="w-3 h-3 mr-2 text-unswap-blue-deep/60" /> Chat
-              </Button>
               <Button variant="ghost" onClick={() => onReject(request)} className="w-full text-red-500 hover:text-red-700 hover:bg-rose-50 rounded-none h-10 text-[9px] font-bold uppercase tracking-[0.2em]">Decline</Button>
             </>
           )}
 
           {/* STEP 2: Approved → Host schedules video call */}
-          {isIncoming && request.status === 'approved' && (
+          {isIncoming && request.status === 'approved' && !request.video_call_completed && (
             <>
               <Button
                 onClick={() => onScheduleVideo(request)}
                 className="w-full bg-unswap-blue-deep hover:bg-slate-900 text-white rounded-none h-10 text-[9px] font-bold uppercase tracking-[0.2em] shadow-sm"
               >
                 <Video className="w-3 h-3 mr-2 opacity-60" /> Schedule Call
-              </Button>
-              <Button variant="outline" onClick={() => onMessage(request)} className="w-full bg-white border-slate-200 rounded-none h-10 text-[9px] font-bold uppercase tracking-[0.2em] text-slate-600 hover:bg-slate-50 shadow-sm">
-                <MessageSquare className="w-3 h-3 mr-2 text-unswap-blue-deep/60" /> Chat
               </Button>
             </>
           )}
@@ -213,42 +207,43 @@ export default function SwapRequestCard({
               >
                 <Video className="w-3 h-3 mr-2 opacity-60" /> Join Call
               </Button>
-              <Button variant="outline" onClick={() => onMessage(request)} className="w-full bg-white border-slate-200 rounded-none h-10 text-[9px] font-bold uppercase tracking-[0.2em] text-slate-600 hover:bg-slate-50 shadow-sm">
-                <MessageSquare className="w-3 h-3 mr-2 text-unswap-blue-deep/60" /> Chat
-              </Button>
             </>
           )}
 
-          {/* STEP 4: Video call done → Host finalizes stay details */}
+          {/* STEP 4: Video call done → Host marks completed (which finalizes & transfers points) */}
           {isIncoming && request.video_call_completed && request.status !== 'finalized' && request.status !== 'completed' && (
-            <Button onClick={() => onFinalizeSwap(request)} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-none h-10 text-[9px] font-bold uppercase tracking-[0.2em] shadow-sm mt-1">
-              Finalize Stay
-            </Button>
+            <div className="flex gap-2 w-full mt-1">
+              <Button onClick={() => onCompleteSwap?.(request)} className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-none h-10 text-[9px] font-bold uppercase tracking-[0.2em] shadow-sm transition-all">
+                <CheckCircle className="w-3 h-3 justify-center opacity-60" /> Finalize Swap
+              </Button>
+              <Button variant="ghost" onClick={() => onReject(request)} className="flex-1 border border-red-200 text-red-500 hover:text-red-700 hover:bg-rose-50 rounded-none h-10 text-[9px] font-bold uppercase tracking-[0.2em]">
+                Decline
+              </Button>
+            </div>
           )}
 
           {/* ── GUEST (!isIncoming) actions ── */}
 
-          {/* Guest: approved → waiting for host to schedule call */}
-          {!isIncoming && request.status === 'approved' && (
+          {/* Guest: approved → waiting for host to schedule call / finalize stay */}
+          {!isIncoming && request.status === 'approved' && !request.video_call_completed && (
             <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest text-center py-2">
               Awaiting host to schedule call
             </p>
           )}
-
-          {/* Guest: video scheduled → join call only */}
+          {/* Guest: video scheduled → join call */}
           {!isIncoming && request.status === 'video_scheduled' && (
             <Button
               onClick={() => onScheduleVideo(request)}
-              className="w-full bg-unswap-blue-deep hover:bg-slate-900 text-white rounded-none h-10 text-[9px] font-bold uppercase tracking-[0.2em] shadow-sm"
+              className="w-full bg-unswap-blue-deep hover:bg-slate-900 text-white rounded-none h-10 text-[9px] font-bold uppercase tracking-[0.2em] shadow-sm mb-2"
             >
               <Video className="w-3 h-3 mr-2 opacity-60" /> Join Call
             </Button>
           )}
-
-          {/* Both: finalized → mark completed */}
-          {request.status === 'finalized' && (
-            <Button onClick={() => onCompleteSwap?.(request)} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-none h-10 text-[9px] font-bold uppercase tracking-[0.2em] shadow-sm transition-all">
-              <CheckCircle className="w-3 h-3 mr-2 opacity-60" /> Mark Completed
+          
+          {/* Guest: finalized/completed → mark completed / view details */}
+          {!isIncoming && request.status === 'finalized' && (
+            <Button onClick={() => onCompleteSwap?.(request)} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-none h-10 text-[9px] font-bold uppercase tracking-[0.2em] shadow-sm transition-all mt-1">
+              <CheckCircle className="w-3 h-3 mr-2 opacity-60" /> Finalize Swap
             </Button>
           )}
 
@@ -259,20 +254,20 @@ export default function SwapRequestCard({
             </Button>
           )}
 
-          {/* Chat always visible when swap is past pending/video/approved */}
-          {!['pending', 'video_scheduled', 'approved', 'rejected', 'cancelled'].includes(request.status) && (
+          {/* Chat always visible */}
+          {(isIncoming || !isIncoming) && (
             <Button variant="outline" onClick={() => onMessage(request)} className="w-full bg-white border-slate-200 rounded-none h-10 text-[9px] font-bold uppercase tracking-[0.2em] text-slate-600 hover:bg-slate-50 mt-auto shadow-sm">
               <MessageSquare className="w-3 h-3 mr-2 text-unswap-blue-deep/60" /> Open Chat
             </Button>
           )}
 
-          {/* Guest: cancel outgoing pending request */}
-          {!isIncoming && ['pending', 'counter_proposed', 'approved'].includes(request.status) && onDelete && (
+          {/* Guest: cancel outgoing request — only while pending or awaiting approval, not after video call done */}
+          {!isIncoming && ['pending', 'counter_proposed'].includes(request.status) && onDelete && (
             <Button variant="ghost" onClick={() => onDelete(request)} className="w-full text-slate-400 hover:text-red-500 rounded-none h-10 text-[9px] font-bold uppercase tracking-[0.3em] mt-auto">Cancel Request</Button>
           )}
 
-          {/* Host/Guest: remove rejected/cancelled records */}
-          {['rejected', 'cancelled'].includes(request.status) && onDelete && (
+          {/* Host/Guest: remove completed, rejected or cancelled records */}
+          {['completed', 'rejected', 'cancelled'].includes(request.status) && onDelete && (
             <Button variant="ghost" onClick={() => onDelete(request)} className="w-full text-slate-400 hover:text-red-500 rounded-none h-10 text-[9px] font-bold uppercase tracking-[0.3em] mt-auto">Remove Record</Button>
           )}
 

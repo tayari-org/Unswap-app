@@ -41,14 +41,22 @@ async function sendEmail({ to, subject, body, html }) {
         });
 
         if (error) {
+            // Resend returned an API-level error (auth, validation, etc.) — log but don't crash
             console.error('[Email] Resend API Error:', error);
-            throw new Error(error.message);
+            return { skipped: true, reason: error.message };
         }
 
         return { messageId: data.id };
     } catch (err) {
+        // Network-level failure (DNS, timeout, no internet) — skip silently
+        const isNetworkError = err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED'
+            || err.code === 'ETIMEDOUT' || err.message?.includes('fetch') || err.message?.includes('resolve');
+        if (isNetworkError) {
+            console.warn('[Email] Network error reaching Resend — email skipped for:', to, `(${err.message})`);
+            return { skipped: true, reason: 'network_error' };
+        }
         console.error('[Email] Failed to send via Resend:', err);
-        throw err;
+        return { skipped: true, reason: err.message };
     }
 }
 
@@ -60,10 +68,12 @@ router.post('/send', requireAuth, async (req, res) => {
             return res.status(400).json({ error: 'to, subject, and body are required' });
         }
         const result = await sendEmail({ to, subject, body, html });
+        // Always return 200 — skipped emails are non-fatal
         res.json({ success: true, ...result });
     } catch (err) {
         console.error('Email send error:', err);
-        res.status(500).json({ error: 'Failed to send email' });
+        // Still return 200 so frontend notifications don't cascade-fail
+        res.json({ success: false, skipped: true, reason: err.message });
     }
 });
 

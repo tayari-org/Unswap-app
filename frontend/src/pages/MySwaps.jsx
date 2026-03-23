@@ -59,6 +59,7 @@ export default function MySwaps() {
   const [showReviewDialog, setShowReviewDialog] = useState(null);
   const [showFinalizeDialog, setShowFinalizeDialog] = useState(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(null);
+  const [showApproveDialog, setShowApproveDialog] = useState(null);
   const [editVideoCall, setEditVideoCall] = useState(null);
   const [deleteVideoCall, setDeleteVideoCall] = useState(null);
 
@@ -117,6 +118,10 @@ export default function MySwaps() {
       propertyTitle: request.property_title,
       swapRequestId: request.id
     });
+
+    toast.success('Swap request approved!');
+    setShowApproveDialog(null);
+    setSearchParams({ tab: 'approved' });
   };
 
   const handleScheduleVideo = (request) => {
@@ -378,20 +383,19 @@ export default function MySwaps() {
                   transition={{ duration: 0.4 }}
                   className="space-y-6"
                 >
-                  {incomingRequests.filter(r => r.status !== 'completed').length === 0 ? (
-                    <EmptyState message="No incoming swap requests yet" />
+                  {incomingRequests.filter(r => ['pending', 'counter_proposed'].includes(r.status)).length === 0 ? (
+                    <EmptyState message="No pending incoming swap requests" />
                   ) : (
                     incomingRequests
-                      .filter(r => r.status !== 'completed')
+                      .filter(r => ['pending', 'counter_proposed'].includes(r.status))
                       .map(request => (
                         <SwapRequestCard
                           key={request.id}
                           request={request} isIncoming user={user}
                           property={properties.find(p => p.id === request.property_id)}
-                          onApprove={handleApprove} onReject={setSelectedRequest}
+                          onApprove={setShowApproveDialog} onReject={setSelectedRequest}
                           onCounterPropose={setShowCounterDialog} onScheduleVideo={handleScheduleVideo}
                           onMessage={setShowMessaging} onCompleteSwap={setShowCompleteDialog}
-                          onFinalizeSwap={setShowFinalizeDialog}
                           onDelete={handleDelete}
                         />
                       ))
@@ -408,20 +412,19 @@ export default function MySwaps() {
                   transition={{ duration: 0.4 }}
                   className="space-y-6"
                 >
-                  {outgoingRequests.filter(r => r.status !== 'completed').length === 0 ? (
+                  {outgoingRequests.filter(r => ['pending', 'counter_proposed'].includes(r.status)).length === 0 ? (
                     <EmptyState message="You haven't requested any swaps yet" onCreateNew={handleNewSwapRequest} />
                   ) : (
                     outgoingRequests
-                      .filter(r => r.status !== 'completed')
+                      .filter(r => ['pending', 'counter_proposed'].includes(r.status))
                       .map(request => (
                         <SwapRequestCard
                           key={request.id}
                           request={request} isIncoming={false} user={user}
                           property={properties.find(p => p.id === request.property_id)}
-                          onApprove={handleApprove} onReject={setSelectedRequest}
+                          onApprove={setShowApproveDialog} onReject={setSelectedRequest}
                           onCounterPropose={setShowCounterDialog} onScheduleVideo={handleScheduleVideo}
                           onMessage={setShowMessaging} onCompleteSwap={setShowCompleteDialog}
-                          onFinalizeSwap={setShowFinalizeDialog}
                           onDelete={handleDelete}
                         />
                       ))
@@ -438,20 +441,19 @@ export default function MySwaps() {
                   transition={{ duration: 0.4 }}
                   className="space-y-6"
                 >
-                  {swapRequests.filter(r => ['approved', 'video_scheduled'].includes(r.status)).length === 0 ? (
+                  {swapRequests.filter(r => ['approved', 'video_scheduled', 'finalized'].includes(r.status)).length === 0 ? (
                     <EmptyState message="No approved swaps" onCreateNew={handleNewSwapRequest} />
                   ) : (
                     swapRequests
-                      .filter(r => ['approved', 'video_scheduled'].includes(r.status))
+                      .filter(r => ['approved', 'video_scheduled', 'finalized'].includes(r.status))
                       .map(request => (
                         <SwapRequestCard
                           key={request.id}
                           request={request} isIncoming={request.host_email === user?.email} user={user}
                           property={properties.find(p => p.id === request.property_id)}
-                          onApprove={handleApprove} onReject={setSelectedRequest}
+                          onApprove={setShowApproveDialog} onReject={setSelectedRequest}
                           onCounterPropose={setShowCounterDialog} onScheduleVideo={handleScheduleVideo}
                           onMessage={setShowMessaging} onCompleteSwap={setShowCompleteDialog}
-                          onFinalizeSwap={setShowFinalizeDialog}
                           onDelete={handleDelete}
                         />
                       ))
@@ -605,7 +607,7 @@ export default function MySwaps() {
       <CreateSwapRequestDialog open={showCreateDialog} onOpenChange={setShowCreateDialog} user={user} isVerified={isVerified} />
       <VerificationRequiredDialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog} action="send swap requests" />
       <CounterProposalDialog open={!!showCounterDialog} onOpenChange={() => setShowCounterDialog(null)} request={showCounterDialog} user={user} />
-      <CompleteSwapDialog open={!!showCompleteDialog} onOpenChange={() => setShowCompleteDialog(null)} request={showCompleteDialog} user={user} />
+      <CompleteSwapDialog open={!!showCompleteDialog} onOpenChange={() => setShowCompleteDialog(null)} request={showCompleteDialog} user={user} property={showCompleteDialog ? properties.find(p => p.id === showCompleteDialog.property_id) : null} onSuccess={() => setSearchParams({ tab: 'completed' })} />
       <Dialog open={!!showReviewDialog} onOpenChange={() => setShowReviewDialog(null)}>
         <DialogContent className="max-w-2xl rounded-none border-0 shadow-2xl p-0 overflow-hidden" aria-describedby="dialog-desc-review">
           <div className="p-8 border-b bg-stone-50">
@@ -619,6 +621,42 @@ export default function MySwaps() {
         </DialogContent>
       </Dialog>
       {showFinalizeDialog && <FinalizeSwapDialog open={!!showFinalizeDialog} onOpenChange={() => setShowFinalizeDialog(null)} swapRequest={showFinalizeDialog} user={user} property={properties.find(p => p.id === showFinalizeDialog.property_id)} />}
+
+      {/* Approve Confirmation Dialog */}
+      <Dialog open={!!showApproveDialog} onOpenChange={() => setShowApproveDialog(null)}>
+        <DialogContent className="max-w-md rounded-none border-stone-200 shadow-2xl p-0 overflow-hidden" aria-describedby="dialog-desc-approve">
+          <div className="p-8 border-b bg-emerald-50/40">
+            <DialogTitle className="text-2xl font-extralight tracking-tight text-slate-900 flex items-center gap-3">
+              <CheckCircle className="w-6 h-6 text-emerald-500" />
+              Approve Swap Request
+            </DialogTitle>
+            <p className="sr-only" id="dialog-desc-approve">Confirm approval of swap request</p>
+          </div>
+          <div className="p-8">
+            {showApproveDialog && (
+              <div className="mb-6 p-5 bg-stone-50 border border-stone-100 rounded-none border-l-4 border-l-emerald-400">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-900">{showApproveDialog.property_title}</p>
+                <p className="text-[11px] text-slate-500 mt-1">Requested by <strong>{showApproveDialog.requester_name || showApproveDialog.requester_email}</strong></p>
+                <div className="flex items-center gap-3 mt-3 text-[10px] font-bold text-stone-400 uppercase tracking-widest">
+                  <CalendarDays className="w-3.5 h-3.5" />
+                  {showApproveDialog.check_in && format(new Date(showApproveDialog.check_in), 'MMM d')} – {showApproveDialog.check_out && format(new Date(showApproveDialog.check_out), 'MMM d, yyyy')}
+                </div>
+              </div>
+            )}
+            <p className="text-stone-500 font-light leading-relaxed text-sm">Are you sure you want to approve this swap request?</p>
+            <div className="mt-8 flex gap-4">
+              <Button variant="ghost" onClick={() => setShowApproveDialog(null)} className="flex-1 rounded-none font-bold text-[10px] uppercase tracking-widest">Cancel</Button>
+              <Button
+                onClick={() => handleApprove(showApproveDialog)}
+                disabled={updateSwapMutation.isPending}
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-none h-12 text-[10px] font-bold uppercase tracking-widest shadow-xl"
+              >
+                {updateSwapMutation.isPending ? 'Approving…' : 'Confirm Approve'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

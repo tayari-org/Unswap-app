@@ -17,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { notifySwapRequest } from '../notifications/notificationHelpers';
@@ -186,9 +187,9 @@ export default function CreateSwapRequestDialog({ open, onOpenChange, user, pres
           <DialogTitle className="text-5xl font-extralight text-slate-900 tracking-tighter leading-none mb-6">
             Initiate <span className="italic font-serif">Swap Request.</span>
           </DialogTitle>
-          <p className="text-[13px] text-slate-500 font-light max-w-xl leading-relaxed">
+          <DialogDescription className="text-[13px] text-slate-500 font-light max-w-xl leading-relaxed">
             Send a swap request to the host. You can choose to use GuestPoints or a reciprocal swap if both of you have properties listed.
-          </p>
+          </DialogDescription>
         </DialogHeader>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 border-b border-slate-100">

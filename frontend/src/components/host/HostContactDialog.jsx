@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
@@ -69,6 +70,9 @@ export default function HostContactDialog({ open, onOpenChange, host, currentUse
             <MessageSquare className="w-5 h-5" />
             Contact {host?.full_name || 'Host'}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Send a message to the host of this property.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="py-4">

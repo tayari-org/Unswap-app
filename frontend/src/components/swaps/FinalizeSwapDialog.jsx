@@ -45,37 +45,69 @@ export default function FinalizeSwapDialog({ open, onOpenChange, swapRequest, us
         special_instructions: specialInstructions,
       });
 
-      // Call the backend function to deduct points and mark as finalized
-      await api.functions.finalizeSwap({ swap_request_id: swapRequest.id });
+      // Call the backend function to deduct points (if guestpoints swap) and mark as finalized
+      await api.functions.invoke('finalizeSwap', { swap_request_id: swapRequest.id });
 
-      // Send finalization details email to guest
+      const hostDisplayName = swapRequest.host_name || swapRequest.host_email;
+      const guestDisplayName = swapRequest.requester_name || swapRequest.requester_email;
+      const handoffLabel = {
+        in_person: 'In Person — host will hand over keys directly',
+        lockbox: `Lockbox${lockboxCode ? ` — Code: <strong>${lockboxCode}</strong>` : ''}`,
+        property_manager: 'Building Staff / Property Manager',
+        doorman: 'Concierge / Doorman — collect from lobby',
+        neighbor: 'Trusted Neighbor',
+      }[keyHandoffMethod] || keyHandoffMethod;
+
+      // Send finalization + handoff details email to guest
       await api.integrations.Core.SendEmail({
         to: swapRequest.requester_email,
-        subject: `Your Swap is Finalized: ${swapRequest.property_title}`,
-        body: `
-          <h2>Swap Finalized</h2>
-          <p>Hello ${swapRequest.requester_name || swapRequest.requester_email},</p>
-          <p>${swapRequest.host_name || swapRequest.host_email} has finalized your swap and provided the following logistics.</p>
-          
-          <h3>Property Details</h3>
-          <p><strong>Property:</strong> ${swapRequest.property_title}</p>
-          <p><strong>Check-in:</strong> ${swapRequest.check_in}</p>
-          <p><strong>Check-out:</strong> ${swapRequest.check_out}</p>
-          
-          <h3>Key Handoff</h3>
-          <p><strong>Method:</strong> ${keyHandoffMethod === 'in_person' ? 'In Person' : keyHandoffMethod === 'lockbox' ? 'Lockbox' : keyHandoffMethod === 'property_manager' ? 'Property Manager' : keyHandoffMethod === 'doorman' ? 'Doorman' : 'Neighbor'}</p>
-          ${lockboxCode ? `<p><strong>Lockbox Code:</strong> ${lockboxCode}</p>` : ''}
-          
-          <h3>Emergency Contact</h3>
-          <p><strong>Name:</strong> ${emergencyContactName}</p>
-          <p><strong>Phone:</strong> ${emergencyContactPhone}</p>
-          
-          ${specialInstructions ? `<h3>Special Instructions</h3><p>${specialInstructions.replace(/\n/g, '<br>')}</p>` : ''}
-          
-          <h3>Insurance Coverage</h3>
-          <p>Comprehensive insurance coverage is now activated for your stay.</p>
-          <p><a href="${insuranceCert}">View Insurance Certificate</a></p>
-        `
+        subject: `Your Swap is Confirmed — ${swapRequest.property_title}`,
+        body: `Swap confirmed for ${swapRequest.property_title}`,
+        html: `
+          <div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1e293b">
+            <div style="background:#0a2342;padding:32px;text-align:center">
+              <h1 style="color:#fff;font-size:24px;font-weight:300;margin:0;letter-spacing:2px">UNSWAP</h1>
+            </div>
+            <div style="padding:40px 32px">
+              <h2 style="font-size:22px;font-weight:300;margin-bottom:8px">Your Swap is Confirmed! 🎉</h2>
+              <p style="color:#64748b;margin-bottom:32px">Hello ${guestDisplayName}, here are all the details you need for your upcoming stay.</p>
+
+              <div style="background:#f8fafc;border-left:4px solid #0a2342;padding:20px 24px;margin-bottom:24px;border-radius:2px">
+                <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#64748b;margin:0 0 8px">Property</p>
+                <p style="font-size:18px;font-weight:600;margin:0 0 4px">${swapRequest.property_title}</p>
+                <p style="color:#64748b;margin:0">Check-in: <strong>${swapRequest.check_in}</strong> &nbsp;→&nbsp; Check-out: <strong>${swapRequest.check_out}</strong></p>
+              </div>
+
+              <div style="background:#f8fafc;border-left:4px solid #f59e0b;padding:20px 24px;margin-bottom:24px;border-radius:2px">
+                <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#64748b;margin:0 0 8px">🔑 Key Handoff</p>
+                <p style="margin:0">${handoffLabel}</p>
+              </div>
+
+              <div style="background:#f8fafc;border-left:4px solid #10b981;padding:20px 24px;margin-bottom:24px;border-radius:2px">
+                <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#64748b;margin:0 0 12px">📞 Reach Your Host</p>
+                <p style="margin:0 0 6px"><strong>${hostDisplayName}</strong></p>
+                <p style="margin:0 0 6px">📧 <a href="mailto:${swapRequest.host_email}" style="color:#0a2342">${swapRequest.host_email}</a></p>
+                ${emergencyContactName ? `<p style="margin:8px 0 0;font-size:12px;color:#64748b">Emergency Contact: <strong>${emergencyContactName}</strong> — 📞 <strong>${emergencyContactPhone}</strong></p>` : ''}
+              </div>
+
+              ${specialInstructions ? `
+              <div style="background:#fffbeb;border-left:4px solid #f59e0b;padding:20px 24px;margin-bottom:24px;border-radius:2px">
+                <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#64748b;margin:0 0 8px">📝 Special Instructions</p>
+                <p style="margin:0;white-space:pre-line">${specialInstructions}</p>
+              </div>` : ''}
+
+              <div style="background:#eff6ff;border:1px solid #bfdbfe;padding:20px 24px;margin-bottom:32px;border-radius:2px">
+                <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#1d4ed8;margin:0 0 6px">🛡️ Insurance Coverage Active</p>
+                <p style="font-size:13px;color:#1e40af;margin:0">Asset Protection: $2M USD &nbsp;|&nbsp; Guarantee: $350/Night</p>
+                <p style="margin:8px 0 0"><a href="${insuranceCert}" style="color:#1d4ed8;font-size:13px">View Insurance Certificate →</a></p>
+              </div>
+
+              <a href="${window.location.origin}/MySwaps" style="display:inline-block;background:#0a2342;color:#fff;padding:14px 32px;text-decoration:none;font-weight:600;font-size:13px;letter-spacing:1px;border-radius:2px">View My Swaps →</a>
+
+              <p style="margin-top:40px;font-size:12px;color:#94a3b8">Have a wonderful stay! — The Unswap Team</p>
+            </div>
+          </div>
+        `,
       });
     },
     onSuccess: () => {

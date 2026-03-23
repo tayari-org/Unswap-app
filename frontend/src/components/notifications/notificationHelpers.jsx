@@ -57,23 +57,26 @@ export async function createNotification({
   });
 }
 
-// Send email notification
+// Send email notification — always resolves; email failures must not break the main flow
 async function sendEmailNotification({
   recipientEmail,
   subject,
-  body
+  body,
+  html
 }) {
   try {
     const shouldSend = await shouldNotify(recipientEmail, 'email');
     if (!shouldSend) return;
-    
+
     await api.integrations.Core.SendEmail({
       to: recipientEmail,
       subject: `UNswap - ${subject}`,
-      body
+      body,
+      html,
     });
   } catch (error) {
-    console.error('Failed to send email notification:', error);
+    // Non-fatal: log and continue
+    console.warn('[Email] Notification skipped for', recipientEmail, '—', error?.message);
   }
 }
 
@@ -88,25 +91,31 @@ async function sendFullNotification({
   senderName,
   senderEmail,
   emailSubject,
-  emailBody
+  emailBody,
+  emailHtml
 }) {
-  // Send in-app notification
-  await createNotification({
-    userEmail,
-    type,
-    title,
-    message,
-    link,
-    relatedId,
-    senderName,
-    senderEmail
-  });
-  
-  // Send email notification
+  // In-app notification (primary — always attempted)
+  try {
+    await createNotification({
+      userEmail,
+      type,
+      title,
+      message,
+      link,
+      relatedId,
+      senderName,
+      senderEmail
+    });
+  } catch (err) {
+    console.warn('[Notification] Failed to create in-app notification:', err?.message);
+  }
+
+  // Email (secondary — non-fatal)
   await sendEmailNotification({
     recipientEmail: userEmail,
     subject: emailSubject || title,
-    body: emailBody || message
+    body: emailBody || message,
+    html: emailHtml || emailBody || undefined,
   });
 }
 

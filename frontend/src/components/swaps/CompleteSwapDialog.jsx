@@ -18,7 +18,7 @@ import {
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function CompleteSwapDialog({ open, onOpenChange, request, user }) {
+export default function CompleteSwapDialog({ open, onOpenChange, request, user, property, onSuccess }) {
   const queryClient = useQueryClient();
   const [confirmed, setConfirmed] = useState(false);
 
@@ -71,17 +71,69 @@ export default function CompleteSwapDialog({ open, onOpenChange, request, user }
 
   const completeSwapMutation = useMutation({
     mutationFn: async () => {
-      // Use backend function to complete swap
+      // Use backend function to complete swap and transfer points
       const response = await api.functions.invoke('completeSwap', {
         swap_request_id: request.id
       });
-      return response.data;
+      return response?.data;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries(['my-swaps']);
       queryClient.invalidateQueries(['current-user']);
-      toast.success('Swap completed successfully! Points have been transferred.');
+      toast.success('Swap completed! Points have been transferred.');
+
+      // Send handoff email to guest with host contact info
+      try {
+        const hostName = request.host_name || request.host_email;
+        const guestName = request.requester_name || request.requester_email;
+        const propertyAddress = property?.address || property?.location || '';
+
+        await api.integrations.Core.SendEmail({
+          to: request.requester_email,
+          subject: `Your Swap is Complete — ${request.property_title}`,
+          body: `Swap completed for ${request.property_title}`,
+          html: `
+            <div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1e293b">
+              <div style="background:#0a2342;padding:32px;text-align:center">
+                <h1 style="color:#fff;font-size:24px;font-weight:300;margin:0;letter-spacing:2px">UNSWAP</h1>
+              </div>
+              <div style="padding:40px 32px">
+                <h2 style="font-size:22px;font-weight:300;margin-bottom:8px">Your Swap is All Set! 🎉</h2>
+                <p style="color:#64748b;margin-bottom:32px">Hello ${guestName}, your swap has been confirmed and points have been transferred. Here's everything you need for your stay.</p>
+
+                <div style="background:#f8fafc;border-left:4px solid #0a2342;padding:20px 24px;margin-bottom:24px">
+                  <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#64748b;margin:0 0 8px">Property</p>
+                  <p style="font-size:18px;font-weight:600;margin:0 0 4px">${request.property_title}</p>
+                  ${propertyAddress ? `<p style="color:#64748b;margin:4px 0 0">📍 ${propertyAddress}</p>` : ''}
+                  <p style="color:#64748b;margin:8px 0 0">Check-in: <strong>${request.check_in}</strong> &nbsp;→&nbsp; Check-out: <strong>${request.check_out}</strong></p>
+                </div>
+
+                <div style="background:#f8fafc;border-left:4px solid #10b981;padding:20px 24px;margin-bottom:24px">
+                  <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#64748b;margin:0 0 12px">📞 Reach Your Host</p>
+                  <p style="margin:0 0 6px"><strong>${hostName}</strong></p>
+                  <p style="margin:0">📧 <a href="mailto:${request.host_email}" style="color:#0a2342">${request.host_email}</a></p>
+                </div>
+
+                ${isGuestPointsSwap ? `
+                <div style="background:#f0fdf4;border-left:4px solid #10b981;padding:20px 24px;margin-bottom:24px">
+                  <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#166534;margin:0 0 8px">💰 Points Transfer Complete</p>
+                  <p style="color:#166534;margin:0">${request.total_points} GuestPoints have been transferred to the host.</p>
+                </div>` : ''}
+
+                <a href="${window.location.origin}/MySwaps?tab=completed" style="display:inline-block;background:#0a2342;color:#fff;padding:14px 32px;text-decoration:none;font-weight:600;font-size:13px;letter-spacing:1px">View Completed Swap →</a>
+
+                <p style="margin-top:40px;font-size:12px;color:#94a3b8">Have a wonderful stay! — The Unswap Team</p>
+              </div>
+            </div>
+          `,
+        });
+      } catch (emailErr) {
+        // Non-fatal — swap is still completed
+        console.warn('[CompleteSwap] Handoff email failed:', emailErr?.message);
+      }
+
       onOpenChange(false);
+      onSuccess?.();
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to complete swap');

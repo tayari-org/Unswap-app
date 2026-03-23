@@ -114,9 +114,42 @@ async function completeSwap(req, res) {
     const isHost = swapRequest.host_email === user.email;
     if (!isRequester && !isHost) return res.status(403).json({ error: 'Not part of this swap' });
 
-    if (swapRequest.swap_type === 'guestpoints') {
+    if (swapRequest.swap_type === 'guestpoints' && swapRequest.status !== 'completed') {
         const totalPoints = swapRequest.total_points || 0;
-        // Points are now deducted during finalizeSwap. completeSwap only marks the stay as finished.
+        const requester = await prisma.user.findUnique({ where: { email: swapRequest.requester_email } });
+        const host = await prisma.user.findUnique({ where: { email: swapRequest.host_email } });
+        if (!requester || !host) return res.status(500).json({ error: 'Could not fetch user data' });
+
+        const reqPoints = requester.guest_points || 0;
+        const hostPoints = host.guest_points || 0;
+        if (reqPoints < totalPoints) {
+            return res.status(400).json({ error: `Insufficient points. Requester has ${reqPoints}, needs ${totalPoints}.` });
+        }
+
+        await prisma.$transaction([
+            prisma.user.update({ where: { email: swapRequest.requester_email }, data: { guest_points: reqPoints - totalPoints } }),
+            prisma.user.update({ where: { email: swapRequest.host_email }, data: { guest_points: hostPoints + totalPoints } }),
+            prisma.guestPointTransaction.create({
+                data: {
+                    user_email: swapRequest.requester_email,
+                    transaction_type: 'spent_swap',
+                    points: -totalPoints,
+                    balance_after: reqPoints - totalPoints,
+                    description: `Swap completed for ${swapRequest.property_title}`,
+                    related_id: swap_request_id
+                }
+            }),
+            prisma.guestPointTransaction.create({
+                data: {
+                    user_email: swapRequest.host_email,
+                    transaction_type: 'earned_swap',
+                    points: totalPoints,
+                    balance_after: hostPoints + totalPoints,
+                    description: `Earned from swap completed for ${swapRequest.property_title}`,
+                    related_id: swap_request_id
+                }
+            })
+        ]);
     }
 
     await prisma.swapRequest.update({
@@ -173,7 +206,28 @@ async function createStripeCheckoutSession(req, res) {
     const { subscription_plan_id } = req.body;
     if (!subscription_plan_id) return res.status(400).json({ error: 'subscription_plan_id is required' });
 
-    const plan = await prisma.subscriptionPlan.findUnique({ where: { id: subscription_plan_id } });
+    let plan = await prisma.subscriptionPlan.findUnique({ where: { id: subscription_plan_id } });
+    
+    // Auto-create plan if missing (fallback for fresh databases)
+    if (!plan || !plan.is_active) {
+        const STATIC_PLANS = [
+            { id: 'limited', name: 'Limited', description: 'Perfect for diplomats with a single annual rotation.', price: 129, type: 'annual', is_active: true },
+            { id: 'standard', name: 'Standard', description: 'Ideal for mid-level staff with bi-annual mobility.', price: 219, type: 'annual', is_active: true },
+            { id: 'professional', name: 'Professional', description: 'Designed for senior staff on frequent rotational assignments.', price: 349, type: 'annual', is_active: true },
+            { id: 'unlimited-pro', name: 'Unlimited Pro', description: 'Maximum flexibility for agency heads and ambassadors.', price: 449, type: 'annual', is_active: true },
+            { id: 'lifetime', name: 'Lifetime Access', description: 'Pay once, exchange forever. Unlimited Pro features for life.', price: 3143, type: 'lifetime', is_active: true },
+        ];
+        
+        const defaultPlan = STATIC_PLANS.find(p => p.id === subscription_plan_id);
+        if (defaultPlan) {
+            plan = await prisma.subscriptionPlan.upsert({
+                where: { id: defaultPlan.id },
+                update: { is_active: true },
+                create: defaultPlan
+            });
+        }
+    }
+
     if (!plan || !plan.is_active) return res.status(400).json({ error: 'Invalid or inactive subscription plan' });
 
     const origin = req.headers.origin || process.env.FRONTEND_URL;
@@ -249,27 +303,28 @@ async function markVideoCallCompleted(req, res) {
 
     const videoCall = await prisma.videoCall.findUnique({ where: { id: video_call_id } });
     if (!videoCall) return res.status(404).json({ error: 'Video call not found' });
-    if (videoCall.host_email !== user.email && videoCall.guest_email !== user.email) return res.status(403).json({ error: 'Not part of this call' });
+    if (videoCall.host_email !== user.email) return res.status(403).json({ error: 'Only the host can mark the call as completed' });
 
     await prisma.videoCall.update({
         where: { id: video_call_id },
         data: { status: 'completed', meeting_completed: true, call_ended_at: new Date() }
     });
 
-    const relatedSwaps = await prisma.swapRequest.findMany({ where: { video_call_id: video_call_id } });
-    if (relatedSwaps.length > 0) {
-        const swapRequest = relatedSwaps[0];
-        await prisma.swapRequest.update({
-            where: { id: swapRequest.id },
-            data: { status: 'approved', video_call_completed: true }
-        });
+    if (videoCall.swap_request_id) {
+        const swapRequest = await prisma.swapRequest.findUnique({ where: { id: videoCall.swap_request_id } });
+        if (swapRequest) {
+            await prisma.swapRequest.update({
+                where: { id: swapRequest.id },
+                data: { status: 'approved', video_call_completed: true, video_call_id: video_call_id }
+            });
 
-        await prisma.notification.createMany({
-            data: [
-                { user_email: swapRequest.requester_email, type: 'swap_approved', title: 'Video Call Completed', message: `Your video call for ${swapRequest.property_title} is complete. Swap approved!`, link: '/MySwaps', related_id: swapRequest.id },
-                { user_email: swapRequest.host_email, type: 'swap_approved', title: 'Video Call Completed', message: `Your video call for ${swapRequest.property_title} is complete. Swap approved!`, link: '/MySwaps', related_id: swapRequest.id },
-            ]
-        });
+            await prisma.notification.createMany({
+                data: [
+                    { user_email: swapRequest.requester_email, type: 'swap_approved', title: 'Video Call Completed', message: `Your video call for ${swapRequest.property_title} is complete. Swap approved!`, link: '/MySwaps', related_id: swapRequest.id },
+                    { user_email: swapRequest.host_email, type: 'swap_approved', title: 'Video Call Completed', message: `Your video call for ${swapRequest.property_title} is complete. Swap approved!`, link: '/MySwaps', related_id: swapRequest.id },
+                ]
+            });
+        }
     }
 
     return res.json({ success: true, video_call_id });

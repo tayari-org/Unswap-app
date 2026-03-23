@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, ZoomIn } from 'lucide-react';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 export default function ImageAttachment({ src, onRemove, isPreview = false }) {
   if (isPreview) {
@@ -36,6 +36,8 @@ export default function ImageAttachment({ src, onRemove, isPreview = false }) {
         </button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl p-2">
+        <DialogTitle className="sr-only">Image Attachment</DialogTitle>
+        <DialogDescription className="sr-only">Full size view of the attached image</DialogDescription>
         <img src={src} alt="Full size" className="w-full h-auto rounded-lg" />
       </DialogContent>
     </Dialog>
