@@ -236,7 +236,7 @@ async function createStripeCheckoutSession(req, res) {
         payment_method_types: ['card'],
         line_items: [{ price_data: { currency: 'usd', product_data: { name: plan.name, description: plan.description }, unit_amount: Math.round(plan.price * 100), ...(plan.type === 'annual' && { recurring: { interval: 'year' } }) }, quantity: 1 }],
         mode: plan.type === 'annual' ? 'subscription' : 'payment',
-        success_url: `${origin}/PaymentSuccess?session_id={CHECKOUT_SESSION_ID}&type=subscription`,
+        success_url: `${origin}/PaymentSuccess?type=subscription&plan=${encodeURIComponent(plan.name)}&price=${plan.price}&plan_type=${plan.type}`,
         cancel_url: `${origin}/subscription-plans?canceled=true`,
         metadata: { user_email: user.email, subscription_plan_id: plan.id, plan_type: plan.type },
     });
@@ -277,7 +277,7 @@ async function createGuestPointsCheckoutSession(req, res) {
             quantity: 1
         }],
         mode: 'payment',
-        success_url: `${origin}/PaymentSuccess?session_id={CHECKOUT_SESSION_ID}&type=points`,
+        success_url: `${origin}/PaymentSuccess?type=points&points=${points_amount}&price=${price_usd}`,
         cancel_url: `${origin}/settings?canceled=true`,
         metadata: { user_email: user.email, plan_type: 'guest_points', points_amount: points_amount.toString() },
     });

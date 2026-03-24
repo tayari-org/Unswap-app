@@ -63,13 +63,15 @@ export default function ScheduledCallCard({ videoCall, user, onJoinCall, onEdit,
             </div>
           </div>
 
-          {canJoin && (videoCall.status === 'scheduled' || videoCall.status === 'in_progress') && (
+          {(videoCall.status === 'scheduled' || videoCall.status === 'in_progress') && (
             <Button 
               onClick={onJoinCall}
-              className="bg-blue-500 hover:bg-blue-600 animate-pulse"
+              className={`bg-blue-500 hover:bg-blue-600 text-white ${
+                canJoin ? 'animate-pulse' : ''
+              }`}
             >
               <Video className="w-4 h-4 mr-2" />
-              {videoCall.status === 'scheduled' ? 'Join Call' : 'Rejoin Call'}
+              {videoCall.status === 'in_progress' ? 'Rejoin Call' : 'Join Call'}
             </Button>
           )}
         </div>
@@ -127,6 +129,16 @@ export default function ScheduledCallCard({ videoCall, user, onJoinCall, onEdit,
                 View Property
               </Button>
             </Link>
+          )}
+          {(videoCall.status === 'scheduled' || videoCall.status === 'in_progress') && (
+            <Button
+              size="sm"
+              onClick={onJoinCall}
+              className="bg-blue-500 hover:bg-blue-600 text-white flex-1"
+            >
+              <Video className="w-4 h-4 mr-2" />
+              {videoCall.status === 'in_progress' ? 'Rejoin Call' : 'Join Call'}
+            </Button>
           )}
           {videoCall.status === 'scheduled' && (
             <Button 
