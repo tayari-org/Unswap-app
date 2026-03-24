@@ -139,7 +139,6 @@ export default function Dashboard() {
 
   const navItems = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'listings', label: 'My Listings', icon: Home },
     { id: 'saved', label: 'Saved', icon: Heart, count: savedIds.length },
     { id: 'messages', label: 'Messages', icon: MessageSquare, count: messages.length },
     { id: 'calls', label: 'Video Calls', icon: Video },
@@ -262,10 +261,10 @@ export default function Dashboard() {
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   {[
-                    { label: 'Active Listings', value: stats.activeListings, icon: Home, color: 'text-blue-600', bg: 'bg-blue-50' },
-                    { label: 'Exchanges', value: stats.swapsCompleted, icon: ArrowLeftRight, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                    { label: 'Rating', value: stats.avgRating > 0 ? `${stats.avgRating.toFixed(1)} (${stats.reviewsCount})` : '—', icon: Star, color: 'text-amber-600', bg: 'bg-amber-50' },
-                    { label: 'Total Views', value: stats.totalViews, icon: Eye, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                    { label: 'Active Listings', value: stats.activeListings, icon: Home, color: 'text-blue-600', bg: 'bg-blue-50', link: createPageUrl('HostDashboard') },
+                    { label: 'Exchanges', value: stats.swapsCompleted, icon: ArrowLeftRight, color: 'text-emerald-600', bg: 'bg-emerald-50', link: createPageUrl('MySwaps') },
+                    { label: 'Rating', value: stats.avgRating > 0 ? `${stats.avgRating.toFixed(1)} (${stats.reviewsCount})` : '—', icon: Star, color: 'text-amber-600', bg: 'bg-amber-50', link: createPageUrl('HostDashboard') + '?tab=reviews' },
+                    { label: 'Total Views', value: stats.totalViews, icon: Eye, color: 'text-indigo-600', bg: 'bg-indigo-50', link: createPageUrl('HostDashboard') },
                   ].map((stat, index) => (
                     <motion.div
                       key={index}
@@ -273,17 +272,19 @@ export default function Dashboard() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
                     >
-                      <Card className="bg-white border border-stone-100 shadow-sm hover:shadow-md transition-shadow duration-300 rounded-2xl overflow-hidden">
-                        <CardContent className="p-5">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className={`w-9 h-9 ${stat.bg} rounded-xl flex items-center justify-center`}>
-                              <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                      <Link to={stat.link} className="block group">
+                        <Card className="bg-white border border-stone-100 shadow-sm group-hover:shadow-md group-hover:border-blue-200 transition-all duration-300 rounded-2xl overflow-hidden cursor-pointer">
+                          <CardContent className="p-5">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className={`w-9 h-9 ${stat.bg} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                                <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                              </div>
                             </div>
-                          </div>
-                          <p className="text-2xl font-semibold text-slate-900 tracking-tight">{stat.value}</p>
-                          <p className="text-xs text-stone-400 mt-1 font-medium">{stat.label}</p>
-                        </CardContent>
-                      </Card>
+                            <p className="text-2xl font-semibold text-slate-900 tracking-tight group-hover:text-blue-600 transition-colors">{stat.value}</p>
+                            <p className="text-xs text-stone-400 mt-1 font-medium">{stat.label}</p>
+                          </CardContent>
+                        </Card>
+                      </Link>
                     </motion.div>
                   ))}
                 </div>
@@ -388,65 +389,6 @@ export default function Dashboard() {
                   </CardContent>
                 </Card>
               </>
-            )}
-
-
-            {activeTab === 'listings' && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-semibold text-slate-900">My Listings</h2>
-                  <Link to={createPageUrl('AddProperty')}>
-                    <Button className="bg-blue-600 text-white hover:bg-blue-700 rounded-xl px-6 h-10 font-medium text-sm shadow-lg shadow-blue-600/20">
-                      + Add Property
-                    </Button>
-                  </Link>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {properties.length === 0 ? (
-                    <Card className="col-span-2 border-2 border-dashed border-stone-200 rounded-2xl bg-stone-50/50 p-16 text-center">
-                      <Home className="w-10 h-10 text-stone-300 mx-auto mb-3" />
-                      <p className="text-stone-500 font-medium">No properties listed yet</p>
-                      <p className="text-stone-400 text-sm mt-1">Add your first property to start swapping</p>
-                    </Card>
-                  ) : (
-                    properties.map((property) => (
-                      <Card key={property.id} className="border border-stone-100 shadow-sm hover:shadow-lg transition-all duration-300 rounded-2xl overflow-hidden group bg-white">
-                        <CardContent className="p-0">
-                          <div className="aspect-video bg-stone-100 relative overflow-hidden">
-                            {property.image_url ? (
-                              <img src={property.image_url} alt={property.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-stone-300">
-                                <Home className="w-12 h-12" />
-                              </div>
-                            )}
-                            <Badge className={`absolute top-3 right-3 rounded-full border-0 font-medium text-xs capitalize ${property.status === 'active' ? 'bg-emerald-500 text-white' : 'bg-slate-600 text-white'
-                              }`}>
-                              {property.status}
-                            </Badge>
-                          </div>
-                          <div className="p-5">
-                            <p className="text-xs text-blue-600 font-medium mb-1">{property.location}</p>
-                            <h3 className="text-lg font-semibold text-slate-900 tracking-tight mb-3 group-hover:text-blue-600 transition-colors">{property.title}</h3>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-4 text-stone-400 text-xs font-medium">
-                                <span>{property.bedrooms} Beds</span>
-                                <span>{property.bathrooms} Baths</span>
-                              </div>
-                              <Link to={createPageUrl('PropertyDetails') + `?id=${property.id}`}>
-                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 font-medium text-sm h-8">
-                                  Manage →
-                                </Button>
-                              </Link>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                  )}
-                </div>
-              </div>
             )}
 
             {activeTab === 'messages' && (
