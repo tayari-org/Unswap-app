@@ -1,6 +1,6 @@
 const express = require('express');
 const crypto = require('crypto');
-const { waitlistPrisma } = require('../db-waitlist');
+const prisma = require('../db');
 const { sendEmail } = require('./email');
 const router = express.Router();
 
@@ -27,7 +27,7 @@ router.post('/join/initiate', async (req, res) => {
         const normalizedEmail = email.toLowerCase();
 
         // Already on waitlist? Check local DB as fallback
-        const existing = await waitlistPrisma.waitlistEntry.findUnique({ where: { email: normalizedEmail } });
+        const existing = await prisma.waitlistEntry.findUnique({ where: { email: normalizedEmail } });
         if (existing) {
             return res.status(409).json({ error: 'This email is already on the waitlist.' });
         }
@@ -122,7 +122,7 @@ router.get('/confirm', async (req, res) => {
 
         // Keep local DB in sync (using Waitlister's generated referral_code)
         try {
-            await waitlistPrisma.waitlistEntry.create({
+            await prisma.waitlistEntry.create({
                 data: {
                     email: pending.email,
                     full_name: pending.name,
@@ -153,26 +153,78 @@ router.get('/confirm', async (req, res) => {
 // ─── GET /api/waitlist/count ──────────────────────────────────────────────────
 router.get('/count', async (req, res) => {
     try {
-        const count = await waitlistPrisma.waitlistEntry.count();
+        const waitlisterApiKey = process.env.WAITLISTER_API_KEY;
+        const waitlisterWaitlistKey = process.env.WAITLISTER_WAITLIST_KEY;
 
-        // Let's rely on local DB for the basic count on index for now,
-        // or waitlister has an API for stats, but local shadow DB handles this efficiently.
-        const recent = await waitlistPrisma.waitlistEntry.findMany({
-            orderBy: { created_at: 'desc' },
-            take: 4,
-            select: { full_name: true, email: true }
+        if (!waitlisterApiKey || !waitlisterWaitlistKey) {
+            return res.json({ count: 0, recentJoiners: [] });
+        }
+
+        // Fetch recent subscribers from Waitlister directly
+        const wlResponse = await fetch(`https://waitlister.me/api/v1/waitlist/${waitlisterWaitlistKey}/subscribers?limit=4&sort_by=date&sort_dir=desc`, {
+            method: 'GET',
+            headers: {
+                'X-Api-Key': waitlisterApiKey,
+                'Content-Type': 'application/json'
+            }
         });
 
-        const recentJoiners = recent.map(u => ({
-            initials: u.full_name
-                ? u.full_name.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase()
+        const wlData = await wlResponse.json();
+
+        if (!wlResponse.ok || !wlData.success) {
+            console.error('Waitlister count API error:', wlData);
+            // Fallback gracefully so frontend doesn't crash
+            return res.json({ count: 0, recentJoiners: [] });
+        }
+
+        const count = wlData.data.total || 0;
+        
+        const recentJoiners = (wlData.data.subscribers || []).map(u => ({
+            initials: u.name
+                ? u.name.trim().split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase()
                 : u.email[0].toUpperCase(),
         }));
 
         res.json({ count, recentJoiners });
     } catch (err) {
         console.error('Waitlist count error:', err);
-        res.status(500).json({ error: 'Failed to get waitlist count' });
+        res.status(500).json({ error: 'Failed to get waitlist count from Waitlister' });
+    }
+});
+
+// ─── GET /api/waitlist/status ──────────────────────────────────────────────────
+router.get('/status', async (req, res) => {
+    try {
+        const { email } = req.query;
+        if (!email) return res.status(400).json({ error: 'Email is required' });
+
+        const waitlisterApiKey = process.env.WAITLISTER_API_KEY;
+        const waitlisterWaitlistKey = process.env.WAITLISTER_WAITLIST_KEY;
+
+        if (!waitlisterApiKey || !waitlisterWaitlistKey) {
+            return res.status(500).json({ error: 'Waitlister API keys not configured' });
+        }
+
+        const wlResponse = await fetch(`https://waitlister.me/api/v1/waitlist/${waitlisterWaitlistKey}/subscribers/${encodeURIComponent(email)}`, {
+            method: 'GET',
+            headers: {
+                'X-Api-Key': waitlisterApiKey,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const wlData = await wlResponse.json();
+
+        if (!wlResponse.ok || !wlData.success || !wlData.data?.subscriber) {
+            return res.json({ found: false });
+        }
+
+        // Return the thank you URL so the frontend can redirect
+        return res.json({ found: true, thank_you_url: wlData.data.subscriber.thank_you_url });
+
+    } catch (err) {
+        console.error('Waitlist status error:', err);
+        res.status(500).json({ error: 'Failed to get waitlist status' });
     }
 });
 

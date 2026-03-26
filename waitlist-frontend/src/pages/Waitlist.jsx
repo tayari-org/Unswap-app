@@ -61,17 +61,17 @@ export default function Waitlist() {
     try {
       const data = await api.waitlist.getStatus(checkEmail);
       if (data.found === false) {
-        setErrorMessage('You have not signed up yet');
+        setErrorMessage("We couldn't find an account matching that email.");
         setStatus('error');
         return;
       }
       
-      // Since Waitlister handles the actual redirects, if they check status here
-      // we can just confirm they are on our local lists or they can check their email.
-      // For simplicity, we just show a basic found message.
-      setErrorMessage('');
-      setStatus('idle');
-      alert(`You're on the waitlist! Your referral code is: ${data.referral_code}`);
+      if (data.thank_you_url) {
+          window.location.href = data.thank_you_url;
+      } else {
+          setErrorMessage('Dashboard link not found');
+          setStatus('error');
+      }
     } catch (err) {
       setErrorMessage(err.message || 'Something went wrong.');
       setStatus('error');
@@ -183,6 +183,12 @@ export default function Waitlist() {
                             <span className="text-sm text-white font-medium">{waitlistCount} people have already joined!</span>
                         </div>
                     )}
+                    <button 
+                        onClick={() => { setMode('status'); setErrorMessage(''); }}
+                        className="mt-4 text-[#899BB1] hover:text-white text-sm transition-colors"
+                    >
+                        Check your waitlist status →
+                    </button>
                  </div>
              </div>
           </motion.div>

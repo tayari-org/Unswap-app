@@ -355,3 +355,29 @@ model MessageReaction {
   emoji      String
   created_at DateTime @default(now())
 }
+
+model WaitlistEntry {
+  id                            String    @id @default(uuid())
+  email                         String    @unique
+  full_name                     String?
+  organization                  String?
+  waitlist_position             Int?
+  referral_code                 String    @unique
+  referred_by                   String?   // referral_code of referrer
+  referred_users_verified_count Int       @default(0)
+  is_verified                   Boolean   @default(true)  // always true: OTP confirmed
+  created_at                    DateTime  @default(now())
+  updated_at                    DateTime  @updatedAt
+
+  referrals WaitlistReferral[] @relation("ReferrerEntries")
+}
+
+model WaitlistReferral {
+  id               String        @id @default(uuid())
+  referrer_code    String
+  referrer         WaitlistEntry @relation("ReferrerEntries", fields: [referrer_code], references: [referral_code])
+  referred_email   String        @unique
+  referred_name    String?
+  completed_at     DateTime?
+  created_at       DateTime      @default(now())
+}

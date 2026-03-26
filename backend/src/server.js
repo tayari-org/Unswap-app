@@ -5,7 +5,6 @@ const helmet = require('helmet');
 const path = require('path');
 const rateLimit = require('express-rate-limit');
 const { connectDB } = require('./db');
-const { connectWaitlistDB } = require('./db-waitlist');
 
 const authRoutes = require('./routes/auth');
 const entitiesRouter = require('./routes/entities');
@@ -119,7 +118,7 @@ app.use((err, req, res, next) => {
 });
 
 // ─── Start ────────────────────────────────────────────────────────────────────
-Promise.all([connectDB(), connectWaitlistDB()]).then(() => {
+connectDB().then(() => {
     app.listen(PORT, () => {
         const url = process.env.BACKEND_URL || `http://localhost:${PORT}`;
         console.log(`\n🚀 Unswap backend running on ${url}`);
