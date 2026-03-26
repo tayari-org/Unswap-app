@@ -22,7 +22,15 @@ export default function Waitlist() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const ref = params.get('ref');
+    const errParam = params.get('error');
+
     if (ref) sessionStorage.setItem('unswap_referral_code', ref);
+    if (errParam) {
+        setErrorMessage(decodeURIComponent(errParam).replace(/\+/g, ' '));
+        setMode('error');
+        // Clean URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
 
     api.waitlist.getCount().then(data => {
         if (typeof data.count === 'number') setWaitlistCount(data.count);
@@ -87,7 +95,7 @@ export default function Waitlist() {
         {mode === 'join' && (
           <motion.div key="join" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
              {/* LEFT: Image */}
-             <div className="w-full aspect-[4/3] lg:aspect-auto lg:h-[500px] relative rounded-3xl overflow-hidden shadow-2xl group">
+             <div className="hidden lg:block w-full aspect-[4/3] lg:aspect-auto lg:h-[500px] relative rounded-3xl overflow-hidden shadow-2xl group">
                  <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80" alt="Home Interior" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                  
                  {/* Decorative Overlay */}
