@@ -28,8 +28,7 @@ app.use(helmet({
 }));
 const allowedOrigins = [
     process.env.FRONTEND_URL,
-    process.env.WAITLIST_FRONTEND_URL || 'http://localhost:5174',
-    'https://unswap-waitlist.vercel.app'
+    process.env.WAITLIST_FRONTEND_URL
 ].filter(Boolean);
 
 app.use(cors({

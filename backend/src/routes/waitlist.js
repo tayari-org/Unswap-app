@@ -80,11 +80,11 @@ router.get('/confirm', async (req, res) => {
         const pending = pendingWaitlist.get(token);
 
         if (!pending) {
-            return res.redirect(`${process.env.WAITLIST_FRONTEND_URL || 'http://localhost:5174'}?error=No+pending+signup+found+or+it+has+expired`);
+            return res.redirect(`${process.env.WAITLIST_FRONTEND_URL}?error=No+pending+signup+found+or+it+has+expired`);
         }
         if (Date.now() > pending.expiresAt) {
             pendingWaitlist.delete(token);
-            return res.redirect(`${process.env.WAITLIST_FRONTEND_URL || 'http://localhost:5174'}?error=Confirmation+link+expired`);
+            return res.redirect(`${process.env.WAITLIST_FRONTEND_URL}?error=Confirmation+link+expired`);
         }
 
         const waitlisterApiKey = process.env.WAITLISTER_API_KEY;
