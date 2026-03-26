@@ -254,8 +254,11 @@ export default function Waitlist() {
         {/* ========================================= STATUS CHECKER ========================================= */}
         {mode === 'status' && (
            <motion.div key="status" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center text-center w-full max-w-lg mx-auto">
-               <h3 className="text-white font-semibold mb-2 text-lg">Unswap</h3>
-               <h1 className="text-4xl md:text-5xl font-bold text-white mb-8 tracking-tight">Check your waitlist status</h1>
+               <div className="flex items-center justify-center gap-3 mb-4">
+                   <img src="/logo.png" alt="Unswap Logo" className="h-10 w-10 object-contain grayscale brightness-200" />
+                   <h3 className="text-white text-2xl font-bold tracking-tight uppercase">Unswap</h3>
+               </div>
+               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-8 tracking-tight whitespace-nowrap">Check your waitlist status</h1>
                
                <form onSubmit={handleCheckStatus} className="w-full flex flex-col items-center gap-4">
                    <div className="w-full relative">
