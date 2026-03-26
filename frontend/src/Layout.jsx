@@ -65,6 +65,7 @@ export default function Layout({ children, currentPageName }) {
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-display">
       {/* Navigation */}
+      {currentPageName !== 'Waitlist' && (
       <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled || !isHomePage
         ? 'bg-white/80 backdrop-blur-xl border-b border-slate-100 shadow-sm'
         : 'bg-transparent'
@@ -384,15 +385,16 @@ export default function Layout({ children, currentPageName }) {
           )}
         </AnimatePresence>
       </header>
+      )}
 
       {/* Main Content - Precise offset */}
-      <main className={isHomePage ? '' : 'pt-20'}>
+      <main className={isHomePage || currentPageName === 'Waitlist' ? '' : 'pt-20'}>
         {children}
       </main>
 
       {/* Footer */}
       {
-        !['Home', 'Messages', 'Dashboard', 'AdminDashboard', 'MyListings', 'MySwaps', 'Settings', 'HostProfile', 'GuestDashboard'].includes(currentPageName) && (
+        !['Home', 'Messages', 'Dashboard', 'AdminDashboard', 'MyListings', 'MySwaps', 'Settings', 'HostProfile', 'GuestDashboard', 'Waitlist'].includes(currentPageName) && (
           <footer className="bg-[#05080f] border-t border-white/5 pt-24 pb-12 px-6">
             <div className="max-w-7xl mx-auto">
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 mb-16">

@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const path = require('path');
 const rateLimit = require('express-rate-limit');
 const { connectDB } = require('./db');
+const { connectWaitlistDB } = require('./db-waitlist');
 
 const authRoutes = require('./routes/auth');
 const entitiesRouter = require('./routes/entities');
@@ -14,6 +15,7 @@ const emailRouter = require('./routes/email');
 const webhookRouter = require('./routes/webhook');
 const referralsRouter = require('./routes/referrals');
 const favoritesRouter = require('./routes/favorites');
+const waitlistRouter = require('./routes/waitlist');
 
 const app = express();
 const PORT = process.env.PORT;
@@ -25,8 +27,21 @@ if (!PORT) {
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
+const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    process.env.WAITLIST_FRONTEND_URL || 'http://localhost:5174'
+].filter(Boolean);
+
 app.use(cors({
-    origin: process.env.FRONTEND_URL,
+    origin: (origin, callback) => {
+        // allow requests with no origin (like mobile apps or curl requests)
+        // or allowed origins
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
 }));
 
@@ -64,6 +79,7 @@ app.use('/api/upload', uploadsRouter);
 app.use('/api/email', emailRouter);
 app.use('/api/referrals', referralsRouter);
 app.use('/api/favorites', favoritesRouter);
+app.use('/api/waitlist', waitlistRouter);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
@@ -103,7 +119,7 @@ app.use((err, req, res, next) => {
 });
 
 // ─── Start ────────────────────────────────────────────────────────────────────
-connectDB().then(() => {
+Promise.all([connectDB(), connectWaitlistDB()]).then(() => {
     app.listen(PORT, () => {
         const url = process.env.BACKEND_URL || `http://localhost:${PORT}`;
         console.log(`\n🚀 Unswap backend running on ${url}`);

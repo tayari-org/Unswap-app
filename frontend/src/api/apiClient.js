@@ -302,6 +302,27 @@ const favorites = {
     },
 };
 
+// ─── Waitlist ─────────────────────────────────────────────────────────────────
+
+const waitlist = {
+    async getCount() {
+        return get('/api/waitlist/count');
+    },
+    async initiateJoin(data) {
+        return post('/api/waitlist/join/initiate', data);
+    },
+    async verifyJoin(email, otp) {
+        return post('/api/waitlist/join/verify', { email, otp });
+    },
+    async getStatus(email) {
+        // apiClient throws if not ok (including 404), so get() is sufficient
+        return get(`/api/waitlist/status?email=${encodeURIComponent(email)}`);
+    },
+    async getLeaderboard() {
+        return get('/api/waitlist/leaderboard');
+    }
+};
+
 // ─── Main export ───────────────────────────────────────────────────────────────
 
 export const api = {
@@ -311,6 +332,7 @@ export const api = {
     integrations,
     referrals,
     favorites,
+    waitlist,
     // asServiceRole is the same object — backend handles admin elevation via JWT role
     get asServiceRole() {
         return this;

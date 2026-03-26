@@ -53,9 +53,15 @@ export default function Dashboard() {
     queryKey: ['my-swap-requests', user?.email],
     queryFn: () => api.entities.SwapRequest.filter({
       $or: [{ requester_email: user?.email }, { host_email: user?.email }]
-    }, '-created_date', 10),
+    }, '-created_date'),
     enabled: !!user?.email,
   });
+
+  const completedSwapsAsHost = swapRequests.filter(s => s.host_email === user?.email && s.status === 'completed');
+  const completedSwapsAsGuest = swapRequests.filter(s => s.requester_email === user?.email && s.status === 'completed');
+  
+  const totalEarned = completedSwapsAsHost.reduce((acc, s) => acc + (s.total_points || 0), 0);
+  const totalSpent = completedSwapsAsGuest.reduce((acc, s) => acc + (s.total_points || 0), 0);
 
   const { data: messages = [] } = useQuery({
     queryKey: ['unread-messages', user?.email],
@@ -122,10 +128,10 @@ export default function Dashboard() {
 
   const stats = {
     guestPoints: user?.guest_points ?? 500,
-    totalEarned: user?.total_points_earned || 0,
-    totalSpent: user?.total_points_spent || 0,
-    swapsCompleted: user?.swaps_completed || 0,
-    hostingCount: user?.hosting_count || 0,
+    totalEarned,
+    totalSpent,
+    swapsCompleted: completedSwapsAsGuest.length,
+    hostingCount: completedSwapsAsHost.length,
     avgRating,
     reviewsCount: myReviews.length,
     activeListings: properties.filter(p => p.status === 'active').length,

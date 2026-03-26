@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion } from 'framer-motion';
 import {
   Home, TrendingUp, Calendar, MessageSquare, Settings, Plus,
-  Eye, Heart, Star, Coins, Users, ArrowUpRight, Clock
+  Eye, Heart, Star, Coins, Users, ArrowUpRight, Clock, LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import PerformanceMetrics from '../components/host/PerformanceMetrics';
 import BookingTrends from '../components/host/BookingTrends';
 import EarningsOverview from '../components/host/EarningsOverview';
@@ -19,8 +20,11 @@ import QuickActions from '../components/host/QuickActions';
 import RecentReviews from '../components/host/RecentReviews';
 import NotificationCenter from '../components/notifications/NotificationCenter';
 import NotificationPreferences from '../components/notifications/NotificationPreferences';
+import ReferralProgram from '../components/host/ReferralProgram';
 
 export default function HostDashboard() {
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
   const [selectedProperty, setSelectedProperty] = useState('all');
 
   // Fetch user data
@@ -92,32 +96,98 @@ export default function HostDashboard() {
     );
   }
 
+  const navItems = [
+    { id: 'overview', label: 'Overview', icon: TrendingUp },
+    { id: 'bookings', label: 'Bookings', icon: Calendar },
+    { id: 'calendar', label: 'Calendar', icon: Calendar },
+    { id: 'reviews', label: 'Reviews', icon: Star },
+    { id: 'earnings', label: 'Earnings', icon: Coins },
+    { id: 'referrals', label: 'Referrals', icon: Users },
+    { id: 'notifications', label: 'Notifications', icon: MessageSquare },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#F8FAFC] py-8 px-6">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-unswap-blue-deep mb-2">Dashboard</p>
-            <h1 className="text-4xl font-extralight tracking-tighter text-slate-900">Host Dashboard</h1>
-            <p className="text-slate-500 text-sm mt-1 font-serif italic">
-              Manage your listings and track your performance
-            </p>
+    <div className="min-h-screen flex bg-[#FDF8F4]">
+      {/* FULL-HEIGHT SIDEBAR */}
+      <aside className="hidden md:flex flex-col w-60 flex-shrink-0 bg-unswap-blue-deep sticky top-0 h-screen overflow-y-auto z-40">
+        <div className="px-6 pt-8 pb-6">
+          <h1 className="text-lg font-bold text-white tracking-tight font-display">Host Dashboard</h1>
+          <Badge variant="outline" className={`mt-2 flex items-center gap-1.5 px-2.5 py-0.5 w-fit rounded-full text-[9px] border-white/20 bg-white/10 text-white/80`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${user?.verification_status === 'verified' ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+            {user?.verification_status?.toUpperCase() || 'UNVERIFIED'}
+          </Badge>
+        </div>
+
+        <nav className="flex-1 px-3">
+          <div className="px-3 pt-4 pb-3">
+            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Menu</span>
           </div>
-          <div className="flex items-center gap-3">
-            <Link to={createPageUrl('MyListings')}>
-              <Button variant="outline" className="rounded-none border-unswap-border text-[10px] uppercase font-bold tracking-[0.2em] h-11">
-                <Home className="w-4 h-4 mr-2" />
-                My Listings
-              </Button>
-            </Link>
-            <Link to={createPageUrl('PropertyForm')}>
-              <Button className="bg-unswap-blue-deep hover:bg-slate-800 rounded-none text-[10px] uppercase font-bold tracking-[0.2em] h-11">
-                <Plus className="w-4 h-4 mr-2" />
-                New Listing
-              </Button>
-            </Link>
+          <div className="space-y-0.5">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`w-full group flex items-center gap-3 px-3 py-2.5 transition-all text-left rounded-sm border-l-[3px] ${activeTab === item.id
+                  ? 'border-unswap-silver-light bg-white/10 text-white'
+                  : 'border-transparent text-white/60 hover:text-white hover:bg-white/5'
+                  }`}
+              >
+                <item.icon className={`w-4 h-4 flex-shrink-0 transition-colors ${activeTab === item.id ? 'text-white' : 'text-white/40 group-hover:text-white/70'}`} />
+                <span className={`text-[13px] tracking-wide ${activeTab === item.id ? 'font-semibold' : 'font-medium'}`}>{item.label}</span>
+              </button>
+            ))}
           </div>
+        </nav>
+
+        <div className="px-3 pb-6 mt-auto border-t border-white/10 pt-4">
+          <Button variant="ghost" size="sm" onClick={() => api.auth.logout()} className="w-full justify-start text-white/50 hover:text-red-300 hover:bg-white/5 transition-all font-semibold text-[11px] tracking-wide gap-2 h-9 rounded-sm">
+            <LogOut className="w-3.5 h-3.5" />
+            Sign Out
+          </Button>
+        </div>
+      </aside>
+
+      {/* MOBILE HEADER */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-white border-b border-slate-200 px-4 py-3">
+        <div className="flex items-center justify-between mb-3">
+          <h1 className="text-lg font-bold text-unswap-blue-deep font-display">Host Dashboard</h1>
+          <Button variant="ghost" size="sm" onClick={() => api.auth.logout()} className="text-slate-400 hover:text-red-600 text-[10px] font-bold uppercase tracking-widest">
+            <LogOut className="w-3 h-3 mr-1.5" />
+            Sign Out
+          </Button>
+        </div>
+        <div className="flex gap-1 overflow-x-auto pb-1">
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold whitespace-nowrap rounded-sm transition-all ${activeTab === item.id
+                ? 'bg-unswap-blue-deep text-white'
+                : 'text-slate-500 hover:bg-slate-100'
+                }`}
+            >
+              <item.icon className="w-3.5 h-3.5" />
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* MAIN CONTENT AREA */}
+      <main className="flex-1 min-w-0 overflow-y-auto md:pt-0 pt-28">
+        <div className="max-w-6xl mx-auto px-6 md:px-10 py-10 space-y-8">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-unswap-blue-deep mb-2">Host Options</p>
+              <h1 className="text-4xl font-extralight tracking-tighter text-slate-900">
+                {navItems.find(i => i.id === activeTab)?.label || 'Overview'}
+              </h1>
+              <p className="text-slate-500 text-sm mt-1 font-serif italic">
+                Manage your listings and track your performance
+              </p>
+            </div>
+
         </div>
 
         {/* Property Filter */}
@@ -280,45 +350,10 @@ export default function HostDashboard() {
           </motion.div>
         </div>
 
-        {/* Quick Actions */}
-        <QuickActions
-          pendingCount={pendingRequests}
-          unreadCount={unreadMessages}
-        />
+
 
         {/* Main Content Tabs */}
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-7">
-            <TabsTrigger value="overview">
-              <TrendingUp className="w-4 h-4 mr-2" />
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="bookings">
-              <Calendar className="w-4 h-4 mr-2" />
-              Bookings
-            </TabsTrigger>
-            <TabsTrigger value="calendar">
-              <Calendar className="w-4 h-4 mr-2" />
-              Calendar
-            </TabsTrigger>
-            <TabsTrigger value="reviews">
-              <Star className="w-4 h-4 mr-2" />
-              Reviews
-            </TabsTrigger>
-            <TabsTrigger value="earnings">
-              <Coins className="w-4 h-4 mr-2" />
-              Earnings
-            </TabsTrigger>
-            <TabsTrigger value="referrals">
-              <Users className="w-4 h-4 mr-2" />
-              Referrals
-            </TabsTrigger>
-            <TabsTrigger value="notifications">
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Notifications
-            </TabsTrigger>
-          </TabsList>
-
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsContent value="overview" className="space-y-6">
             <PerformanceMetrics
               properties={properties}
@@ -377,6 +412,7 @@ export default function HostDashboard() {
           </TabsContent>
         </Tabs>
       </div>
+     </main>
     </div>
   );
 }
