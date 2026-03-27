@@ -166,6 +166,31 @@ router.get('/confirm', async (req, res) => {
             console.warn('Silent fail writing to local waitlist shadow DB:', dbErr.message);
         }
 
+        // ─── Post-Verification Kit Form Subscription ────────────────────────────────
+        const kitApiSecret = process.env.KIT_API_KEY || process.env.KIT_API_SECRET;
+        const kitFormId = process.env.KIT_FORM_ID;
+        
+        if (kitApiSecret && kitFormId) {
+            try {
+                const kitFormResponse = await fetch(`https://api.kit.com/v4/forms/${kitFormId}/subscribers`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Kit-Api-Key': kitApiSecret
+                    },
+                    body: JSON.stringify({
+                        email_address: pending.email
+                    })
+                });
+
+                if (!kitFormResponse.ok) {
+                    console.warn('Silent fail adding verified user to Kit Form:', await kitFormResponse.text());
+                }
+            } catch (formErr) {
+                console.warn('Exception adding verified user to Kit Form:', formErr.message);
+            }
+        }
+
         // Redirect user directly to their waitlister redirect URL status page
         if (wlData.redirect_url) {
             return res.redirect(wlData.redirect_url);
