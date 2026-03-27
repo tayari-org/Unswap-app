@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../api/apiClient.js';
 
@@ -100,20 +100,16 @@ export default function Waitlist() {
                  
                  {/* Decorative Overlay */}
                  <div className="absolute inset-0 bg-gradient-to-t from-[#0B101E]/90 via-[#0B101E]/40 to-transparent flex flex-col justify-end p-8 sm:p-10 pointer-events-none">
-                     <div className="flex items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                         <img src="/logo.png" alt="Unswap" className="w-10 h-10 object-contain " />
-                         <div className="flex flex-col">
-                             <span className="text-white text-3xl font-extrabold tracking-widest uppercase shadow-sm">Unswap</span>
-                         </div>
+                     <div className="flex flex-col items-start gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                         <img src="/logo.png" alt="Unswap" className="h-28 w-auto object-contain " />
                      </div>
                  </div>
              </div>
 
              {/* RIGHT: Form */}
              <div className="w-full max-w-lg mx-auto lg:mx-0">
-                 <div className="flex items-center gap-3 mb-8">
-                     <img src="/logo.png" alt="Unswap Logo" className="h-10 w-10 object-contain" />
-                     <h1 className="text-3xl font-bold text-white tracking-tight uppercase">Unswap</h1>
+                 <div className="flex flex-col items-center justify-center gap-4 mb-8">
+                     <img src="/logo.png" alt="Unswap Logo" className="h-32 w-auto object-contain" />
                  </div>
                  <p className="text-[#899BB1] text-sm mb-8 leading-relaxed">
                    A closed-loop home exchange ecosystem exclusively for verified staff of the UN, World Bank, IMF and other International Organizations.
@@ -254,9 +250,8 @@ export default function Waitlist() {
         {/* ========================================= STATUS CHECKER ========================================= */}
         {mode === 'status' && (
            <motion.div key="status" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center text-center w-full max-w-lg mx-auto">
-               <div className="flex items-center justify-center gap-3 mb-4">
-                   <img src="/logo.png" alt="Unswap Logo" className="h-10 w-10 object-contain " />
-                   <h3 className="text-white text-2xl font-bold tracking-tight uppercase">Unswap</h3>
+               <div className="flex flex-col items-center justify-center gap-4 mb-8">
+                   <img src="/logo.png" alt="Unswap Logo" className="h-32 w-auto object-contain" />
                </div>
                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-8 tracking-tight whitespace-nowrap">Check your waitlist status</h1>
                
