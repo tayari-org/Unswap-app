@@ -45,7 +45,7 @@ router.post('/join/initiate', async (req, res) => {
 
         await sendEmail({
             to: normalizedEmail,
-            subject: 'UNswap — Confirm your waitlist spot',
+            subject: 'Confirm your waitlist spot',
             body: `Click this link to confirm your spot: ${confirmUrl}`,
             html: `
                 <div style="font-family: sans-serif; padding: 32px; max-width: 480px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px;">
@@ -184,7 +184,7 @@ router.get('/count', async (req, res) => {
         }
 
         const count = wlData.data.total || 0;
-        
+
         const recentJoiners = (wlData.data.subscribers || []).map(u => ({
             initials: u.name
                 ? u.name.trim().split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase()
