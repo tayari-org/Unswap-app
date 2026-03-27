@@ -1,7 +1,6 @@
 const express = require('express');
 const crypto = require('crypto');
 const { prisma } = require('../db');
-const { sendEmail } = require('./email');
 const router = express.Router();
 
 // ─── Token store (in-memory, 15-min TTL) ──────────────────────────────────────
@@ -43,25 +42,51 @@ router.post('/join/initiate', async (req, res) => {
 
         const confirmUrl = `${process.env.BACKEND_URL || 'http://localhost:3000'}/api/waitlist/confirm?token=${token}`;
 
-        await sendEmail({
-            to: normalizedEmail,
-            subject: 'Confirm your waitlist spot',
-            body: `Click this link to confirm your spot: ${confirmUrl}`,
-            html: `
-                <div style="font-family: sans-serif; padding: 32px; max-width: 480px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px;">
-                    <div style="margin-bottom: 24px;">
-                        <h2 style="color: #1e293b; font-weight: 600; font-size: 24px; margin: 0;">You're almost in! ✉️</h2>
-                    </div>
-                    <p style="color: #64748b; font-size: 14px; line-height: 1.6;">
-                        Click the button below to confirm your email and secure your spot on the UNswap waitlist.
-                    </p>
-                    <div style="text-align: center; margin: 32px 0;">
-                        <a href="${confirmUrl}" style="background: #2563ea; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block;">Confirm Email</a>
-                    </div>
-                    <p style="color: #94a3b8; font-size: 12px;">This link expires in 15 minutes. If you didn't request this, you can ignore this email.</p>
-                </div>
-            `
+        // Trigger the magic link via Kit Automation by assigning the waitlist-pending tag
+        const kitApiSecret = process.env.KIT_API_KEY || process.env.KIT_API_SECRET;
+        const kitTagId = process.env.KIT_TAG_ID;
+
+        if (!kitApiSecret || !kitTagId) {
+            console.error('Kit API Secret or Tag ID not configured in .env');
+            return res.status(500).json({ error: 'Kit configuration missing on server.' });
+        }
+
+        // 1. Create/Update the Subscriber with the custom fields
+        const kitCreateResponse = await fetch(`https://api.kit.com/v4/subscribers`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Kit-Api-Key': kitApiSecret
+            },
+            body: JSON.stringify({
+                email_address: normalizedEmail,
+                first_name: name.split(' ')[0],
+                state: 'active',
+                fields: { waitlist_token: token }
+            })
         });
+
+        if (!kitCreateResponse.ok) {
+            const kitErr = await kitCreateResponse.json();
+            console.error('Kit Create API Error:', kitErr);
+            return res.status(500).json({ error: 'Failed to create subscriber in Kit.' });
+        }
+
+        // 2. Tag the Subscriber to trigger the automation
+        const kitTagResponse = await fetch(`https://api.kit.com/v4/tags/${kitTagId}/subscribers`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Kit-Api-Key': kitApiSecret
+            },
+            body: JSON.stringify({ email_address: normalizedEmail })
+        });
+
+        if (!kitTagResponse.ok) {
+            const kitErr = await kitTagResponse.json();
+            console.error('Kit Tag API Error:', kitErr);
+            return res.status(500).json({ error: 'Failed to tag subscriber in Kit.' });
+        }
 
         res.status(200).json({ success: true, message: 'Confirmation link sent to your email.' });
     } catch (err) {
