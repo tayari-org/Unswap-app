@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../api/apiClient.js';
 
@@ -101,7 +101,7 @@ export default function Waitlist() {
                  {/* Decorative Overlay */}
                  <div className="absolute inset-0 bg-gradient-to-t from-[#0B101E]/90 via-[#0B101E]/40 to-transparent flex flex-col justify-end p-8 sm:p-10 pointer-events-none">
                      <div className="flex items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                         <img src="/logo.png" alt="Unswap" className="w-10 h-10 object-contain grayscale brightness-200" />
+                         <img src="/logo.png" alt="Unswap" className="w-10 h-10 object-contain " />
                          <div className="flex flex-col">
                              <span className="text-white text-3xl font-extrabold tracking-widest uppercase shadow-sm">Unswap</span>
                          </div>
@@ -153,7 +153,7 @@ export default function Waitlist() {
                              style={{ background: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23899BB1' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") no-repeat right 0.75rem center/1.5rem 1.5rem` }}
                          >
                             <option value="" disabled className="bg-[#0B101E] text-[#5A6D88]">Select your organization / affiliation</option>
-                            {['United Nations', 'Specialized Agencies (WHO, ILO, UNESCO, etc.)', 'World Bank Group', 'International Monetary Fund (IMF)', 'Diplomatic Mission / Foreign Service', 'Other Intergovernmental Organization'].map(org => (
+                            {['United Nations', 'Specialized Agencies (WHO, ILO, UNESCO, etc.)', 'World Bank Group', 'International Monetary Fund (IMF)', 'Diplomatic Mission / Foreign Service', 'Other Intergovernmental Organization', 'I am a friend/family of an international employee whom I want to invite'].map(org => (
                                 <option key={org} value={org} className="bg-[#0B101E] text-white py-2">{org}</option>
                             ))}
                          </select>
@@ -255,7 +255,7 @@ export default function Waitlist() {
         {mode === 'status' && (
            <motion.div key="status" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center text-center w-full max-w-lg mx-auto">
                <div className="flex items-center justify-center gap-3 mb-4">
-                   <img src="/logo.png" alt="Unswap Logo" className="h-10 w-10 object-contain grayscale brightness-200" />
+                   <img src="/logo.png" alt="Unswap Logo" className="h-10 w-10 object-contain " />
                    <h3 className="text-white text-2xl font-bold tracking-tight uppercase">Unswap</h3>
                </div>
                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-8 tracking-tight whitespace-nowrap">Check your waitlist status</h1>

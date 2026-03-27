@@ -369,15 +369,4 @@ model WaitlistEntry {
   created_at                    DateTime  @default(now())
   updated_at                    DateTime  @updatedAt
 
-  referrals WaitlistReferral[] @relation("ReferrerEntries")
-}
-
-model WaitlistReferral {
-  id               String        @id @default(uuid())
-  referrer_code    String
-  referrer         WaitlistEntry @relation("ReferrerEntries", fields: [referrer_code], references: [referral_code])
-  referred_email   String        @unique
-  referred_name    String?
-  completed_at     DateTime?
-  created_at       DateTime      @default(now())
 }
