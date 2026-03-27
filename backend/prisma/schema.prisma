@@ -333,28 +333,7 @@ model PlatformSettings {
   updated_at                             DateTime @updatedAt
 }
 
-model TypingStatus {
-  id              String   @id @default(uuid())
-  conversation_id String
-  user_email      String
-  is_typing       Boolean  @default(false)
-  updated_at      DateTime @updatedAt
-}
 
-model PinnedConversation {
-  id              String   @id @default(uuid())
-  user_email      String
-  conversation_id String
-  created_at      DateTime @default(now())
-}
-
-model MessageReaction {
-  id         String   @id @default(uuid())
-  message_id String
-  user_email String
-  emoji      String
-  created_at DateTime @default(now())
-}
 
 model WaitlistEntry {
   id                            String    @id @default(uuid())
