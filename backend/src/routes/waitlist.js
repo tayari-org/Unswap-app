@@ -191,6 +191,13 @@ router.get('/confirm', async (req, res) => {
             }
         }
 
+        // Fire-and-forget webhook
+        fetch('https://events.evidence.io/hook/vQrlDk0zuDnpKoqD', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: pending.email, name: pending.name, organization: pending.organization }),
+        }).catch((e) => console.error('[Webhook] evidence.io failed:', e));
+
         // Redirect user directly to their waitlister redirect URL status page
         if (wlData.redirect_url) {
             return res.redirect(wlData.redirect_url);
