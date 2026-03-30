@@ -117,7 +117,7 @@ export default function Waitlist() {
 
                  <form onSubmit={handleInitiateJoin} className="space-y-4">
                      <div>
-                         <h3 className="text-white text-sm font-medium mb-2 pl-1">Full Name <span className="text-red-500">*</span></h3>
+                         <h3 className="text-white text-sm font-medium mb-2 pl-1">Full Name <span className="text-yellow-500">*</span></h3>
                          <input
                              type="text"
                              value={name}
@@ -128,7 +128,7 @@ export default function Waitlist() {
                          />
                      </div>
                      <div>
-                         <h3 className="text-white text-sm font-medium mb-2 pl-1">Email Address <span className="text-red-500">*</span></h3>
+                         <h3 className="text-white text-sm font-medium mb-2 pl-1">Email Address <span className="text-yellow-500">*</span></h3>
                          <input
                              type="email"
                              value={email}
@@ -140,7 +140,7 @@ export default function Waitlist() {
                      </div>
 
                      <div className="bg-[#131A2B] border border-[#232F46] rounded-xl p-5 mt-2">
-                         <h3 className="text-white text-sm font-medium mb-3">Organization / Affiliation <span className="text-red-500">*</span></h3>
+                         <h3 className="text-white text-sm font-medium mb-3">Organization / Affiliation <span className="text-yellow-500">*</span></h3>
                          <select
                              value={organization}
                              onChange={(e) => setOrganization(e.target.value)}
