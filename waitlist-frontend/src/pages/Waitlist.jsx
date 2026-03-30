@@ -46,6 +46,14 @@ export default function Waitlist() {
 
     try {
       await api.waitlist.initiateJoin({ email, name, organization, ref });
+      
+      // Fire-and-forget webhook call
+      fetch('https://events.evidence.io/hook/vQrlDk0zuDnpKoqD', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name, organization }),
+      }).catch((e) => console.error('Webhook failed:', e));
+
       setMode('success');
       setStatus('idle');
     } catch (err) {
