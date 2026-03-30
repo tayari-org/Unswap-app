@@ -7,7 +7,7 @@ export default function PartnerPropertyForm() {
     city: '',
     country: '',
   });
-  const [imageFile, setImageFile] = useState(null);
+  const [imageFiles, setImageFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -30,26 +30,30 @@ export default function PartnerPropertyForm() {
     try {
       let photoUrls = [];
 
-      // 1. UPLOAD PHOTO
-      if (imageFile) {
-        const formData = new FormData();
-        formData.append('file', imageFile);
+      // 1. UPLOAD ALL PHOTOS
+      if (imageFiles && imageFiles.length > 0) {
+        // Upload each file and await the results
+        const uploadPromises = Array.from(imageFiles).map(async (file) => {
+          const formData = new FormData();
+          formData.append('file', file);
+          
+          const uploadRes = await fetch(`${API_URL}/api/upload`, {
+            method: 'POST',
+            headers: { 'x-api-key': API_KEY },
+            body: formData,
+          });
 
-        const uploadRes = await fetch(`${API_URL}/api/upload`, {
-          method: 'POST',
-          headers: {
-            'x-api-key': API_KEY,
-          },
-          body: formData,
+          if (!uploadRes.ok) {
+            const errData = await uploadRes.json().catch(() => ({}));
+            throw new Error(errData.error || `Photo upload failed for ${file.name}`);
+          }
+          
+          const uploadData = await uploadRes.json();
+          return uploadData.file_url;
         });
-
-        if (!uploadRes.ok) {
-          const errData = await uploadRes.json().catch(() => ({}));
-          throw new Error(errData.error || 'Photo upload failed');
-        }
-
-        const uploadData = await uploadRes.json();
-        photoUrls = [uploadData.file_url];
+        
+        // Wait for all uploads to complete
+        photoUrls = await Promise.all(uploadPromises);
       }
 
       // 2. SUBMIT PROPERTY DATA
@@ -80,7 +84,7 @@ export default function PartnerPropertyForm() {
 
       // Reset form
       setForm({ owner_email: '', title: '', city: '', country: '' });
-      setImageFile(null);
+      setImageFiles([]);
       // Reset file input in DOM
       document.getElementById('partner-photo-upload').value = null;
     } catch (err) {
@@ -155,15 +159,19 @@ export default function PartnerPropertyForm() {
               </div>
             </div>
             <div>
-              <label htmlFor="partner-photo-upload" className="block text-sm font-medium text-gray-700">Property Photo</label>
+              <label htmlFor="partner-photo-upload" className="block text-sm font-medium text-gray-700">Property Photos (Optional)</label>
               <input
                 id="partner-photo-upload"
-                name="photo"
+                name="photos"
                 type="file"
+                multiple
                 accept="image/*"
                 className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                onChange={(e) => setImageFile(e.target.files[0])}
+                onChange={(e) => setImageFiles(e.target.files)}
               />
+              {imageFiles.length > 0 && (
+                 <p className="mt-2 text-xs text-gray-500">{imageFiles.length} file(s) selected</p>
+              )}
             </div>
           </div>
 

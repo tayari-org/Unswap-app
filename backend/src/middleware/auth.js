@@ -3,9 +3,17 @@ const { prisma } = require('../db');
 
 const requireAuth = async (req, res, next) => {
     try {
+        // --- Added for third-party API Key Integration ---
+        const apiKey = req.headers['x-api-key'];
+        if (apiKey && process.env.PARTNER_API_KEY && apiKey === process.env.PARTNER_API_KEY) {
+            // Mock a system user/admin for this request
+            req.user = { id: 'system', email: 'system@unswap.co', role: 'admin' };
+            return next();
+        }
+
         const authHeader = req.headers['authorization'];
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ error: 'Authorization token required' });
+            return res.status(401).json({ error: 'Authorization token or API Key required' });
         }
 
         const token = authHeader.split(' ')[1];
