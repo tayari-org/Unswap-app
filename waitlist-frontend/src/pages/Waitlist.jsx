@@ -227,7 +227,7 @@ export default function Waitlist() {
                         {/* IMAGE — background on mobile, left on desktop */}
                         <div className="absolute inset-0 lg:static lg:w-[35%] order-2 lg:order-1 lg:sticky lg:top-0 lg:h-[100dvh] overflow-hidden z-0 bg-[#0B101E]">
                             <img src="/hero.webp" alt="Luxury Interior" className="absolute inset-0 w-full h-full object-cover object-center" />
-                            <div className="absolute inset-0 bg-[#0B101E]/85 lg:hidden" />
+                            <div className="absolute inset-0 bg-[#0B101E]/95 lg:hidden" />
                             <div className="hidden lg:block absolute bottom-0 left-0 right-0 p-8 lg:p-10">
 
                                 <div className="flex items-center gap-2">
