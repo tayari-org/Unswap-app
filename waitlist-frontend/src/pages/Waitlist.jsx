@@ -106,7 +106,7 @@ export default function Waitlist() {
                         className="flex flex-col lg:flex-row w-full min-h-screen relative"
                     >
                         {/* FORM — overlaid on mobile, right on desktop */}
-                        <div className="w-full lg:w-1/2 order-1 lg:order-2 flex items-center justify-center p-8 sm:p-12 lg:p-16 relative z-10 min-h-[100dvh] overflow-y-auto">
+                        <div className="w-full lg:w-[65%] order-1 lg:order-2 flex items-center justify-center p-8 sm:p-12 lg:p-16 relative z-10 min-h-[100dvh] overflow-y-auto">
                             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(212,175,55,0.05)_0%,_transparent_60%)] pointer-events-none" />
 
                             <div className="w-full max-w-md mx-auto relative">
@@ -225,8 +225,8 @@ export default function Waitlist() {
 
 
                         {/* IMAGE — background on mobile, left on desktop */}
-                        <div className="absolute inset-0 lg:static lg:w-1/2 order-2 lg:order-1 lg:sticky lg:top-0 lg:h-[100dvh] overflow-hidden z-0 bg-[#0B101E]">
-                            <img src="/hero.png" alt="Luxury Interior" className="absolute inset-0 w-full h-full object-cover object-center" />
+                        <div className="absolute inset-0 lg:static lg:w-[35%] order-2 lg:order-1 lg:sticky lg:top-0 lg:h-[100dvh] overflow-hidden z-0 bg-[#0B101E]">
+                            <img src="/hero.webp" alt="Luxury Interior" className="absolute inset-0 w-full h-full object-cover object-center" />
                             <div className="absolute inset-0 bg-[#0B101E]/85 lg:hidden" />
                             <div className="hidden lg:block absolute bottom-0 left-0 right-0 p-8 lg:p-10">
 
