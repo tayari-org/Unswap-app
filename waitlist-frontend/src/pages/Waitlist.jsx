@@ -109,7 +109,7 @@ export default function Waitlist() {
                         <div className="w-full lg:w-[65%] order-1 lg:order-2 flex items-center justify-center p-8 sm:p-12 lg:p-16 relative z-10 min-h-[100dvh] overflow-y-auto">
                             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(212,175,55,0.05)_0%,_transparent_60%)] pointer-events-none" />
 
-                            <div className="w-full max-w-md mx-auto relative">
+                            <div className="w-full max-w-xl mx-auto relative">
                                 {/* Circular logo */}
                                 <div className="flex justify-center mb-6">
                                     <img src="/logo.png" alt="UnSwap" className="w-20 h-20 object-contain" />
@@ -123,7 +123,7 @@ export default function Waitlist() {
                                 </div>
 
                                 {/* Description */}
-                                <p className="text-[#D4AF37] text-xl leading-relaxed text-center mb-8">
+                                <p className="text-[#D4AF37] text-2xl leading-relaxed text-center mb-8 font-light">
                                     A closed-loop home exchange ecosystem exclusively for verified staff of the UN, World Bank, IMF and other International Organizations.
                                 </p>
 
@@ -139,7 +139,7 @@ export default function Waitlist() {
                                             onChange={(e) => setName(e.target.value)}
                                             placeholder="Enter your full name"
                                             required
-                                            className="w-full bg-white/[0.03] border border-[#2D3A53] px-5 py-3.5 text-white placeholder-[#3A4A62] focus:outline-none focus:border-[#D4AF37] focus:shadow-[0_0_0_1px_rgba(212,175,55,0.25)] transition-all duration-300 text-sm"
+                                            className="w-full bg-white/[0.03] border border-[#2D3A53] px-5 py-4 text-white placeholder-[#3A4A62] focus:outline-none focus:border-[#D4AF37] focus:shadow-[0_0_0_1px_rgba(212,175,55,0.25)] transition-all duration-300 text-base"
                                         />
                                     </div>
                                     <div>
@@ -152,7 +152,7 @@ export default function Waitlist() {
                                             onChange={(e) => setEmail(e.target.value)}
                                             placeholder="your@email.com"
                                             required
-                                            className="w-full bg-white/[0.03] border border-[#2D3A53] px-5 py-3.5 text-white placeholder-[#3A4A62] focus:outline-none focus:border-[#D4AF37] focus:shadow-[0_0_0_1px_rgba(212,175,55,0.25)] transition-all duration-300 text-sm"
+                                            className="w-full bg-white/[0.03] border border-[#2D3A53] px-5 py-4 text-white placeholder-[#3A4A62] focus:outline-none focus:border-[#D4AF37] focus:shadow-[0_0_0_1px_rgba(212,175,55,0.25)] transition-all duration-300 text-base"
                                         />
                                     </div>
                                     <div>
@@ -179,7 +179,7 @@ export default function Waitlist() {
                                     <button
                                         type="submit"
                                         disabled={status === 'loading'}
-                                        className="w-full bg-[#D4AF37] hover:bg-[#C9A227] text-black font-semibold tracking-[0.15em] uppercase text-base py-4 transition-all duration-300 shadow-[0_4px_24px_rgba(212,175,55,0.25)] hover:shadow-[0_6px_32px_rgba(212,175,55,0.45)]"
+                                        className="w-full bg-[#D4AF37] hover:bg-[#C9A227] text-black font-bold tracking-[0.15em] uppercase text-lg py-5 transition-all duration-300 shadow-[0_4px_24px_rgba(212,175,55,0.25)] hover:shadow-[0_6px_32px_rgba(212,175,55,0.45)]"
                                     >
                                         {status === 'loading' ? (
                                             <span className="flex items-center justify-center gap-2">
