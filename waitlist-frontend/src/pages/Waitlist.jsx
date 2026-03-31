@@ -123,7 +123,7 @@ export default function Waitlist() {
                                 </div>
 
                                 {/* Description */}
-                                <p className="text-[#D4AF37] text-base leading-relaxed text-center mb-8">
+                                <p className="text-[#D4AF37] text-xl leading-relaxed text-center mb-8">
                                     A closed-loop home exchange ecosystem exclusively for verified staff of the UN, World Bank, IMF and other International Organizations.
                                 </p>
 
@@ -179,7 +179,7 @@ export default function Waitlist() {
                                     <button
                                         type="submit"
                                         disabled={status === 'loading'}
-                                        className="w-full bg-[#D4AF37] hover:bg-[#C9A227] text-black font-semibold tracking-[0.15em] uppercase text-sm py-4 transition-all duration-300 shadow-[0_4px_24px_rgba(212,175,55,0.25)] hover:shadow-[0_6px_32px_rgba(212,175,55,0.45)]"
+                                        className="w-full bg-[#D4AF37] hover:bg-[#C9A227] text-black font-semibold tracking-[0.15em] uppercase text-base py-4 transition-all duration-300 shadow-[0_4px_24px_rgba(212,175,55,0.25)] hover:shadow-[0_6px_32px_rgba(212,175,55,0.45)]"
                                     >
                                         {status === 'loading' ? (
                                             <span className="flex items-center justify-center gap-2">
