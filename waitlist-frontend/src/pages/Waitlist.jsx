@@ -118,7 +118,7 @@ export default function Waitlist() {
                                 {/* Divider label */}
                                 <div className="flex items-center justify-center gap-3 mb-5">
                                     <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[#D4AF37]/40" />
-                                    <span className="text-white text-[10px] tracking-[0.35em] uppercase font-medium">Exclusive Access</span>
+                                    <span className="text-white text-xs tracking-[0.35em] uppercase font-medium">Exclusive Access</span>
                                     <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
                                 </div>
 
@@ -179,7 +179,7 @@ export default function Waitlist() {
                                     <button
                                         type="submit"
                                         disabled={status === 'loading'}
-                                        className="w-full bg-[#D4AF37] hover:bg-[#C9A227] text-black font-semibold tracking-[0.15em] uppercase text-xs py-4 transition-all duration-300 shadow-[0_4px_24px_rgba(212,175,55,0.25)] hover:shadow-[0_6px_32px_rgba(212,175,55,0.45)]"
+                                        className="w-full bg-[#D4AF37] hover:bg-[#C9A227] text-black font-semibold tracking-[0.15em] uppercase text-sm py-4 transition-all duration-300 shadow-[0_4px_24px_rgba(212,175,55,0.25)] hover:shadow-[0_6px_32px_rgba(212,175,55,0.45)]"
                                     >
                                         {status === 'loading' ? (
                                             <span className="flex items-center justify-center gap-2">
