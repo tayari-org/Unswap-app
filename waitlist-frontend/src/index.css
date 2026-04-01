@@ -2,18 +2,99 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    --navy: #0a0e1a;
+    --deep: #060910;
+    --gold: #c9a84c;
+    --gold-light: #e4c97a;
+    --gold-dim: rgba(201,168,76,0.18);
+    --ivory: #f5f0e8;
+    --ivory-dim: rgba(245,240,232,0.65);
+    --cream: #ede8dd;
+    --muted: rgba(245,240,232,0.4);
+    --border: rgba(201,168,76,0.25);
+    --serif: 'Cormorant Garamond', Georgia, serif;
+    --sans: 'DM Sans', sans-serif;
+  }
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-body, button, input, select, textarea {
-  font-family: "Cormorant+Garamond", "Cormorant Garamond", Georgia, serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+body {
+  background-color: var(--navy);
+  color: var(--ivory);
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.7;
+  overflow-x: hidden;
 }
 
-body {
-  background-color: #0B101E;
+/* ── NOISE TEXTURE ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.5;
+}
+
+@layer components {
+  .btn-gold {
+    display: inline-block;
+    background: var(--gold);
+    color: var(--navy);
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 17px 38px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.25s, transform 0.2s;
+  }
+  .btn-gold:hover { 
+    background: var(--gold-light); 
+    transform: translateY(-2px); 
+  }
+
+  .btn-outline {
+    display: inline-block;
+    background: transparent;
+    color: var(--gold);
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 17px 38px;
+    border: 1px solid var(--gold);
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.25s, color 0.25s, transform 0.2s;
+  }
+  .btn-outline:hover { 
+    background: var(--gold-dim); 
+    transform: translateY(-2px); 
+  }
+
+  .topbar {
+    background: var(--gold);
+    color: var(--navy);
+    text-align: center;
+    padding: 10px 20px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
 }
