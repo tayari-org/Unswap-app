@@ -1,16 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Unswap — Join the Waitlist</title>
-    <meta name="description" content="Join the Unswap waitlist — a closed-loop home exchange ecosystem for verified international organization staff." />
+    <meta name="description"
+        content="Join the Unswap waitlist — a closed-loop home exchange ecosystem for verified international organization staff." />
+
+    <!-- ShareThis -->
+    <script type='text/javascript' src='https://platform-api.sharethis.com/js/sharethis.js#property=69ce9028d0567d19f43f03df&product=sop' async='async'></script>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap"
+        rel="stylesheet" />
 
     <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -91,15 +98,19 @@
         }
     </style>
 </head>
+
 <body class="min-h-screen relative text-ivory font-sans bg-navy">
-    
+
     <!-- All Views Container -->
     <div class="relative w-full min-h-screen">
 
         <!-- ========================================= JOIN ========================================= -->
         <div id="join-view" class="mode-section active flex-col lg:flex-row w-full min-h-screen relative">
-            <div class="w-full lg:w-[65%] order-1 lg:order-2 flex items-center justify-center p-8 sm:p-12 lg:p-16 relative z-10 min-h-[100dvh] overflow-y-auto">
-                <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--gold-dim)_0%,_transparent_60%)] pointer-events-none"></div>
+            <div
+                class="w-full lg:w-[65%] order-1 lg:order-2 flex items-center justify-center p-8 sm:p-12 lg:p-16 relative z-10 min-h-[100dvh] overflow-y-auto">
+                <div
+                    class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--gold-dim)_0%,_transparent_60%)] pointer-events-none">
+                </div>
 
                 <div class="w-full max-w-xl mx-auto relative">
                     <!-- Circular logo -->
@@ -110,60 +121,74 @@
                     <!-- Divider label -->
                     <div class="flex items-center justify-center gap-3 mb-5 mt-2">
                         <div class="h-px flex-1 bg-gradient-to-r from-transparent to-unswap-border"></div>
-                        <span class="text-ivory text-[11px] tracking-[0.22em] uppercase font-medium">Exclusive Access</span>
+                        <span class="text-ivory text-[11px] tracking-[0.22em] uppercase font-medium">Exclusive
+                            Access</span>
                         <div class="h-px flex-1 bg-gradient-to-l from-transparent to-unswap-border"></div>
                     </div>
 
                     <!-- Description -->
                     <p class="text-gold font-display text-[26px] leading-snug text-center mb-10 font-light italic">
-                        A closed-loop home exchange ecosystem exclusively for verified staff of the UN, World Bank, IMF and other International Organizations.
+                        A closed-loop home exchange ecosystem exclusively for verified staff of the UN, World Bank, IMF
+                        and other International Organizations.
                     </p>
 
                     <!-- Form -->
                     <form id="join-form" class="space-y-4">
                         <div>
-                            <label class="text-ivory-dim text-xs tracking-[0.08em] uppercase font-medium mb-2 pl-1 flex items-center gap-1">
+                            <label
+                                class="text-ivory-dim text-xs tracking-[0.08em] uppercase font-medium mb-2 pl-1 flex items-center gap-1">
                                 Full Name <span class="text-gold">*</span>
                             </label>
                             <input type="text" id="join-name" placeholder="Enter your full name" required
                                 class="w-full bg-[rgba(10,14,26,0.5)] border border-unswap-border px-[20px] py-[16px] text-ivory placeholder-muted focus:outline-none focus:border-gold focus:shadow-[0_0_0_1px_var(--border)] transition-all duration-300 text-[15px] font-sans" />
                         </div>
                         <div>
-                            <label class="text-ivory-dim text-xs tracking-[0.08em] uppercase font-medium mb-2 pl-1 flex items-center gap-1">
+                            <label
+                                class="text-ivory-dim text-xs tracking-[0.08em] uppercase font-medium mb-2 pl-1 flex items-center gap-1">
                                 Email Address <span class="text-gold">*</span>
                             </label>
                             <input type="email" id="join-email" placeholder="your@email.com" required
                                 class="w-full bg-[rgba(10,14,26,0.5)] border border-unswap-border px-[20px] py-[16px] text-ivory placeholder-muted focus:outline-none focus:border-gold focus:shadow-[0_0_0_1px_var(--border)] transition-all duration-300 text-[15px] font-sans" />
                         </div>
                         <div>
-                            <label class="text-ivory-dim text-xs tracking-[0.08em] uppercase font-medium mb-2 pl-1 flex items-center gap-1">
+                            <label
+                                class="text-ivory-dim text-xs tracking-[0.08em] uppercase font-medium mb-2 pl-1 flex items-center gap-1">
                                 Organization / Affiliation <span class="text-gold">*</span>
                             </label>
                             <select id="join-organization" required
                                 class="w-full text-muted bg-[rgba(10,14,26,0.5)] border border-unswap-border px-[20px] py-[16px] focus:outline-none focus:border-gold focus:shadow-[0_0_0_1px_var(--border)] hover:border-gold transition-all duration-300 appearance-none text-[15px] font-sans"
                                 style="background: url('data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3e%3cpath stroke=\'%23c9a84c\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M6 8l4 4 4-4\'/%3e%3c/svg%3e') no-repeat right 0.75rem center/1.5rem 1.5rem">
-                                <option value="" disabled selected class="bg-deep text-muted">Select your organization / affiliation</option>
+                                <option value="" disabled selected class="bg-deep text-muted">Select your organization /
+                                    affiliation</option>
                                 <option value="United Nations" class="bg-navy text-ivory">United Nations</option>
-                                <option value="Specialized Agencies (WHO, ILO, UNESCO, etc.)" class="bg-navy text-ivory">Specialized Agencies (WHO, ILO, UNESCO, etc.)</option>
+                                <option value="Specialized Agencies (WHO, ILO, UNESCO, etc.)"
+                                    class="bg-navy text-ivory">Specialized Agencies (WHO, ILO, UNESCO, etc.)</option>
                                 <option value="World Bank Group" class="bg-navy text-ivory">World Bank Group</option>
-                                <option value="International Monetary Fund (IMF)" class="bg-navy text-ivory">International Monetary Fund (IMF)</option>
-                                <option value="Diplomatic Mission / Foreign Service" class="bg-navy text-ivory">Diplomatic Mission / Foreign Service</option>
-                                <option value="Other Intergovernmental Organization" class="bg-navy text-ivory">Other Intergovernmental Organization</option>
-                                <option value="I am a friend/family of an international employee whom I want to invite" class="bg-navy text-ivory">I am a friend/family of an international employee whom I want to invite</option>
+                                <option value="International Monetary Fund (IMF)" class="bg-navy text-ivory">
+                                    International Monetary Fund (IMF)</option>
+                                <option value="Diplomatic Mission / Foreign Service" class="bg-navy text-ivory">
+                                    Diplomatic Mission / Foreign Service</option>
+                                <option value="Other Intergovernmental Organization" class="bg-navy text-ivory">Other
+                                    Intergovernmental Organization</option>
+                                <option value="I am a friend/family of an international employee whom I want to invite"
+                                    class="bg-navy text-ivory">I am a friend/family of an international employee whom I
+                                    want to invite</option>
                             </select>
                         </div>
-                        
+
                         <p id="join-error" class="hidden text-[#ff6b6b] text-[14.5px]"></p>
 
                         <!-- Main CTA -->
-                        <button type="submit" id="join-btn" class="btn-gold w-full flex items-center justify-center mt-2 group shadow-[0_4px_24px_var(--gold-dim)]">
+                        <button type="submit" id="join-btn"
+                            class="btn-gold w-full flex items-center justify-center mt-2 group shadow-[0_4px_24px_var(--gold-dim)]">
                             Request Access →
                         </button>
 
                         <!-- Social proof area -->
                         <div class="pt-6 mt-4 border-t border-unswap-border flex flex-col items-center gap-3">
                             <p class="text-[13px] text-ivory-dim" id="waitlist-count-text">Waitlist loading...</p>
-                            <button type="button" onclick="setMode('status')" class="text-muted hover:text-gold text-[11px] font-medium tracking-[0.18em] uppercase transition-colors">
+                            <button type="button" onclick="setMode('status')"
+                                class="text-muted hover:text-gold text-[11px] font-medium tracking-[0.18em] uppercase transition-colors">
                                 Check Status →
                             </button>
                         </div>
@@ -172,8 +197,10 @@
             </div>
 
             <!-- IMAGE — background on mobile, left on desktop -->
-            <div class="absolute inset-0 lg:static lg:w-[35%] order-2 lg:order-1 lg:sticky lg:top-0 lg:h-[100dvh] overflow-hidden z-0 bg-deep border-r border-unswap-border">
-                <img src="/hero.webp" alt="Luxury Interior" class="absolute inset-0 w-full h-full object-cover object-center opacity-80" />
+            <div
+                class="absolute inset-0 lg:static lg:w-[35%] order-2 lg:order-1 lg:sticky lg:top-0 lg:h-[100dvh] overflow-hidden z-0 bg-deep border-r border-unswap-border">
+                <img src="/hero.webp" alt="Luxury Interior"
+                    class="absolute inset-0 w-full h-full object-cover object-center opacity-80" />
                 <div class="absolute inset-0 bg-navy/90 lg:hidden"></div>
                 <div class="hidden lg:block absolute bottom-0 left-0 right-0 p-8 lg:p-10">
                     <div class="flex items-center gap-3">
@@ -185,8 +212,11 @@
         </div>
 
         <!-- ========================================= STATUS CHECKER ========================================= -->
-        <div id="status-view" class="mode-section flex-col items-center justify-center text-center w-full max-w-lg mx-auto min-h-screen p-6 relative z-10">
-            <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--gold-dim)_0%,_transparent_60%)] pointer-events-none"></div>
+        <div id="status-view"
+            class="mode-section flex-col items-center justify-center text-center w-full max-w-lg mx-auto min-h-screen p-6 relative z-10">
+            <div
+                class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--gold-dim)_0%,_transparent_60%)] pointer-events-none">
+            </div>
             <div class="flex justify-center mb-6">
                 <img src="/logo.png" alt="Unswap Logo" class="w-28 h-28 object-contain" />
             </div>
@@ -197,47 +227,76 @@
             <form id="status-form" class="w-full flex flex-col items-center gap-4">
                 <input type="email" id="check-email" placeholder="email@example.com" required
                     class="w-full bg-[rgba(10,14,26,0.5)] border border-unswap-border px-[20px] py-[16px] text-ivory placeholder-muted focus:outline-none focus:border-gold focus:shadow-[0_0_0_1px_var(--border)] transition-all duration-300 font-sans text-[15px]" />
-                <button type="submit" id="status-btn" class="btn-gold w-full flex items-center justify-center mt-2 group shadow-[0_4px_24px_var(--gold-dim)]">
+                <button type="submit" id="status-btn"
+                    class="btn-gold w-full flex items-center justify-center mt-2 group shadow-[0_4px_24px_var(--gold-dim)]">
                     Check Status
                 </button>
             </form>
 
             <p id="status-error" class="hidden text-[#ff6b6b] text-[14.5px] mt-6 mb-2"></p>
 
-            <button onclick="setMode('join')" class="mt-8 text-muted hover:text-gold text-[11px] font-medium tracking-[0.18em] uppercase transition-colors">
+            <button onclick="setMode('join')"
+                class="mt-8 text-muted hover:text-gold text-[11px] font-medium tracking-[0.18em] uppercase transition-colors">
                 ← Back to waitlist
             </button>
         </div>
 
         <!-- ========================================= SUCCESS ========================================= -->
-        <div id="success-view" class="mode-section flex-col items-center justify-center text-center max-w-md mx-auto w-full relative min-h-screen p-6">
-            <button onclick="setMode('join')" class="absolute top-8 left-4 sm:left-8 text-ivory-dim hover:text-ivory transition-colors flex items-center gap-2 text-[14.5px]">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+        <div id="success-view"
+            class="mode-section flex-col items-center justify-center text-center max-w-md mx-auto w-full relative min-h-screen p-6">
+            <button onclick="setMode('join')"
+                class="absolute top-8 left-4 sm:left-8 text-ivory-dim hover:text-ivory transition-colors flex items-center gap-2 text-[14.5px]">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
                 Back
             </button>
-            <div class="w-16 h-16 rounded-full bg-[rgba(201,168,76,0.05)] border border-unswap-border flex items-center justify-center mb-6 mt-2 shadow-[0_4px_24px_var(--gold-dim)]">
-                <svg class="w-8 h-8 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
+            <div
+                class="w-16 h-16 rounded-full bg-[rgba(201,168,76,0.05)] border border-unswap-border flex items-center justify-center mb-6 mt-2 shadow-[0_4px_24px_var(--gold-dim)]">
+                <svg class="w-8 h-8 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                </svg>
             </div>
             <h2 class="font-display text-[44px] font-light text-gold mb-4 leading-[1.15]">Check your inbox</h2>
             <p class="text-ivory-dim text-[16px] mb-1">We sent a confirmation link to</p>
             <p id="success-email" class="text-ivory font-medium text-[16px] mb-3"></p>
-            <p class="text-muted text-[14.5px] max-w-xs mx-auto leading-relaxed">Click the link to confirm your email and be redirected to your waitlist status dashboard.</p>
+            <p class="text-muted text-[14.5px] max-w-xs mx-auto leading-relaxed">Click the link to confirm your email
+                and be redirected to your waitlist status dashboard.</p>
+
+            <!-- Share nudge — the actual buttons are the sticky bar on the side of the page -->
+            <div class="mt-10 w-full border-t border-unswap-border pt-8">
+                <p class="text-ivory-dim text-xs tracking-[0.18em] uppercase font-medium mb-1">Skip the queue</p>
+                <p class="text-gold font-display text-[20px] font-light italic mb-2">Share & move up the waitlist</p>
+                <p class="text-muted text-[13px]">Use the share buttons on the side of the screen →</p>
+                <p id="share-ref-note" class="hidden text-muted text-[11px] mt-3 tracking-wide">Your personal referral link is included.</p>
+            </div>
         </div>
 
         <!-- ========================================= ERROR ========================================= -->
-        <div id="error-view" class="mode-section flex-col items-center justify-center text-center max-w-md mx-auto w-full relative min-h-screen p-6">
-            <button onclick="setMode('join')" class="absolute top-8 left-4 sm:left-8 text-ivory-dim hover:text-ivory transition-colors flex items-center gap-2 text-[14.5px]">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+        <div id="error-view"
+            class="mode-section flex-col items-center justify-center text-center max-w-md mx-auto w-full relative min-h-screen p-6">
+            <button onclick="setMode('join')"
+                class="absolute top-8 left-4 sm:left-8 text-ivory-dim hover:text-ivory transition-colors flex items-center gap-2 text-[14.5px]">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
                 Back
             </button>
-            <div class="w-16 h-16 rounded-full bg-[rgba(255,0,0,0.03)] border border-[rgba(255,0,0,0.15)] flex items-center justify-center mb-6 mt-2">
-                <svg class="w-8 h-8 text-[#ff6b6b]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            <div
+                class="w-16 h-16 rounded-full bg-[rgba(255,0,0,0.03)] border border-[rgba(255,0,0,0.15)] flex items-center justify-center mb-6 mt-2">
+                <svg class="w-8 h-8 text-[#ff6b6b]" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                    stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
             </div>
             <h2 class="font-display text-[44px] font-light text-gold mb-4 leading-[1.15]">Unable to connect</h2>
             <p id="error-text" class="text-ivory-dim text-[16px] mb-8 leading-relaxed max-w-xs mx-auto">
                 Network error or the service is temporarily unavailable. Please try again later.
             </p>
-            <button onclick="setMode('join')" class="btn-gold w-full flex items-center justify-center shadow-[0_4px_24px_var(--gold-dim)]">
+            <button onclick="setMode('join')"
+                class="btn-gold w-full flex items-center justify-center shadow-[0_4px_24px_var(--gold-dim)]">
                 Try Again
             </button>
         </div>
@@ -247,14 +306,14 @@
     <!-- Application Script Logic -->
     <script>
         const views = ['join-view', 'status-view', 'success-view', 'error-view'];
-        
+
         // Mode switching
-        window.setMode = function(mode) {
+        window.setMode = function (mode) {
             views.forEach(v => {
                 document.getElementById(v).classList.remove('active');
             });
             document.getElementById(`${mode}-view`).classList.add('active');
-            
+
             if (mode === 'join') {
                 document.getElementById('join-error').classList.add('hidden');
             }
@@ -280,7 +339,7 @@
         const errParam = params.get('error');
 
         if (ref) sessionStorage.setItem('unswap_referral_code', ref);
-        
+
         if (errParam) {
             document.getElementById('error-text').textContent = decodeURIComponent(errParam).replace(/\+/g, ' ');
             setMode('error');
@@ -323,7 +382,7 @@
                     body: JSON.stringify(payload)
                 });
                 const data = await response.json();
-                
+
                 if (!response.ok) {
                     if (response.status === 409) {
                         document.getElementById('check-email').value = payload.email;
@@ -334,14 +393,15 @@
                 } else {
                     document.getElementById('success-email').textContent = payload.email;
                     setMode('success');
-                    
+                    updateShareUrl(payload.email);
+
                     fetch('https://events.evidence.io/hook/vQrlDk0zuDnpKoqD', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload),
                     }).catch(console.error);
                 }
-            } catch(err) {
+            } catch (err) {
                 document.getElementById('error-text').textContent = err.message || 'Failed to initiate signup';
                 setMode('error');
             } finally {
@@ -356,7 +416,7 @@
             const btn = document.getElementById('status-btn');
             const errorP = document.getElementById('status-error');
             const email = document.getElementById('check-email').value;
-            
+
             btn.innerHTML = 'Loading...';
             btn.disabled = true;
             errorP.classList.add('hidden');
@@ -364,7 +424,7 @@
             try {
                 const response = await fetch(`${API_URL}/waitlist/status?email=${encodeURIComponent(email)}`);
                 const data = await response.json();
-                
+
                 if (data.found === false) {
                     errorP.textContent = "We couldn't find an account matching that email.";
                     errorP.classList.remove('hidden');
@@ -374,7 +434,7 @@
                     errorP.textContent = 'Dashboard link not found';
                     errorP.classList.remove('hidden');
                 }
-            } catch(err) {
+            } catch (err) {
                 errorP.textContent = 'Something went wrong.';
                 errorP.classList.remove('hidden');
             } finally {
@@ -382,6 +442,46 @@
                 btn.disabled = false;
             }
         });
+
+        // ─── ShareThis: Dynamic URL ────────────────────────────────────────────────
+        // After sign-up we try to get the user's personal Waitlister referral URL.
+        // If we can't retrieve it yet (they haven't clicked the confirmation email),
+        // we fall back to the base waitlist URL so sharing is never blocked.
+        async function updateShareUrl(email) {
+            const container = document.getElementById('sharethis-container');
+            const note = document.getElementById('share-ref-note');
+            let shareUrl = 'https://waitlist.unswap.com';
+
+            try {
+                const res = await fetch(`${API_URL}/waitlist/status?email=${encodeURIComponent(email)}`);
+                const data = await res.json();
+                // thank_you_url from Waitlister contains the user's referral link
+                if (data.found && data.thank_you_url) {
+                    shareUrl = data.thank_you_url;
+                    note.classList.remove('hidden');
+                }
+            } catch (_) {
+                // Silently fall back — sharing still works with the base URL
+            }
+
+            // Set the data-url and reinitialize ShareThis buttons
+            container.setAttribute('data-url', shareUrl);
+            if (window.__sharethis__ && typeof window.__sharethis__.initialize === 'function') {
+                window.__sharethis__.initialize();
+            }
+        }
     </script>
+
+    <!-- ShareThis Sticky Share Buttons — placed here per ShareThis docs; ShareThis moves it into position -->
+    <!-- data-url is updated dynamically by updateShareUrl() after a successful sign-up -->
+    <div
+        class="sharethis-sticky-share-buttons"
+        id="sharethis-container"
+        data-url="https://waitlist.unswap.com"
+        data-title="Join the UnSwap waitlist — exclusive home exchange for international organization staff"
+        data-description="A closed-loop home exchange ecosystem exclusively for verified UN, World Bank, IMF and other international organization staff."
+        data-image="https://waitlist.unswap.com/hero.webp"
+    ></div>
 </body>
+
 </html>

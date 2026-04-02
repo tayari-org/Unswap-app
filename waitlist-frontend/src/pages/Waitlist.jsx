@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../api/apiClient.js';
 
@@ -18,6 +18,8 @@ export default function Waitlist() {
 
     const [waitlistCount, setWaitlistCount] = useState(null);
     const [recentJoiners, setRecentJoiners] = useState([]);
+    const [shareRefNote, setShareRefNote] = useState(false);
+    const shareContainerRef = useRef(null);
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -54,6 +56,7 @@ export default function Waitlist() {
 
             setMode('success');
             setStatus('idle');
+            updateShareUrl(email);
         } catch (err) {
             if (err.status === 409) {
                 setMode('status');
@@ -64,6 +67,30 @@ export default function Waitlist() {
                 setMode('error');
             }
             setStatus('error');
+        }
+    };
+
+    // ─── ShareThis: Dynamic URL ────────────────────────────────────────────────
+    // After sign-up, try to retrieve the user's personal Waitlister referral URL.
+    // Falls back silently to the base waitlist URL so sharing is never blocked.
+    const updateShareUrl = async (userEmail) => {
+        const container = shareContainerRef.current;
+        if (!container) return;
+
+        let shareUrl = 'https://waitlist.unswap.com';
+        try {
+            const data = await api.waitlist.getStatus(userEmail);
+            if (data.found && data.thank_you_url) {
+                shareUrl = data.thank_you_url;
+                setShareRefNote(true);
+            }
+        } catch (_) {
+            // silent fallback
+        }
+
+        container.setAttribute('data-url', shareUrl);
+        if (window.__sharethis__ && typeof window.__sharethis__.initialize === 'function') {
+            window.__sharethis__.initialize();
         }
     };
 
@@ -223,8 +250,7 @@ export default function Waitlist() {
                             </div>
                         </div>
 
-                        {/* Share this code begins */}
-                        <div class="sharethis-inline-share-buttons"></div>
+                        
 
                         {/* IMAGE — background on mobile, left on desktop */}
                         <div className="absolute inset-0 lg:static lg:w-[35%] order-2 lg:order-1 lg:sticky lg:top-0 lg:h-[100dvh] overflow-hidden z-0 bg-deep border-r border-unswap-border">
@@ -257,6 +283,16 @@ export default function Waitlist() {
                         <p className="text-ivory-dim text-[16px] mb-1">We sent a confirmation link to</p>
                         <p className="text-ivory font-medium text-[16px] mb-3">{email}</p>
                         <p className="text-muted text-[14.5px] max-w-xs mx-auto leading-relaxed">Click the link to confirm your email and be redirected to your waitlist status dashboard.</p>
+
+                        {/* Share nudge — sticky buttons float on the side of the screen */}
+                        <div className="mt-10 w-full border-t border-[rgba(201,168,76,0.25)] pt-8">
+                            <p className="text-[rgba(245,240,232,0.65)] text-xs tracking-[0.18em] uppercase font-medium mb-1">Skip the queue</p>
+                            <p className="font-['Cormorant_Garamond'] text-[#c9a84c] text-[20px] font-light italic mb-2">Share &amp; move up the waitlist</p>
+                            <p className="text-[rgba(245,240,232,0.4)] text-[13px]">Use the share buttons on the side of the screen →</p>
+                            {shareRefNote && (
+                                <p className="text-[rgba(245,240,232,0.4)] text-[11px] mt-3 tracking-wide">Your personal referral link is included.</p>
+                            )}
+                        </div>
                     </motion.div>
                 )}
 
@@ -334,6 +370,17 @@ export default function Waitlist() {
                 )}
 
             </AnimatePresence>
+
+            {/* ShareThis Sticky Share Buttons — ShareThis auto-positions this as a floating sidebar */}
+            {/* data-url is updated dynamically by updateShareUrl() after a successful sign-up */}
+            <div
+                ref={shareContainerRef}
+                className="sharethis-sticky-share-buttons"
+                data-url="https://waitlist.unswap.com"
+                data-title="Join the UnSwap waitlist — exclusive home exchange for international organization staff"
+                data-description="A closed-loop home exchange ecosystem exclusively for verified UN, World Bank, IMF and other international organization staff."
+                data-image="https://waitlist.unswap.com/hero.webp"
+            />
         </div>
     );
 }
