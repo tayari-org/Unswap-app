@@ -223,6 +223,9 @@ export default function Waitlist() {
                             </div>
                         </div>
 
+                        {/* Share this code begins */}
+                        <div class="sharethis-inline-share-buttons"></div>
+
                         {/* IMAGE — background on mobile, left on desktop */}
                         <div className="absolute inset-0 lg:static lg:w-[35%] order-2 lg:order-1 lg:sticky lg:top-0 lg:h-[100dvh] overflow-hidden z-0 bg-deep border-r border-unswap-border">
                             <img src="/hero.webp" alt="Luxury Interior" className="absolute inset-0 w-full h-full object-cover object-center opacity-80" />
