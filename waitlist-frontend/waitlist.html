@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Unswap — Join the Waitlist</title>
+    <meta name="description" content="Join the Unswap waitlist — a closed-loop home exchange ecosystem for verified international organization staff." />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: '#0a0e1a',
+                        deep: '#060910',
+                        gold: '#c9a84c',
+                        'gold-light': '#e4c97a',
+                        'gold-dim': 'rgba(201,168,76,0.18)',
+                        ivory: '#f5f0e8',
+                        'ivory-dim': 'rgba(245,240,232,0.65)',
+                        cream: '#ede8dd',
+                        muted: 'rgba(245,240,232,0.4)',
+                        'unswap-border': 'rgba(201,168,76,0.25)',
+                    },
+                    fontFamily: {
+                        sans: ['"DM Sans"', 'sans-serif'],
+                        display: ['"Cormorant Garamond"', 'serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <!-- Base Configuration & Custom Components -->
+    <style type="text/tailwindcss">
+        @layer base {
+            :root {
+                --border: rgba(201, 168, 76, 0.25);
+                --gold-dim: rgba(201, 168, 76, 0.18);
+            }
+            body {
+                @apply bg-navy text-ivory font-sans overflow-x-hidden;
+                font-size: 17px;
+                line-height: 1.7;
+            }
+            body::before {
+                content: '';
+                position: fixed;
+                inset: 0;
+                background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+                pointer-events: none;
+                z-index: 9999;
+                opacity: 0.5;
+            }
+        }
+        @layer components {
+            .btn-gold {
+                @apply inline-block bg-gold text-navy font-sans font-medium tracking-[0.08em] uppercase border-none cursor-pointer no-underline transition-all duration-300 ease-out;
+                padding: 17px 38px;
+                font-size: 14px;
+            }
+            .btn-gold:hover { 
+                @apply bg-gold-light opacity-100;
+                transform: translateY(-2px); 
+            }
+            .btn-outline {
+                @apply inline-block bg-transparent text-gold font-sans font-medium tracking-[0.08em] uppercase border border-gold cursor-pointer no-underline transition-all duration-300 ease-out;
+                padding: 17px 38px;
+                font-size: 14px;
+            }
+            .btn-outline:hover { 
+                @apply bg-gold-dim; 
+                transform: translateY(-2px); 
+            }
+        }
+        
+        /* Smooth Transition Classes for JS Toggling */
+        .mode-section { display: none; }
+        .mode-section.active { display: flex; animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen relative text-ivory font-sans bg-navy">
+    
+    <!-- All Views Container -->
+    <div class="relative w-full min-h-screen">
+
+        <!-- ========================================= JOIN ========================================= -->
+        <div id="join-view" class="mode-section active flex-col lg:flex-row w-full min-h-screen relative">
+            <div class="w-full lg:w-[65%] order-1 lg:order-2 flex items-center justify-center p-8 sm:p-12 lg:p-16 relative z-10 min-h-[100dvh] overflow-y-auto">
+                <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--gold-dim)_0%,_transparent_60%)] pointer-events-none"></div>
+
+                <div class="w-full max-w-xl mx-auto relative">
+                    <!-- Circular logo -->
+                    <div class="flex justify-center mb-6">
+                        <img src="/logo.png" alt="UnSwap" class="w-28 h-28 object-contain" />
+                    </div>
+
+                    <!-- Divider label -->
+                    <div class="flex items-center justify-center gap-3 mb-5 mt-2">
+                        <div class="h-px flex-1 bg-gradient-to-r from-transparent to-unswap-border"></div>
+                        <span class="text-ivory text-[11px] tracking-[0.22em] uppercase font-medium">Exclusive Access</span>
+                        <div class="h-px flex-1 bg-gradient-to-l from-transparent to-unswap-border"></div>
+                    </div>
+
+                    <!-- Description -->
+                    <p class="text-gold font-display text-[26px] leading-snug text-center mb-10 font-light italic">
+                        A closed-loop home exchange ecosystem exclusively for verified staff of the UN, World Bank, IMF and other International Organizations.
+                    </p>
+
+                    <!-- Form -->
+                    <form id="join-form" class="space-y-4">
+                        <div>
+                            <label class="text-ivory-dim text-xs tracking-[0.08em] uppercase font-medium mb-2 pl-1 flex items-center gap-1">
+                                Full Name <span class="text-gold">*</span>
+                            </label>
+                            <input type="text" id="join-name" placeholder="Enter your full name" required
+                                class="w-full bg-[rgba(10,14,26,0.5)] border border-unswap-border px-[20px] py-[16px] text-ivory placeholder-muted focus:outline-none focus:border-gold focus:shadow-[0_0_0_1px_var(--border)] transition-all duration-300 text-[15px] font-sans" />
+                        </div>
+                        <div>
+                            <label class="text-ivory-dim text-xs tracking-[0.08em] uppercase font-medium mb-2 pl-1 flex items-center gap-1">
+                                Email Address <span class="text-gold">*</span>
+                            </label>
+                            <input type="email" id="join-email" placeholder="your@email.com" required
+                                class="w-full bg-[rgba(10,14,26,0.5)] border border-unswap-border px-[20px] py-[16px] text-ivory placeholder-muted focus:outline-none focus:border-gold focus:shadow-[0_0_0_1px_var(--border)] transition-all duration-300 text-[15px] font-sans" />
+                        </div>
+                        <div>
+                            <label class="text-ivory-dim text-xs tracking-[0.08em] uppercase font-medium mb-2 pl-1 flex items-center gap-1">
+                                Organization / Affiliation <span class="text-gold">*</span>
+                            </label>
+                            <select id="join-organization" required
+                                class="w-full text-muted bg-[rgba(10,14,26,0.5)] border border-unswap-border px-[20px] py-[16px] focus:outline-none focus:border-gold focus:shadow-[0_0_0_1px_var(--border)] hover:border-gold transition-all duration-300 appearance-none text-[15px] font-sans"
+                                style="background: url('data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3e%3cpath stroke=\'%23c9a84c\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M6 8l4 4 4-4\'/%3e%3c/svg%3e') no-repeat right 0.75rem center/1.5rem 1.5rem">
+                                <option value="" disabled selected class="bg-deep text-muted">Select your organization / affiliation</option>
+                                <option value="United Nations" class="bg-navy text-ivory">United Nations</option>
+                                <option value="Specialized Agencies (WHO, ILO, UNESCO, etc.)" class="bg-navy text-ivory">Specialized Agencies (WHO, ILO, UNESCO, etc.)</option>
+                                <option value="World Bank Group" class="bg-navy text-ivory">World Bank Group</option>
+                                <option value="International Monetary Fund (IMF)" class="bg-navy text-ivory">International Monetary Fund (IMF)</option>
+                                <option value="Diplomatic Mission / Foreign Service" class="bg-navy text-ivory">Diplomatic Mission / Foreign Service</option>
+                                <option value="Other Intergovernmental Organization" class="bg-navy text-ivory">Other Intergovernmental Organization</option>
+                                <option value="I am a friend/family of an international employee whom I want to invite" class="bg-navy text-ivory">I am a friend/family of an international employee whom I want to invite</option>
+                            </select>
+                        </div>
+                        
+                        <p id="join-error" class="hidden text-[#ff6b6b] text-[14.5px]"></p>
+
+                        <!-- Main CTA -->
+                        <button type="submit" id="join-btn" class="btn-gold w-full flex items-center justify-center mt-2 group shadow-[0_4px_24px_var(--gold-dim)]">
+                            Request Access →
+                        </button>
+
+                        <!-- Social proof area -->
+                        <div class="pt-6 mt-4 border-t border-unswap-border flex flex-col items-center gap-3">
+                            <p class="text-[13px] text-ivory-dim" id="waitlist-count-text">Waitlist loading...</p>
+                            <button type="button" onclick="setMode('status')" class="text-muted hover:text-gold text-[11px] font-medium tracking-[0.18em] uppercase transition-colors">
+                                Check Status →
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- IMAGE — background on mobile, left on desktop -->
+            <div class="absolute inset-0 lg:static lg:w-[35%] order-2 lg:order-1 lg:sticky lg:top-0 lg:h-[100dvh] overflow-hidden z-0 bg-deep border-r border-unswap-border">
+                <img src="/hero.webp" alt="Luxury Interior" class="absolute inset-0 w-full h-full object-cover object-center opacity-80" />
+                <div class="absolute inset-0 bg-navy/90 lg:hidden"></div>
+                <div class="hidden lg:block absolute bottom-0 left-0 right-0 p-8 lg:p-10">
+                    <div class="flex items-center gap-3">
+                        <div class="w-[60px] h-px bg-gold"></div>
+                        <p class="text-gold/60 text-[11px] tracking-[0.22em] uppercase">By invitation only</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================= STATUS CHECKER ========================================= -->
+        <div id="status-view" class="mode-section flex-col items-center justify-center text-center w-full max-w-lg mx-auto min-h-screen p-6 relative z-10">
+            <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--gold-dim)_0%,_transparent_60%)] pointer-events-none"></div>
+            <div class="flex justify-center mb-6">
+                <img src="/logo.png" alt="Unswap Logo" class="w-28 h-28 object-contain" />
+            </div>
+            <h1 class="font-display text-[36px] sm:text-[48px] font-light text-ivory mb-8 tracking-tight leading-[1.1]">
+                Check your <em class="text-gold-light italic">waitlist status</em>
+            </h1>
+
+            <form id="status-form" class="w-full flex flex-col items-center gap-4">
+                <input type="email" id="check-email" placeholder="email@example.com" required
+                    class="w-full bg-[rgba(10,14,26,0.5)] border border-unswap-border px-[20px] py-[16px] text-ivory placeholder-muted focus:outline-none focus:border-gold focus:shadow-[0_0_0_1px_var(--border)] transition-all duration-300 font-sans text-[15px]" />
+                <button type="submit" id="status-btn" class="btn-gold w-full flex items-center justify-center mt-2 group shadow-[0_4px_24px_var(--gold-dim)]">
+                    Check Status
+                </button>
+            </form>
+
+            <p id="status-error" class="hidden text-[#ff6b6b] text-[14.5px] mt-6 mb-2"></p>
+
+            <button onclick="setMode('join')" class="mt-8 text-muted hover:text-gold text-[11px] font-medium tracking-[0.18em] uppercase transition-colors">
+                ← Back to waitlist
+            </button>
+        </div>
+
+        <!-- ========================================= SUCCESS ========================================= -->
+        <div id="success-view" class="mode-section flex-col items-center justify-center text-center max-w-md mx-auto w-full relative min-h-screen p-6">
+            <button onclick="setMode('join')" class="absolute top-8 left-4 sm:left-8 text-ivory-dim hover:text-ivory transition-colors flex items-center gap-2 text-[14.5px]">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                Back
+            </button>
+            <div class="w-16 h-16 rounded-full bg-[rgba(201,168,76,0.05)] border border-unswap-border flex items-center justify-center mb-6 mt-2 shadow-[0_4px_24px_var(--gold-dim)]">
+                <svg class="w-8 h-8 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
+            </div>
+            <h2 class="font-display text-[44px] font-light text-gold mb-4 leading-[1.15]">Check your inbox</h2>
+            <p class="text-ivory-dim text-[16px] mb-1">We sent a confirmation link to</p>
+            <p id="success-email" class="text-ivory font-medium text-[16px] mb-3"></p>
+            <p class="text-muted text-[14.5px] max-w-xs mx-auto leading-relaxed">Click the link to confirm your email and be redirected to your waitlist status dashboard.</p>
+        </div>
+
+        <!-- ========================================= ERROR ========================================= -->
+        <div id="error-view" class="mode-section flex-col items-center justify-center text-center max-w-md mx-auto w-full relative min-h-screen p-6">
+            <button onclick="setMode('join')" class="absolute top-8 left-4 sm:left-8 text-ivory-dim hover:text-ivory transition-colors flex items-center gap-2 text-[14.5px]">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                Back
+            </button>
+            <div class="w-16 h-16 rounded-full bg-[rgba(255,0,0,0.03)] border border-[rgba(255,0,0,0.15)] flex items-center justify-center mb-6 mt-2">
+                <svg class="w-8 h-8 text-[#ff6b6b]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            </div>
+            <h2 class="font-display text-[44px] font-light text-gold mb-4 leading-[1.15]">Unable to connect</h2>
+            <p id="error-text" class="text-ivory-dim text-[16px] mb-8 leading-relaxed max-w-xs mx-auto">
+                Network error or the service is temporarily unavailable. Please try again later.
+            </p>
+            <button onclick="setMode('join')" class="btn-gold w-full flex items-center justify-center shadow-[0_4px_24px_var(--gold-dim)]">
+                Try Again
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Application Script Logic -->
+    <script>
+        const views = ['join-view', 'status-view', 'success-view', 'error-view'];
+        
+        // Mode switching
+        window.setMode = function(mode) {
+            views.forEach(v => {
+                document.getElementById(v).classList.remove('active');
+            });
+            document.getElementById(`${mode}-view`).classList.add('active');
+            
+            if (mode === 'join') {
+                document.getElementById('join-error').classList.add('hidden');
+            }
+            if (mode === 'status') {
+                document.getElementById('status-error').classList.add('hidden');
+            }
+        }
+
+        const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://api.unswap.com/api'; // Adapt for live
+
+        // Custom Dropdown UI functionality
+        const orgSelect = document.getElementById('join-organization');
+        orgSelect.addEventListener('change', () => {
+            if (orgSelect.value) {
+                orgSelect.classList.remove('text-muted');
+                orgSelect.classList.add('text-ivory');
+            }
+        });
+
+        // Initialize state / Referral system
+        const params = new URLSearchParams(window.location.search);
+        const ref = params.get('ref');
+        const errParam = params.get('error');
+
+        if (ref) sessionStorage.setItem('unswap_referral_code', ref);
+        
+        if (errParam) {
+            document.getElementById('error-text').textContent = decodeURIComponent(errParam).replace(/\+/g, ' ');
+            setMode('error');
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        // Fetch member count
+        fetch(`${API_URL}/waitlist/count`)
+            .then(res => res.json())
+            .then(data => {
+                const textContainer = document.getElementById('waitlist-count-text');
+                if (data.count === 0) {
+                    textContainer.innerHTML = 'Be the first to join!';
+                } else if (typeof data.count === 'number') {
+                    textContainer.innerHTML = `<span class="text-ivory font-medium">${data.count}</span> members already on the list`;
+                }
+            })
+            .catch(() => {
+                document.getElementById('waitlist-count-text').innerHTML = 'Join an exclusive list of members.';
+            });
+
+        // Handle Join Form
+        document.getElementById('join-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('join-btn');
+            btn.innerHTML = 'Processing...';
+            btn.disabled = true;
+
+            const payload = {
+                name: document.getElementById('join-name').value,
+                email: document.getElementById('join-email').value,
+                organization: document.getElementById('join-organization').value,
+                ref: sessionStorage.getItem('unswap_referral_code')
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/waitlist/join`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    if (response.status === 409) {
+                        document.getElementById('check-email').value = payload.email;
+                        setMode('status');
+                    } else {
+                        throw new Error(data.message || 'Failed to initiate signup');
+                    }
+                } else {
+                    document.getElementById('success-email').textContent = payload.email;
+                    setMode('success');
+                    
+                    fetch('https://events.evidence.io/hook/vQrlDk0zuDnpKoqD', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                    }).catch(console.error);
+                }
+            } catch(err) {
+                document.getElementById('error-text').textContent = err.message || 'Failed to initiate signup';
+                setMode('error');
+            } finally {
+                btn.innerHTML = 'Request Access →';
+                btn.disabled = false;
+            }
+        });
+
+        // Handle Status Form
+        document.getElementById('status-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('status-btn');
+            const errorP = document.getElementById('status-error');
+            const email = document.getElementById('check-email').value;
+            
+            btn.innerHTML = 'Loading...';
+            btn.disabled = true;
+            errorP.classList.add('hidden');
+
+            try {
+                const response = await fetch(`${API_URL}/waitlist/status?email=${encodeURIComponent(email)}`);
+                const data = await response.json();
+                
+                if (data.found === false) {
+                    errorP.textContent = "We couldn't find an account matching that email.";
+                    errorP.classList.remove('hidden');
+                } else if (data.thank_you_url) {
+                    window.location.href = data.thank_you_url;
+                } else {
+                    errorP.textContent = 'Dashboard link not found';
+                    errorP.classList.remove('hidden');
+                }
+            } catch(err) {
+                errorP.textContent = 'Something went wrong.';
+                errorP.classList.remove('hidden');
+            } finally {
+                btn.innerHTML = 'Check Status';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
