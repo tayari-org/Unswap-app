@@ -201,7 +201,7 @@ export default function ReferralProgram({ user }) {
                 </Button>
               </div>
 
-              <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+              <div className="p-4 bg-amber-50 rounded-lg border border-amber-200 mt-4">
                 <h4 className="font-semibold text-amber-900 mb-2">How it works:</h4>
                 <ol className="space-y-1 text-sm text-amber-800">
                   <li>1. Share your referral link with colleagues</li>

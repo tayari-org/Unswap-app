@@ -21,6 +21,9 @@ export default function Waitlist() {
     const [shareRefNote, setShareRefNote] = useState(false);
     const shareContainerRef = useRef(null);
 
+    const [personalShareUrl, setPersonalShareUrl] = useState('https://waitlist.unswap.com');
+    const [copiedIndex, setCopiedIndex] = useState(null);
+
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const ref = params.get('ref');
@@ -82,6 +85,7 @@ export default function Waitlist() {
             const data = await api.waitlist.getStatus(userEmail);
             if (data.found && data.thank_you_url) {
                 shareUrl = data.thank_you_url;
+                setPersonalShareUrl(shareUrl);
                 setShareRefNote(true);
             }
         } catch (_) {
@@ -268,7 +272,7 @@ export default function Waitlist() {
 
                 {/* ========================================= SUCCESS ========================================= */}
                 {mode === 'success' && (
-                    <motion.div key="success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center text-center max-w-md mx-auto w-full relative min-h-screen p-6">
+                    <motion.div key="success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center text-center max-w-lg mx-auto w-full relative min-h-screen py-10 px-6">
                         <button
                             onClick={() => { setMode('join'); setEmail(''); setName(''); setOrganization(''); }}
                             className="absolute top-8 left-4 sm:left-8 text-ivory-dim hover:text-ivory transition-colors flex items-center gap-2 text-[14.5px]"
@@ -290,8 +294,69 @@ export default function Waitlist() {
                             <p className="font-['Cormorant_Garamond'] text-[#c9a84c] text-[20px] font-light italic mb-2">Share &amp; move up the waitlist</p>
                             <p className="text-[rgba(245,240,232,0.4)] text-[13px]">Use the share buttons on the side of the screen →</p>
                             {shareRefNote && (
-                                <p className="text-[rgba(245,240,232,0.4)] text-[11px] mt-3 tracking-wide">Your personal referral link is included.</p>
+                                <p className="text-[rgba(245,240,232,0.4)] text-[11px] mt-3 tracking-wide">Your personal referral link is automatically added below.</p>
                             )}
+                        </div>
+
+                        {/* Templates Nudge */}
+                        <div className="mt-8 w-full text-left">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[rgba(201,168,76,0.3)]" />
+                                <span className="text-gold text-[11px] tracking-[0.2em] uppercase font-medium">Inspiration</span>
+                                <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[rgba(201,168,76,0.3)]" />
+                            </div>
+                            
+                            <div className="mb-6 p-4 bg-[rgba(10,14,26,0.4)] border border-[rgba(201,168,76,0.2)] rounded-md text-center">
+                                <p className="text-[13px] text-ivory-dim leading-relaxed">
+                                    <strong className="text-gold font-medium">💡 Pro-Tip:</strong> When sharing to LinkedIn, these standard "Hook" styles perform best when paired with an image of a global landmark or a prestigious interior.
+                                </p>
+                            </div>
+                            
+                            <div className="space-y-4">
+                                {[
+                                    { id: 1, title: "Option 1: The Calculation", subtitle: "Best for: LinkedIn or professional networks focused on financial strategy.", content: "I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering — and she built the solution specifically for people with security clearances.\n\nJoin the waitlist here: [INSERT_LINK]" },
+                                    { id: 2, title: "Option 2: The 'Finally'", subtitle: "Best for: UN or Foreign Service WhatsApp / FB groups.", content: "This is the first home exchange system I've seen that was actually built for UN staff and foreign service professionals — not tourists. If your home sits empty during postings, get on this waitlist before it opens: [INSERT_LINK]" },
+                                    { id: 3, title: "Option 3: The Specific Pain", subtitle: "Best for: Personal storytelling or 1-on-1 outreach.", content: "You know the 3am feeling when you're posted abroad and you wonder if everything's okay at home? Jacqueline Tsuma built the answer to that.\n\nSecure your spot on the waitlist: [INSERT_LINK]" },
+                                    { id: 4, title: "Option 4: The Contrast", subtitle: "Best for: High-impact \"Hard Truth\" posts.", content: "Diplomat A: $60K on serviced apartments, home unprotected for 18 months.\nDiplomat B: $0 on accommodation, home with a vetted UN peer, three future exchanges lined up.\n\nSame posting. One decision. Join the waitlist for that decision: [INSERT_LINK]" },
+                                    { id: 5, title: "Option 5: The Credibility Pass", subtitle: "Best for: Establishing authority and trust.", content: "A former UN advisor built a vetted home exchange network specifically for diplomatic professionals — verified by institutional credentials, not star ratings. If you own a home that sits empty during postings, this is for you: [INSERT_LINK]" }
+                                ].map((t) => {
+                                    const hydrated = t.content.replace('[INSERT_LINK]', personalShareUrl);
+                                    return (
+                                        <div 
+                                            key={t.id} 
+                                            className="bg-deep border border-unswap-border rounded-lg p-5 transition-all hover:border-gold hover:shadow-[0_4px_20px_var(--gold-dim)] group cursor-pointer relative overflow-hidden" 
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(hydrated);
+                                                setCopiedIndex(t.id);
+                                                setTimeout(() => setCopiedIndex(null), 2000);
+                                            }}
+                                        >
+                                            <div className="flex justify-between items-start mb-3">
+                                                <div>
+                                                    <h4 className="text-ivory font-medium text-[15px]">{t.title}</h4>
+                                                    <p className="text-muted text-[12px] tracking-wide mt-1">{t.subtitle}</p>
+                                                </div>
+                                                <button className="text-gold bg-[rgba(201,168,76,0.1)] px-3 py-1.5 rounded text-[11px] font-medium tracking-wide uppercase transition-all group-hover:bg-gold group-hover:text-navy flex items-center gap-1.5 shrink-0 ml-3">
+                                                    {copiedIndex === t.id ? (
+                                                        <>
+                                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                                            Copied!
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                                            Copy
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
+                                            <p className="text-[14px] text-ivory-dim leading-[1.6] font-['Cormorant_Garamond'] whitespace-pre-wrap border-l-2 border-[rgba(201,168,76,0.3)] pl-4 italic">
+                                                "{hydrated}"
+                                            </p>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </motion.div>
                 )}
