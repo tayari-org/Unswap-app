@@ -98,3 +98,16 @@ body::before {
     text-transform: uppercase;
   }
 }
+
+/* ShareThis Tailwind Compatibility Fix */
+.st-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+}
+.st-btn img, 
+.st-btn svg {
+  display: inline-block !important;
+}
+.st-btn .st-label {
+  display: inline-block !important;
+}
