@@ -299,8 +299,9 @@ export default function Waitlist() {
                                     ref={shareContainerRef}
                                     className="sharethis-inline-share-buttons"
                                     data-url="https://waitlist.unswap.com"
-                                    data-title="Join the UnSwap waitlist — exclusive home exchange for international organization staff"
-                                    data-description="A closed-loop home exchange ecosystem exclusively for verified UN, World Bank, IMF and other international organization staff."
+                                    data-title="I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering — and she built the solution specifically for people with security clearances. Join the waitlist here:"
+                                    data-message="I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering — and she built the solution specifically for people with security clearances. Join the waitlist here:"
+                                    data-image="https://www.unswap.net/hero.webp"
                                 />
                             </div>
 
