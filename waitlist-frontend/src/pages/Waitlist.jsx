@@ -288,13 +288,24 @@ export default function Waitlist() {
                         <p className="text-ivory font-medium text-[16px] mb-3">{email}</p>
                         <p className="text-muted text-[14.5px] max-w-xs mx-auto leading-relaxed">Click the link to confirm your email and be redirected to your waitlist status dashboard.</p>
 
-                        {/* Share nudge — sticky buttons float on the side of the screen */}
+                        {/* Share nudge — inline buttons rendered directly in the flow */}
                         <div className="mt-10 w-full border-t border-[rgba(201,168,76,0.25)] pt-8">
                             <p className="text-[rgba(245,240,232,0.65)] text-xs tracking-[0.18em] uppercase font-medium mb-1">Skip the queue</p>
-                            <p className="font-['Cormorant_Garamond'] text-[#c9a84c] text-[20px] font-light italic mb-2">Share &amp; move up the waitlist</p>
-                            <p className="text-[rgba(245,240,232,0.4)] text-[13px]">Use the share buttons on the side of the screen →</p>
+                            <p className="font-['Cormorant_Garamond'] text-[#c9a84c] text-[20px] font-light italic mb-4">Share &amp; move up the waitlist</p>
+                            
+                            {/* Inline Share Buttons Container */}
+                            <div className="flex justify-center w-full mb-3 min-h-[48px]">
+                                <div
+                                    ref={shareContainerRef}
+                                    className="sharethis-inline-share-buttons"
+                                    data-url="https://waitlist.unswap.com"
+                                    data-title="Join the UnSwap waitlist — exclusive home exchange for international organization staff"
+                                    data-description="A closed-loop home exchange ecosystem exclusively for verified UN, World Bank, IMF and other international organization staff."
+                                />
+                            </div>
+
                             {shareRefNote && (
-                                <p className="text-[rgba(245,240,232,0.4)] text-[11px] mt-3 tracking-wide">Your personal referral link is automatically added below.</p>
+                                <p className="text-[rgba(245,240,232,0.4)] text-[11px] mt-2 tracking-wide">Your personal referral link is automatically added below.</p>
                             )}
                         </div>
 
@@ -436,16 +447,6 @@ export default function Waitlist() {
 
             </AnimatePresence>
 
-            {/* ShareThis Sticky Share Buttons — ShareThis auto-positions this as a floating sidebar */}
-            {/* data-url is updated dynamically by updateShareUrl() after a successful sign-up */}
-            <div
-                ref={shareContainerRef}
-                className="sharethis-sticky-share-buttons"
-                data-url="https://waitlist.unswap.com"
-                data-title="Join the UnSwap waitlist — exclusive home exchange for international organization staff"
-                data-description="A closed-loop home exchange ecosystem exclusively for verified UN, World Bank, IMF and other international organization staff."
-                data-image="https://media.istockphoto.com/id/1436217023/photo/exterior-of-a-blue-suburban-home.jpg?s=1024x1024&w=is&k=20&c=AZKMyi9tKbOYS5lNCNvRxOfahxo__p_s-Lb8JTXVvqY="
-            />
         </div>
     );
 }
