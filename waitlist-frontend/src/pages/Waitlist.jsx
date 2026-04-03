@@ -444,7 +444,7 @@ export default function Waitlist() {
                 data-url="https://waitlist.unswap.com"
                 data-title="Join the UnSwap waitlist — exclusive home exchange for international organization staff"
                 data-description="A closed-loop home exchange ecosystem exclusively for verified UN, World Bank, IMF and other international organization staff."
-                data-image="https://waitlist.unswap.com/hero.webp"
+                data-image="https://media.istockphoto.com/id/1436217023/photo/exterior-of-a-blue-suburban-home.jpg?s=1024x1024&w=is&k=20&c=AZKMyi9tKbOYS5lNCNvRxOfahxo__p_s-Lb8JTXVvqY="
             />
         </div>
     );
