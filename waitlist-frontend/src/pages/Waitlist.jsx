@@ -24,6 +24,13 @@ export default function Waitlist() {
     const [personalShareUrl, setPersonalShareUrl] = useState('https://waitlist.unswap.com');
     const [copiedIndex, setCopiedIndex] = useState(null);
 
+    // Initialize ShareThis dynamic URL safely after DOM update
+    useEffect(() => {
+        if (mode === 'success' && email) {
+            updateShareUrl(email);
+        }
+    }, [mode]);
+
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const ref = params.get('ref');
@@ -59,7 +66,7 @@ export default function Waitlist() {
 
             setMode('success');
             setStatus('idle');
-            updateShareUrl(email);
+            // updateShareUrl is now handled by the useEffect watching mode
         } catch (err) {
             if (err.status === 409) {
                 setMode('status');
@@ -92,7 +99,11 @@ export default function Waitlist() {
             // silent fallback
         }
 
+        container.setAttribute('data-title', "I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering — and she built the solution specifically for people with security clearances. Join the waitlist here: ");
+        container.setAttribute('data-message', "I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering — and she built the solution specifically for people with security clearances. Join the waitlist here: ");
+        container.setAttribute('data-image', "https://www.unswap.net/hero.webp");
         container.setAttribute('data-url', shareUrl);
+        
         if (window.__sharethis__ && typeof window.__sharethis__.initialize === 'function') {
             window.__sharethis__.initialize();
         }
