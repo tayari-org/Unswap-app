@@ -175,7 +175,7 @@ function buildPlatformButtons(shareUrl) {
 
 // ─── Main SharePage component ───────────────────────────────────────────────
 export default function SharePage() {
-  const [shareUrl, setShareUrl] = useState('https://waitlist.unswap.com');
+  const [shareUrl, setShareUrl] = useState('https://www.unswap.net');
   const [isPersonal, setIsPersonal] = useState(false);
   const [copiedId, setCopiedId] = useState(null); // 'link' | template id
   const [loadingRef, setLoadingRef] = useState(true);

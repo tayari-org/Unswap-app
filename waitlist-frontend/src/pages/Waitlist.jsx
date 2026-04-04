@@ -21,7 +21,7 @@ export default function Waitlist() {
     const [shareRefNote, setShareRefNote] = useState(false);
     const shareContainerRef = useRef(null);
 
-    const [personalShareUrl, setPersonalShareUrl] = useState('https://waitlist.unswap.com');
+    const [personalShareUrl, setPersonalShareUrl] = useState('https://www.unswap.net');
     const [copiedIndex, setCopiedIndex] = useState(null);
 
     // ─── After signup, fetch personal referral URL ─────────────────────────
@@ -84,7 +84,7 @@ export default function Waitlist() {
     // After sign-up, try to retrieve the user's personal Waitlister referral URL.
     // Falls back silently to the base waitlist URL so sharing is never blocked.
     const updateShareUrl = async (userEmail) => {
-        let shareUrl = 'https://waitlist.unswap.com';
+        let shareUrl = 'https://www.unswap.net';
         try {
             const data = await api.waitlist.getStatus(userEmail);
             if (data.found && data.thank_you_url) {
