@@ -8,12 +8,12 @@
     --deep: #060910;
     --gold: #c9a84c;
     --gold-light: #e4c97a;
-    --gold-dim: rgba(201,168,76,0.18);
+    --gold-dim: rgba(201, 168, 76, 0.18);
     --ivory: #f5f0e8;
-    --ivory-dim: rgba(245,240,232,0.65);
+    --ivory-dim: rgba(245, 240, 232, 0.65);
     --cream: #ede8dd;
-    --muted: rgba(245,240,232,0.4);
-    --border: rgba(201,168,76,0.25);
+    --muted: rgba(245, 240, 232, 0.4);
+    --border: rgba(201, 168, 76, 0.25);
     --serif: 'Cormorant Garamond', Georgia, serif;
     --sans: 'DM Sans', sans-serif;
   }
@@ -61,9 +61,10 @@ body::before {
     text-decoration: none;
     transition: background 0.25s, transform 0.2s;
   }
-  .btn-gold:hover { 
-    background: var(--gold-light); 
-    transform: translateY(-2px); 
+
+  .btn-gold:hover {
+    background: var(--gold-light);
+    transform: translateY(-2px);
   }
 
   .btn-outline {
@@ -81,9 +82,10 @@ body::before {
     text-decoration: none;
     transition: background 0.25s, color 0.25s, transform 0.2s;
   }
-  .btn-outline:hover { 
-    background: var(--gold-dim); 
-    transform: translateY(-2px); 
+
+  .btn-outline:hover {
+    background: var(--gold-dim);
+    transform: translateY(-2px);
   }
 
   .topbar {
@@ -104,10 +106,12 @@ body::before {
   display: inline-flex !important;
   align-items: center !important;
 }
-.st-btn img, 
+
+.st-btn img,
 .st-btn svg {
   display: inline-block !important;
 }
+
 .st-btn .st-label {
   display: inline-block !important;
 }

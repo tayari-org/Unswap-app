@@ -24,7 +24,7 @@ export default function Waitlist() {
     const [personalShareUrl, setPersonalShareUrl] = useState('https://waitlist.unswap.com');
     const [copiedIndex, setCopiedIndex] = useState(null);
 
-    // Initialize ShareThis dynamic URL safely after DOM update
+    // ─── After signup, fetch personal referral URL ─────────────────────────
     useEffect(() => {
         if (mode === 'success' && email) {
             updateShareUrl(email);
@@ -84,9 +84,6 @@ export default function Waitlist() {
     // After sign-up, try to retrieve the user's personal Waitlister referral URL.
     // Falls back silently to the base waitlist URL so sharing is never blocked.
     const updateShareUrl = async (userEmail) => {
-        const container = shareContainerRef.current;
-        if (!container) return;
-
         let shareUrl = 'https://waitlist.unswap.com';
         try {
             const data = await api.waitlist.getStatus(userEmail);
@@ -97,15 +94,6 @@ export default function Waitlist() {
             }
         } catch (_) {
             // silent fallback
-        }
-
-        container.setAttribute('data-title', "I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering — and she built the solution specifically for people with security clearances. Join the waitlist here: ");
-        container.setAttribute('data-message', "I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering — and she built the solution specifically for people with security clearances. Join the waitlist here: ");
-        container.setAttribute('data-image', "https://www.unswap.net/hero.webp");
-        container.setAttribute('data-url', shareUrl);
-        
-        if (window.__sharethis__ && typeof window.__sharethis__.initialize === 'function') {
-            window.__sharethis__.initialize();
         }
     };
 
@@ -147,8 +135,8 @@ export default function Waitlist() {
                         exit={{ opacity: 0 }}
                         className="flex flex-col lg:flex-row w-full min-h-screen relative"
                     >
-                        {/* FORM — overlaid on mobile, right on desktop */}
-                        <div className="w-full lg:w-[65%] order-1 lg:order-2 flex items-center justify-center p-8 sm:p-12 lg:p-16 relative z-10 min-h-[100dvh] overflow-y-auto">
+                        {/* FORM */}
+                        <div className="w-full flex items-center justify-center p-8 sm:p-12 lg:p-16 relative z-10 min-h-[100dvh] overflow-y-auto">
                             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--gold-dim)_0%,_transparent_60%)] pointer-events-none" />
 
                             <div className="w-full max-w-xl mx-auto relative">
@@ -265,19 +253,9 @@ export default function Waitlist() {
                             </div>
                         </div>
 
-                        
 
-                        {/* IMAGE — background on mobile, left on desktop */}
-                        <div className="absolute inset-0 lg:static lg:w-[35%] order-2 lg:order-1 lg:sticky lg:top-0 lg:h-[100dvh] overflow-hidden z-0 bg-deep border-r border-unswap-border">
-                            <img src="/hero.webp" alt="Luxury Interior" className="absolute inset-0 w-full h-full object-cover object-center opacity-80" />
-                            <div className="absolute inset-0 bg-navy/90 lg:hidden" />
-                            <div className="hidden lg:block absolute bottom-0 left-0 right-0 p-8 lg:p-10">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-[60px] h-px bg-gold" />
-                                    <p className="text-gold/60 text-[11px] tracking-[0.22em] uppercase">By invitation only</p>
-                                </div>
-                            </div>
-                        </div>
+
+
                     </motion.div>
                 )}
 
@@ -299,25 +277,59 @@ export default function Waitlist() {
                         <p className="text-ivory font-medium text-[16px] mb-3">{email}</p>
                         <p className="text-muted text-[14.5px] max-w-xs mx-auto leading-relaxed">Click the link to confirm your email and be redirected to your waitlist status dashboard.</p>
 
-                        {/* Share nudge — inline buttons rendered directly in the flow */}
+                        {/* Share nudge */}
                         <div className="mt-10 w-full border-t border-[rgba(201,168,76,0.25)] pt-8">
                             <p className="text-[rgba(245,240,232,0.65)] text-xs tracking-[0.18em] uppercase font-medium mb-1">Skip the queue</p>
-                            <p className="font-['Cormorant_Garamond'] text-[#c9a84c] text-[20px] font-light italic mb-4">Share &amp; move up the waitlist</p>
-                            
-                            {/* Inline Share Buttons Container */}
-                            <div className="flex justify-center w-full mb-3 min-h-[48px]">
-                                <div
-                                    ref={shareContainerRef}
-                                    className="sharethis-inline-share-buttons"
-                                    data-url="https://waitlist.unswap.com"
-                                    data-title="I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering — and she built the solution specifically for people with security clearances. Join the waitlist here:"
-                                    data-message="I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering — and she built the solution specifically for people with security clearances. Join the waitlist here:"
-                                    data-image="https://www.unswap.net/hero.webp"
-                                />
+                            <p className="font-['Cormorant_Garamond'] text-[#c9a84c] text-[20px] font-light italic mb-5">Share &amp; move up the waitlist</p>
+
+                            {/* Native Share Buttons */}
+                            <div className="grid grid-cols-2 gap-2 mb-4">
+                                {[{ id: 'whatsapp', label: 'WhatsApp', color: '#25D366', href: `https://wa.me/?text=${encodeURIComponent('I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering. Join here: ')}${encodeURIComponent(personalShareUrl)}` },
+                                  { id: 'twitter',  label: 'X / Twitter', color: '#000', href: `https://twitter.com/intent/tweet?text=${encodeURIComponent('I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering. ')}&url=${encodeURIComponent(personalShareUrl)}` },
+                                  { id: 'linkedin', label: 'LinkedIn',  color: '#0A66C2', href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(personalShareUrl)}` },
+                                  { id: 'instagram', label: 'Instagram', color: '#E1306C', href: 'https://instagram.com' },
+                                ].map(btn => (
+                                    <a
+                                        key={btn.id}
+                                        href={btn.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center justify-center gap-2 px-3 py-3 text-[12px] font-medium tracking-wide rounded border transition-all hover:-translate-y-0.5"
+                                        style={{ background: 'rgba(10,14,26,0.5)', borderColor: 'rgba(201,168,76,0.15)', color: 'var(--ivory)' }}
+                                        onMouseEnter={e => { e.currentTarget.style.borderColor = btn.color; e.currentTarget.style.color = btn.color; }}
+                                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(201,168,76,0.15)'; e.currentTarget.style.color = 'var(--ivory)'; }}
+                                    >
+                                        {btn.label}
+                                    </a>
+                                ))}
                             </div>
 
+                            {/* Copy link */}
+                            <button
+                                onClick={() => {
+                                    navigator.clipboard.writeText(personalShareUrl);
+                                    setCopiedIndex('link');
+                                    setTimeout(() => setCopiedIndex(null), 2000);
+                                }}
+                                className="w-full flex items-center justify-center gap-2 px-4 py-3 text-[12px] font-medium tracking-wide border rounded transition-all mb-3"
+                                style={{ background: 'rgba(10,14,26,0.4)', borderColor: copiedIndex === 'link' ? 'var(--gold)' : 'rgba(201,168,76,0.2)', color: copiedIndex === 'link' ? 'var(--gold)' : 'rgba(245,240,232,0.6)' }}
+                            >
+                                {copiedIndex === 'link' ? '✓ Link Copied!' : '⎘ Copy Referral Link'}
+                            </button>
+
+                            {/* Full share page link */}
+                            <a
+                                href={`/share?email=${encodeURIComponent(email)}`}
+                                className="block text-center text-[11px] tracking-[0.18em] uppercase font-medium transition-colors mt-2"
+                                style={{ color: 'rgba(245,240,232,0.35)' }}
+                                onMouseEnter={e => e.currentTarget.style.color = 'var(--gold)'}
+                                onMouseLeave={e => e.currentTarget.style.color = 'rgba(245,240,232,0.35)'}
+                            >
+                                Open full Share Page →
+                            </a>
+
                             {shareRefNote && (
-                                <p className="text-[rgba(245,240,232,0.4)] text-[11px] mt-2 tracking-wide">Your personal referral link is automatically added below.</p>
+                                <p className="text-[rgba(245,240,232,0.4)] text-[11px] mt-3 tracking-wide text-center">Your personal referral link is automatically included.</p>
                             )}
                         </div>
 
@@ -328,13 +340,13 @@ export default function Waitlist() {
                                 <span className="text-gold text-[11px] tracking-[0.2em] uppercase font-medium">Inspiration</span>
                                 <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[rgba(201,168,76,0.3)]" />
                             </div>
-                            
+
                             <div className="mb-6 p-4 bg-[rgba(10,14,26,0.4)] border border-[rgba(201,168,76,0.2)] rounded-md text-center">
                                 <p className="text-[13px] text-ivory-dim leading-relaxed">
                                     <strong className="text-gold font-medium">💡 Pro-Tip:</strong> When sharing to LinkedIn, these standard "Hook" styles perform best when paired with an image of a global landmark or a prestigious interior.
                                 </p>
                             </div>
-                            
+
                             <div className="space-y-4">
                                 {[
                                     { id: 1, title: "Option 1: The Calculation", subtitle: "Best for: LinkedIn or professional networks focused on financial strategy.", content: "I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering — and she built the solution specifically for people with security clearances.\n\nJoin the waitlist here: [INSERT_LINK]" },
@@ -345,9 +357,9 @@ export default function Waitlist() {
                                 ].map((t) => {
                                     const hydrated = t.content.replace('[INSERT_LINK]', personalShareUrl);
                                     return (
-                                        <div 
-                                            key={t.id} 
-                                            className="bg-deep border border-unswap-border rounded-lg p-5 transition-all hover:border-gold hover:shadow-[0_4px_20px_var(--gold-dim)] group cursor-pointer relative overflow-hidden" 
+                                        <div
+                                            key={t.id}
+                                            className="bg-deep border border-unswap-border rounded-lg p-5 transition-all hover:border-gold hover:shadow-[0_4px_20px_var(--gold-dim)] group cursor-pointer relative overflow-hidden"
                                             onClick={() => {
                                                 navigator.clipboard.writeText(hydrated);
                                                 setCopiedIndex(t.id);
