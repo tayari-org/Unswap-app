@@ -135,8 +135,8 @@ export default function Waitlist() {
                         exit={{ opacity: 0 }}
                         className="flex flex-col lg:flex-row w-full min-h-screen relative"
                     >
-                        {/* FORM */}
-                        <div className="w-full flex items-center justify-center p-8 sm:p-12 lg:p-16 relative z-10 min-h-[100dvh] overflow-y-auto">
+                        {/* FORM — overlaid on mobile, right on desktop */}
+                        <div className="w-full lg:w-[65%] order-1 lg:order-2 flex items-center justify-center p-8 sm:p-12 lg:p-16 relative z-10 min-h-[100dvh] overflow-y-auto">
                             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--gold-dim)_0%,_transparent_60%)] pointer-events-none" />
 
                             <div className="w-full max-w-xl mx-auto relative">
@@ -254,7 +254,17 @@ export default function Waitlist() {
                         </div>
 
 
-
+                        {/* IMAGE — background on mobile, left on desktop */}
+                        <div className="absolute inset-0 lg:static lg:w-[35%] order-2 lg:order-1 lg:sticky lg:top-0 lg:h-[100dvh] overflow-hidden z-0 bg-deep border-r border-unswap-border">
+                            <img src="https://storage.googleapis.com/audos-images/attachments/194914/8db261e4-b743-4756-98fa-eece409b1d0a.png" alt="Luxury Interior" className="absolute inset-0 w-full h-full object-cover object-center opacity-80" />
+                            <div className="absolute inset-0 bg-navy/90 lg:hidden" />
+                            <div className="hidden lg:block absolute bottom-0 left-0 right-0 p-8 lg:p-10">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-[60px] h-px bg-gold" />
+                                    <p className="text-gold/60 text-[11px] tracking-[0.22em] uppercase">By invitation only</p>
+                                </div>
+                            </div>
+                        </div>
 
                     </motion.div>
                 )}
