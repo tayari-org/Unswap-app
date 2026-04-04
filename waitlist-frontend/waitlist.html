@@ -454,7 +454,7 @@
         async function updateShareUrl(email) {
             const container = document.getElementById('sharethis-container');
             const note = document.getElementById('share-ref-note');
-            let shareUrl = 'https://waitlist.unswap.com';
+            let shareUrl = 'https://www.unswap.net';
 
             try {
                 const res = await fetch(`${API_URL}/waitlist/status?email=${encodeURIComponent(email)}`);
@@ -478,10 +478,10 @@
 
     <!-- ShareThis Sticky Share Buttons — placed here per ShareThis docs; ShareThis moves it into position -->
     <!-- data-url is updated dynamically by updateShareUrl() after a successful sign-up -->
-    <div class="sharethis-sticky-share-buttons" id="sharethis-container" data-url="https://waitlist.unswap.com"
+    <div class="sharethis-sticky-share-buttons" id="sharethis-container" data-url="https://www.unswap.net"
         data-title="Join the UnSwap waitlist — exclusive home exchange for international organization staff"
         data-description="A closed-loop home exchange ecosystem exclusively for verified UN, World Bank, IMF and other international organization staff."
-        data-image="https://waitlist.unswap.com/hero.webp"></div>
+        data-image="https://www.unswap.net/social-preview.png"></div>
 </body>
 
 </html>
