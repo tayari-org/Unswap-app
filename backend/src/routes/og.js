@@ -3,16 +3,19 @@ const { prisma } = require('../db');
 const router = express.Router();
 
 // Known social media crawler user-agents
-const CRAWLER_AGENTS = /facebookexternalhit|LinkedInBot|Twitterbot|WhatsApp|Slackbot|TelegramBot|Discordbot|pinterest|bingbot|Googlebot-Image/i;
+// X sends: Twitterbot/1.0, also sometimes via: bot, crawl, spider
+const CRAWLER_AGENTS = /facebookexternalhit|LinkedInBot|Twitterbot|Twitterbot\/|WhatsApp|Slackbot|TelegramBot|Discordbot|pinterest|bingbot|Googlebot-Image|bot|crawl|spider/i;
 
 const SITE_NAME    = 'Unswap';
 const SITE_URL     = process.env.WAITLIST_FRONTEND_URL || 'https://www.unswap.net';
+const BACKEND_URL  = process.env.BACKEND_URL || 'https://api.unswap.com';
 const OG_IMAGE_URL = 'https://www.unswap.net/social-preview.png';
 
 // ─── GET /ref/:code ──────────────────────────────────────────────────────────
-// - Social crawlers  → receive static HTML with OG tags, then meta-refresh to
-//                      the user's Waitlister thank_you_url
+// - Social crawlers  → receive static HTML with OG/Twitter card tags
 // - Real browsers    → 302 redirect to the React app with ?ref=CODE appended
+// NOTE: No meta http-equiv refresh in crawler HTML — Twitterbot follows it
+//       before finishing meta tag parsing, causing it to land on the SPA.
 // ─────────────────────────────────────────────────────────────────────────────
 router.get('/:code', async (req, res) => {
     const { code } = req.params;
@@ -28,7 +31,10 @@ router.get('/:code', async (req, res) => {
         // Fall back gracefully if the code is unknown
         const name        = entry?.full_name  || null;
         const thankYouUrl = entry?.thank_you_url || SITE_URL;
-        const referralUrl = `${SITE_URL}?ref=${encodeURIComponent(code)}`;
+        const referralUrl    = `${SITE_URL}?ref=${encodeURIComponent(code)}`;
+        // The canonical URL for OG/Twitter must be THIS page (the one crawlers hit),
+        // NOT the frontend redirect — otherwise X re-crawls an SPA with no meta tags.
+        const canonicalUrl   = `${BACKEND_URL}/ref/${code}`;
 
         // ── Build personalised copy ──────────────────────────────────────────
         const ogTitle = name
@@ -47,28 +53,32 @@ router.get('/:code', async (req, res) => {
   <meta charset="UTF-8" />
   <title>${ogTitle}</title>
 
-  <!-- Open Graph -->
-  <meta property="og:type"        content="website" />
-  <meta property="og:url"         content="${referralUrl}" />
-  <meta property="og:site_name"   content="${SITE_NAME}" />
-  <meta property="og:title"       content="${ogTitle}" />
-  <meta property="og:description" content="${ogDescription}" />
-  <meta property="og:image"       content="${OG_IMAGE_URL}" />
-  <meta property="og:image:width"  content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta property="og:image:type"   content="image/png" />
-
-  <!-- Twitter Card -->
+  <!-- Twitter / X Card — must appear FIRST; Twitterbot is order-sensitive -->
   <meta name="twitter:card"        content="summary_large_image" />
+  <meta name="twitter:site"        content="@unswap" />
   <meta name="twitter:title"       content="${ogTitle}" />
   <meta name="twitter:description" content="${ogDescription}" />
   <meta name="twitter:image"       content="${OG_IMAGE_URL}" />
+  <meta name="twitter:image:src"   content="${OG_IMAGE_URL}" />
+  <meta name="twitter:image:alt"   content="Unswap — Home exchange for UN and diplomatic professionals" />
 
-  <!-- Redirect the (rare) browser that hits this URL directly -->
-  <meta http-equiv="refresh" content="0;url=${thankYouUrl}" />
+  <!-- Open Graph (Facebook, LinkedIn, WhatsApp, etc.) -->
+  <meta property="og:type"             content="website" />
+  <meta property="og:url"              content="${canonicalUrl}" />
+  <meta property="og:site_name"        content="${SITE_NAME}" />
+  <meta property="og:title"            content="${ogTitle}" />
+  <meta property="og:description"      content="${ogDescription}" />
+  <meta property="og:image"            content="${OG_IMAGE_URL}" />
+  <meta property="og:image:secure_url" content="${OG_IMAGE_URL}" />
+  <meta property="og:image:width"      content="1200" />
+  <meta property="og:image:height"     content="630" />
+  <meta property="og:image:type"       content="image/png" />
+  <meta property="og:image:alt"        content="Unswap — Home exchange for UN and diplomatic professionals" />
 </head>
 <body>
   <p>Redirecting you to Unswap…</p>
+  <!-- JS redirect for browsers that land here directly (crawlers ignore this) -->
+  <script>window.location.replace('${thankYouUrl}');<\/script>
 </body>
 </html>`;
 
