@@ -227,8 +227,9 @@ export default function SharePage() {
       .then(data => {
         if (data.found) {
           if (data.referral_code) {
-            const API_BASE = import.meta.env.VITE_API_URL || 'https://api.unswap.com';
-            setShareUrl(`${API_BASE}/ref/${data.referral_code}`);
+            setShareUrl(`https://www.unswap.net/?ref=${data.referral_code}`);
+            // Save the raw code for Twitter's backend proxy URL
+            setReferralCode(data.referral_code);
           } else if (data.thank_you_url) {
             setShareUrl(data.thank_you_url);
           }
