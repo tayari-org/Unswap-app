@@ -328,7 +328,7 @@ export default function Waitlist() {
 
                             {/* Full share page link */}
                             <a
-                                href={`/share?email=${encodeURIComponent(email)}`}
+                                href={`/share.html?email=${encodeURIComponent(email)}`}
                                 className="block text-center text-[11px] tracking-[0.18em] uppercase font-medium transition-colors mt-2"
                                 style={{ color: 'rgba(245,240,232,0.35)' }}
                                 onMouseEnter={e => e.currentTarget.style.color = 'var(--gold)'}
