@@ -13,4 +13,13 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      input: {
+        main: './index.html',
+        waitlist: './waitlist.html',
+        share: './share.html'
+      }
+    }
+  }
 });
