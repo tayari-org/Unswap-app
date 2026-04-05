@@ -3,8 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../api/apiClient.js';
 
 // ─── Share message templates ────────────────────────────────────────────────
-const SHARE_MESSAGE =
-  "I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering — and she built the solution specifically for people with security clearances. Join the waitlist here:";
+const WHATSAPP_MESSAGE =
+  "This is the first home exchange system I've seen that was actually built for UN staff and foreign service professionals \u2014 not tourists. If your home sits empty during postings, get on this waitlist before it opens:";
+
+const LINKEDIN_MESSAGE =
+  "I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering \u2014 and she built the solution specifically for people with security clearances. Join the waitlist here:";
 
 // ─── Platform icon SVGs (inline, no external deps) ─────────────────────────
 const Icons = {
@@ -99,7 +102,7 @@ function NativeShareButton({ shareUrl }) {
     try {
       await navigator.share({
         title: 'Join Unswap — Exclusive Waitlist',
-        text: `${SHARE_MESSAGE} `,
+        text: `${WHATSAPP_MESSAGE} `,
         url: shareUrl,
       });
       setUsed(true);
@@ -125,7 +128,8 @@ function NativeShareButton({ shareUrl }) {
 // ─── Platform buttons config ────────────────────────────────────────────────
 function buildPlatformButtons(shareUrl) {
   const encodedUrl = encodeURIComponent(shareUrl);
-  const encodedMsg = encodeURIComponent(`${SHARE_MESSAGE} `);
+  const encodedWaMsg = encodeURIComponent(`${WHATSAPP_MESSAGE} `);
+  const encodedLiMsg = encodeURIComponent(`${LINKEDIN_MESSAGE} `);
 
   return [
     {
@@ -133,21 +137,21 @@ function buildPlatformButtons(shareUrl) {
       label: 'WhatsApp',
       icon: Icons.whatsapp,
       color: '#25D366',
-      href: `https://wa.me/?text=${encodedMsg}${encodedUrl}`,
+      href: `https://wa.me/?text=${encodedWaMsg}${encodedUrl}`,
     },
     {
       id: 'twitter',
       label: 'X / Twitter',
       icon: Icons.twitter,
       color: '#000000',
-      href: `https://twitter.com/intent/tweet?text=${encodedMsg}&url=${encodedUrl}`,
+      href: `https://twitter.com/intent/tweet?text=${encodedLiMsg}&url=${encodedUrl}`,
     },
     {
       id: 'linkedin',
       label: 'LinkedIn',
       icon: Icons.linkedin,
       color: '#0A66C2',
-      href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
+      href: `https://www.linkedin.com/shareArticle?mini=true&url=${encodedUrl}&summary=${encodedLiMsg}${encodedUrl}`,
     },
     {
       id: 'facebook',
@@ -161,7 +165,7 @@ function buildPlatformButtons(shareUrl) {
       label: 'Telegram',
       icon: Icons.telegram,
       color: '#26A5E4',
-      href: `https://t.me/share/url?url=${encodedUrl}&text=${encodedMsg}`,
+      href: `https://t.me/share/url?url=${encodedUrl}&text=${encodedWaMsg}`,
     },
     {
       id: 'instagram',

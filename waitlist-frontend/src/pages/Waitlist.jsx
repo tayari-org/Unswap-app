@@ -57,16 +57,9 @@ export default function Waitlist() {
 
         try {
             await api.waitlist.initiateJoin({ email, name, organization, ref });
-
-            fetch('https://events.evidence.io/hook/vQrlDk0zuDnpKoqD', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, name, organization }),
-            }).catch((e) => console.error('Webhook failed:', e));
-
             setMode('success');
             setStatus('idle');
-            // updateShareUrl is now handled by the useEffect watching mode
+            // updateShareUrl is handled by the useEffect watching mode
         } catch (err) {
             if (err.status === 409) {
                 setMode('status');
@@ -80,7 +73,7 @@ export default function Waitlist() {
         }
     };
 
-    // ─── ShareThis: Dynamic URL ────────────────────────────────────────────────
+    // ─── Native Share: Dynamic URL ────────────────────────────────────────────
     // After sign-up, try to retrieve the user's personal Waitlister referral URL.
     // Falls back silently to the base waitlist URL so sharing is never blocked.
     const updateShareUrl = async (userEmail) => {
@@ -294,10 +287,12 @@ export default function Waitlist() {
 
                             {/* Native Share Buttons */}
                             <div className="grid grid-cols-2 gap-2 mb-4">
-                                {[{ id: 'whatsapp', label: 'WhatsApp', color: '#25D366', href: `https://wa.me/?text=${encodeURIComponent('I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering. Join here: ')}${encodeURIComponent(personalShareUrl)}` },
-                                  { id: 'twitter',  label: 'X / Twitter', color: '#000', href: `https://twitter.com/intent/tweet?text=${encodeURIComponent('I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering. ')}&url=${encodeURIComponent(personalShareUrl)}` },
-                                  { id: 'linkedin', label: 'LinkedIn',  color: '#0A66C2', href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(personalShareUrl)}` },
-                                  { id: 'instagram', label: 'Instagram', color: '#E1306C', href: 'https://instagram.com' },
+                                {[{ id: 'whatsapp',  label: 'WhatsApp',   color: '#25D366', href: `https://wa.me/?text=${encodeURIComponent('This is the first home exchange system I\'ve seen that was actually built for UN staff and foreign service professionals \u2014 not tourists. If your home sits empty during postings, get on this waitlist before it opens: ')}${encodeURIComponent(personalShareUrl)}` },
+                                  { id: 'facebook',  label: 'Facebook',   color: '#1877F2', href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(personalShareUrl)}` },
+                                  { id: 'twitter',   label: 'X / Twitter', color: '#000',  href: `https://twitter.com/intent/tweet?text=${encodeURIComponent('I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering. ')}&url=${encodeURIComponent(personalShareUrl)}` },
+                                  { id: 'linkedin',  label: 'LinkedIn',   color: '#0A66C2', href: `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(personalShareUrl)}&summary=${encodeURIComponent('I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering \u2014 and she built the solution specifically for people with security clearances.\n\nJoin the waitlist here: ' + personalShareUrl)}` },
+                                  { id: 'instagram', label: 'Instagram',  color: '#E1306C', href: 'https://instagram.com' },
+                                  { id: 'email',     label: 'Email',      color: '#c9a84c', href: `mailto:?subject=${encodeURIComponent('Join the UnSwap waitlist')}&body=${encodeURIComponent('This is the first home exchange system I\'ve seen that was actually built for UN staff and foreign service professionals \u2014 not tourists. If your home sits empty during postings, get on this waitlist before it opens: ')}${encodeURIComponent(personalShareUrl)}` },
                                 ].map(btn => (
                                     <a
                                         key={btn.id}

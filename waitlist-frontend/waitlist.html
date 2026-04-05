@@ -9,10 +9,26 @@
     <meta name="description"
         content="Join the Unswap waitlist — a closed-loop home exchange ecosystem for verified international organization staff." />
 
-    <!-- ShareThis -->
-    <script type='text/javascript'
-        src='https://platform-api.sharethis.com/js/sharethis.js#property=69ce9028d0567d19f43f03df&product=sop'
-        async='async'></script>
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.unswap.net" />
+    <meta property="og:site_name" content="Unswap" />
+    <meta property="og:title" content="Unswap — Join the Waitlist" />
+    <meta property="og:description"
+        content="I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering — and she built the solution specifically for people with security clearances." />
+    <meta property="og:image" content="https://www.unswap.net/social-preview.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/png" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Unswap — Join the Waitlist" />
+    <meta name="twitter:description"
+        content="I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering — and she built the solution specifically for people with security clearances." />
+    <meta name="twitter:image" content="https://www.unswap.net/social-preview.png" />
+
+
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -267,11 +283,23 @@
             <p class="text-muted text-[14.5px] max-w-xs mx-auto leading-relaxed">Click the link to confirm your email
                 and be redirected to your waitlist status dashboard.</p>
 
-            <!-- Share nudge — the actual buttons are the sticky bar on the side of the page -->
+            <!-- Share nudge + native share buttons -->
             <div class="mt-10 w-full border-t border-unswap-border pt-8">
                 <p class="text-ivory-dim text-xs tracking-[0.18em] uppercase font-medium mb-1">Skip the queue</p>
-                <p class="text-gold font-display text-[20px] font-light italic mb-2">Share & move up the waitlist</p>
-                <p class="text-muted text-[13px]">Use the share buttons on the side of the screen →</p>
+                <p class="text-gold font-display text-[20px] font-light italic mb-4">Share &amp; move up the waitlist</p>
+
+                <div class="grid grid-cols-2 gap-2 mb-3" id="native-share-buttons">
+                    <!-- Buttons are injected by updateShareUrl() -->
+                </div>
+
+                <button
+                    id="copy-link-btn"
+                    onclick="copyShareLink()"
+                    class="w-full flex items-center justify-center gap-2 px-4 py-3 text-[12px] font-medium tracking-wide border rounded transition-all mb-3"
+                    style="background:rgba(10,14,26,0.4);border-color:rgba(201,168,76,0.2);color:rgba(245,240,232,0.6)">
+                    ⎘ Copy Referral Link
+                </button>
+
                 <p id="share-ref-note" class="hidden text-muted text-[11px] mt-3 tracking-wide">Your personal referral
                     link is included.</p>
             </div>
@@ -447,41 +475,65 @@
             }
         });
 
-        // ─── ShareThis: Dynamic URL ────────────────────────────────────────────────
-        // After sign-up we try to get the user's personal Waitlister referral URL.
-        // If we can't retrieve it yet (they haven't clicked the confirmation email),
-        // we fall back to the base waitlist URL so sharing is never blocked.
+        // ─── Native Share Buttons ──────────────────────────────────────────────────
+        let currentShareUrl = 'https://www.unswap.net';
+
         async function updateShareUrl(email) {
-            const container = document.getElementById('sharethis-container');
             const note = document.getElementById('share-ref-note');
-            let shareUrl = 'https://www.unswap.net';
 
             try {
                 const res = await fetch(`${API_URL}/waitlist/status?email=${encodeURIComponent(email)}`);
                 const data = await res.json();
-                // thank_you_url from Waitlister contains the user's referral link
                 if (data.found && data.thank_you_url) {
-                    shareUrl = data.thank_you_url;
+                    currentShareUrl = data.thank_you_url;
                     note.classList.remove('hidden');
                 }
             } catch (_) {
-                // Silently fall back — sharing still works with the base URL
+                // Silent fallback — sharing still works with the base URL
             }
 
-            // Set the data-url and reinitialize ShareThis buttons
-            container.setAttribute('data-url', shareUrl);
-            if (window.__sharethis__ && typeof window.__sharethis__.initialize === 'function') {
-                window.__sharethis__.initialize();
-            }
+            renderShareButtons(currentShareUrl);
         }
+
+        function renderShareButtons(url) {
+            const msg = encodeURIComponent('This is the first home exchange system I\'ve seen that was actually built for UN staff and foreign service professionals — not tourists. If your home sits empty during postings, get on this waitlist before it opens: ');
+            const enc = encodeURIComponent(url);
+            const buttons = [
+                { label: 'WhatsApp',   color: '#25D366', href: `https://wa.me/?text=${msg}${enc}` },
+                { label: 'Facebook',   color: '#1877F2', href: `https://www.facebook.com/sharer/sharer.php?u=${enc}` },
+                { label: 'X / Twitter', color: '#000',  href: `https://twitter.com/intent/tweet?text=${msg}&url=${enc}` },
+                { label: 'LinkedIn',   color: '#0A66C2', href: `https://www.linkedin.com/shareArticle?mini=true&url=${enc}&summary=${encodeURIComponent('I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering — and she built the solution specifically for people with security clearances.\n\nJoin the waitlist here: ')}${enc}` },
+                { label: 'Email',      color: '#c9a84c', href: `mailto:?subject=${encodeURIComponent('Join the UnSwap waitlist')}&body=${msg}${enc}` },
+            ];
+            const container = document.getElementById('native-share-buttons');
+            container.innerHTML = buttons.map(b => `
+                <a href="${b.href}" target="_blank" rel="noopener noreferrer"
+                    style="display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;font-size:12px;font-weight:500;letter-spacing:.04em;border-radius:4px;border:1px solid rgba(201,168,76,0.15);background:rgba(10,14,26,0.5);color:#f5f0e8;text-decoration:none;transition:all .2s"
+                    onmouseover="this.style.borderColor='${b.color}';this.style.color='${b.color}'"
+                    onmouseout="this.style.borderColor='rgba(201,168,76,0.15)';this.style.color='#f5f0e8'">
+                    ${b.label}
+                </a>`).join('');
+        }
+
+        function copyShareLink() {
+            const btn = document.getElementById('copy-link-btn');
+            navigator.clipboard.writeText(currentShareUrl).then(() => {
+                btn.textContent = '✓ Link Copied!';
+                btn.style.borderColor = 'var(--gold, #c9a84c)';
+                btn.style.color = 'var(--gold, #c9a84c)';
+                setTimeout(() => {
+                    btn.textContent = '⎘ Copy Referral Link';
+                    btn.style.borderColor = 'rgba(201,168,76,0.2)';
+                    btn.style.color = 'rgba(245,240,232,0.6)';
+                }, 2000);
+            });
+        }
+
+        // Render default share buttons immediately (before email lookup)
+        renderShareButtons(currentShareUrl);
     </script>
 
-    <!-- ShareThis Sticky Share Buttons — placed here per ShareThis docs; ShareThis moves it into position -->
-    <!-- data-url is updated dynamically by updateShareUrl() after a successful sign-up -->
-    <div class="sharethis-sticky-share-buttons" id="sharethis-container" data-url="https://www.unswap.net"
-        data-title="Join the UnSwap waitlist — exclusive home exchange for international organization staff"
-        data-description="A closed-loop home exchange ecosystem exclusively for verified UN, World Bank, IMF and other international organization staff."
-        data-image="https://www.unswap.net/social-preview.png"></div>
+
 </body>
 
 </html>
