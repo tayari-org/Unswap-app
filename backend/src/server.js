@@ -15,6 +15,7 @@ const webhookRouter = require('./routes/webhook');
 const referralsRouter = require('./routes/referrals');
 const favoritesRouter = require('./routes/favorites');
 const waitlistRouter = require('./routes/waitlist');
+const ogRouter = require('./routes/og');
 
 const app = express();
 const PORT = process.env.PORT;
@@ -79,6 +80,11 @@ app.use('/api/email', emailRouter);
 app.use('/api/referrals', referralsRouter);
 app.use('/api/favorites', favoritesRouter);
 app.use('/api/waitlist', waitlistRouter);
+
+// ─── OG Proxy (referral share links) ──────────────────────────────────────────
+// Must be outside /api and BEFORE the 404 handler.
+// CORS is intentionally skipped here — crawlers don't send Origin headers.
+app.use('/ref', ogRouter);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {

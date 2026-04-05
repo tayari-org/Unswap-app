@@ -77,12 +77,16 @@ export default function Waitlist() {
     // After sign-up, try to retrieve the user's personal Waitlister referral URL.
     // Falls back silently to the base waitlist URL so sharing is never blocked.
     const updateShareUrl = async (userEmail) => {
-        let shareUrl = 'https://www.unswap.net';
         try {
             const data = await api.waitlist.getStatus(userEmail);
-            if (data.found && data.thank_you_url) {
-                shareUrl = data.thank_you_url;
-                setPersonalShareUrl(shareUrl);
+            if (data.found) {
+                // Prefer our OG proxy URL so crawlers get personalised previews
+                if (data.referral_code) {
+                    const API_BASE = import.meta.env.VITE_API_URL || 'https://api.unswap.com';
+                    setPersonalShareUrl(`${API_BASE}/ref/${data.referral_code}`);
+                } else if (data.thank_you_url) {
+                    setPersonalShareUrl(data.thank_you_url);
+                }
                 setShareRefNote(true);
             }
         } catch (_) {

@@ -284,8 +284,13 @@ router.get('/status', async (req, res) => {
             return res.json({ found: false });
         }
 
-        // Return the thank you URL so the frontend can redirect
-        return res.json({ found: true, thank_you_url: wlData.data.subscriber.thank_you_url });
+        // Return the thank you URL (for redirect) and referral_code (for share URL)
+        const subscriber = wlData.data.subscriber;
+        return res.json({
+            found: true,
+            thank_you_url: subscriber.thank_you_url,
+            referral_code: subscriber.referral_code || null,
+        });
 
     } catch (err) {
         console.error('Waitlist status error:', err);

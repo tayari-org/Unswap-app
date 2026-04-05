@@ -192,8 +192,13 @@ export default function SharePage() {
 
     api.waitlist.getStatus(email)
       .then(data => {
-        if (data.found && data.thank_you_url) {
-          setShareUrl(data.thank_you_url);
+        if (data.found) {
+          if (data.referral_code) {
+            const API_BASE = import.meta.env.VITE_API_URL || 'https://api.unswap.com';
+            setShareUrl(`${API_BASE}/ref/${data.referral_code}`);
+          } else if (data.thank_you_url) {
+            setShareUrl(data.thank_you_url);
+          }
           setIsPersonal(true);
         }
       })
