@@ -321,7 +321,7 @@
 
                     if (data.found) {
                         if (data.referral_code) {
-                            shareUrl   = `${API_BASE}/ref/${data.referral_code}`;
+                            shareUrl   = `${SITE_URL}/?ref=${data.referral_code}`;
                             isPersonal = true;
                         } else if (data.thank_you_url) {
                             shareUrl   = data.thank_you_url;
