@@ -36,10 +36,11 @@ router.get('/:code', async (req, res) => {
         // Fall back gracefully if the code is unknown
         const name        = entry?.full_name  || null;
         const thankYouUrl = entry?.thank_you_url || SITE_URL;
-        const referralUrl    = `${SITE_URL}?ref=${encodeURIComponent(code)}`;
-        // The canonical URL for OG/Twitter must be THIS page (the one crawlers hit),
-        // NOT the frontend redirect — otherwise X re-crawls an SPA with no meta tags.
-        const canonicalUrl   = `${BACKEND_URL}/ref/${code}`;
+        const referralUrl  = `${SITE_URL}?ref=${encodeURIComponent(code)}`;
+        // og:url = the frontend referral URL so the Twitter card displays unswap.net cleanly.
+        // Twitterbot crawled the backend /ref/:code endpoint (which has UA detection),
+        // but og:url controls what URL is shown in the card — not what was crawled.
+        const canonicalUrl = code === 'home' ? SITE_URL : referralUrl;
 
         // ── Build personalised copy ──────────────────────────────────────────
         const ogTitle = name

@@ -288,9 +288,10 @@
         };
 
         // ─── State ────────────────────────────────────────────────────────────
-        let shareUrl = SITE_URL;
-        let isPersonal = false;
-        let userEmail = '';
+        let shareUrl    = SITE_URL;
+        let referralCode = null;  // stored separately so Twitter can use backend OG proxy URL
+        let isPersonal  = false;
+        let userEmail   = '';
         let stats = { position: '-', points: '-', referrals: '-' };
 
         // ─── Celebration Pop — fires immediately on page load ─────────────────
@@ -321,8 +322,9 @@
 
                     if (data.found) {
                         if (data.referral_code) {
-                            shareUrl   = `${SITE_URL}/?ref=${data.referral_code}`;
-                            isPersonal = true;
+                            referralCode = data.referral_code;
+                            shareUrl     = `${SITE_URL}/?ref=${data.referral_code}`;
+                            isPersonal   = true;
                         } else if (data.thank_you_url) {
                             shareUrl   = data.thank_you_url;
                             isPersonal = true;
@@ -375,13 +377,21 @@
             const encTw = encodeURIComponent(MSG_TWITTER + shareUrl);
             const encFb = encodeURIComponent(MSG_FACEBOOK + shareUrl);
 
+            // Twitter: use the backend /ref/ OG proxy URL so Twitterbot triggers og.js
+            // og.js detects Twitterbot and serves twitter-preview.png as og:image.
+            // og:url in og.js points to www.unswap.net so the card displays cleanly.
+            const twitterOgUrl = referralCode
+                ? `${API_BASE}/ref/${referralCode}`
+                : `${API_BASE}/ref/home`;  // /ref/home = no DB match → generic OG copy
+            const encTwUrl = encodeURIComponent(twitterOgUrl);
+
             return [
-                { id: 'linkedin', label: 'LinkedIn',   preview: 'The number is staggering \u2014 built for people with security clearances.', color: '#0A66C2', icon: ICONS.linkedin,  href: `https://www.linkedin.com/shareArticle?mini=true&url=${enc}&summary=${encLi}` },
-                { id: 'twitter',  label: 'X / Twitter', preview: 'Diplomat A: $60K\u2026 Diplomat B: $0. Same posting. One decision.',           color: '#1D9BF0', icon: ICONS.twitter,  href: `https://twitter.com/intent/tweet?text=${encTw}&url=${enc}` },
-                { id: 'facebook', label: 'Facebook',   preview: "You know the 3am feeling when you're posted abroad and wonder about home?",   color: '#1877F2', icon: ICONS.facebook, href: `https://www.facebook.com/sharer/sharer.php?u=${enc}&quote=${encFb}` },
-                { id: 'whatsapp', label: 'WhatsApp',   preview: 'The first home exchange system built for UN staff \u2014 not tourists.',        color: '#25D366', icon: ICONS.whatsapp, href: `https://wa.me/?text=${encWa}` },
-                { id: 'email',    label: 'Email',      preview: 'The first home exchange system built for UN staff \u2014 not tourists.',        color: '#c9a84c', icon: ICONS.email,    href: `mailto:?subject=${encodeURIComponent('Join the UnSwap Waitlist')}&body=${encWa}` },
-                { id: 'instagram', label: 'Instagram', preview: 'Copy your referral link and add it to your bio or story.',                    color: '#E1306C', icon: ICONS.instagram, href: `https://instagram.com` },
+                { id: 'linkedin',  label: 'LinkedIn',    preview: 'The number is staggering \u2014 built for people with security clearances.', color: '#0A66C2', icon: ICONS.linkedin,  href: `https://www.linkedin.com/shareArticle?mini=true&url=${enc}&summary=${encLi}` },
+                { id: 'twitter',   label: 'X / Twitter', preview: 'Diplomat A: $60K\u2026 Diplomat B: $0. Same posting. One decision.',           color: '#1D9BF0', icon: ICONS.twitter,  href: `https://twitter.com/intent/tweet?text=${encTw}&url=${encTwUrl}` },
+                { id: 'facebook',  label: 'Facebook',    preview: "You know the 3am feeling when you're posted abroad and wonder about home?",   color: '#1877F2', icon: ICONS.facebook, href: `https://www.facebook.com/sharer/sharer.php?u=${enc}&quote=${encFb}` },
+                { id: 'whatsapp',  label: 'WhatsApp',    preview: 'The first home exchange system built for UN staff \u2014 not tourists.',        color: '#25D366', icon: ICONS.whatsapp, href: `https://wa.me/?text=${encWa}` },
+                { id: 'email',     label: 'Email',       preview: 'The first home exchange system built for UN staff \u2014 not tourists.',        color: '#c9a84c', icon: ICONS.email,    href: `mailto:?subject=${encodeURIComponent('Join the UnSwap Waitlist')}&body=${encWa}` },
+                { id: 'instagram', label: 'Instagram',   preview: 'Copy your referral link and add it to your bio or story.',                    color: '#E1306C', icon: ICONS.instagram, href: `https://instagram.com` },
             ];
         }
 
