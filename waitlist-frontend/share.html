@@ -22,7 +22,7 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Unswap — Join the Waitlist" />
     <meta name="twitter:description" content="I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering — and she built the solution specifically for people with security clearances." />
-    <meta name="twitter:image" content="https://www.unswap.net/social-preview.png" />
+    <meta name="twitter:image" content="https://www.unswap.net/twitter-preview.png" />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -177,11 +177,14 @@
 
         <!-- Header -->
         <div class="text-center mb-10 fade-up fade-up-1" style="opacity:0;">
-            <h1 class="font-display" style="font-size:clamp(34px,6vw,48px);font-weight:300;line-height:1.1;color:var(--gold);margin-bottom:8px;">
+            <h1 class="font-display" style="font-size:clamp(34px,6vw,48px);font-weight:300;line-height:1.1;color:var(--gold);margin-bottom:16px;">
                 You're on the waitlist!
             </h1>
-            <p style="font-size:16px;letter-spacing:0.05em;text-transform:uppercase;font-weight:500;color:var(--ivory);margin-bottom:4px;">Unswap</p>
-            <p id="user-email-display" style="font-size:14px;color:rgba(245,240,232,0.6);margin-bottom:32px;"></p>
+            <div style="display:inline-flex;align-items:center;gap:12px;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);padding:10px 20px;border-radius:12px;margin-bottom:36px;">
+                <span style="font-size:15px;font-weight:500;color:var(--ivory);">Unswap</span>
+                <span style="font-size:16px;line-height:1;">🤝</span>
+                <span id="user-email-display" style="font-size:15px;color:rgba(245,240,232,0.8);"></span>
+            </div>
 
 
 
@@ -263,8 +266,14 @@
         const SITE_URL   = 'https://www.unswap.net';
 
         // ─── Messages ─────────────────────────────────────────────────────────
-        const MSG_WHATSAPP = `This is the first home exchange system I've seen that was actually built for UN staff and foreign service professionals — not tourists. If your home sits empty during postings, get on this waitlist before it opens: `;
-        const MSG_LINKEDIN = `I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering — and she built the solution specifically for people with security clearances.\n\nJoin the waitlist here: `;
+        // WhatsApp → Option 2 "The Finally" (peer-to-peer, conversational)
+        const MSG_WHATSAPP = `This is the first home exchange system I've seen that was actually built for UN staff and foreign service professionals \u2014 not tourists. If your home sits empty during postings, get on this waitlist before it opens: `;
+        // LinkedIn → Option 1 "The Calculation" (professional, curiosity-gap)
+        const MSG_LINKEDIN = `I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering \u2014 and she built the solution specifically for people with security clearances.\n\nJoin the waitlist here: `;
+        // X / Twitter → Option 4 "The Contrast" (scannable A vs B, punchy)
+        const MSG_TWITTER = `Diplomat A: $60K on serviced apartments, home unprotected for 18 months.\nDiplomat B: $0 on accommodation, home with a vetted UN peer, three future exchanges lined up.\n\nSame posting. One decision. Join the waitlist: `;
+        // Facebook → Option 3 "The Specific Pain" (emotional, personal storytelling)
+        const MSG_FACEBOOK = `You know the 3am feeling when you're posted abroad and you wonder if everything's okay at home? Jacqueline Tsuma built the answer to that.\n\nSecure your spot on the waitlist: `;
 
 
 
@@ -283,6 +292,21 @@
         let isPersonal = false;
         let userEmail = '';
         let stats = { position: '-', points: '-', referrals: '-' };
+
+        // ─── Celebration Pop — fires immediately on page load ─────────────────
+        function fireConfetti(particleCount, y) {
+            if (window.confetti) {
+                confetti({ particleCount, spread: 72, origin: { y }, colors: ['#C9A84C', '#F5F0E8', '#0A0E1A'] });
+                return true;
+            }
+            return false;
+        }
+        // Retry until canvas-confetti CDN script is ready (up to 2s)
+        let _retries = 0;
+        const tryFire = (count, y) => {
+            if (!fireConfetti(count, y) && _retries++ < 10) setTimeout(() => tryFire(count, y), 200);
+        };
+        setTimeout(() => tryFire(120, 0.65), 400);
 
         // ─── Initialise ───────────────────────────────────────────────────────
         (async function init() {
@@ -308,23 +332,13 @@
                             stats.points = data.subscriber.points || '0';
                             stats.referrals = data.subscriber.total_referrals || '0';
                         }
+                        // Secondary burst once data loads
+                        setTimeout(() => tryFire(80, 0.55), 300);
                     }
                 } catch (_) { /* silent fallback */ }
             }
 
             renderAll();
-            
-            // Celebration Pop
-            if (window.confetti) {
-                setTimeout(() => {
-                    confetti({
-                        particleCount: 120,
-                        spread: 70,
-                        origin: { y: 0.6 },
-                        colors: ['#C9A84C', '#F5F0E8', '#0A0E1A']
-                    });
-                }, 400);
-            }
         })();
 
         function renderAll() {
@@ -355,27 +369,29 @@
         }
 
         function buildPlatforms() {
-            const enc    = encodeURIComponent(shareUrl);
-            const encWa  = encodeURIComponent(MSG_WHATSAPP + shareUrl);
-            const encLi  = encodeURIComponent(MSG_LINKEDIN + shareUrl);
+            const enc   = encodeURIComponent(shareUrl);
+            const encWa = encodeURIComponent(MSG_WHATSAPP + shareUrl);
+            const encLi = encodeURIComponent(MSG_LINKEDIN + shareUrl);
+            const encTw = encodeURIComponent(MSG_TWITTER + shareUrl);
+            const encFb = encodeURIComponent(MSG_FACEBOOK + shareUrl);
 
             return [
-                { id: 'linkedin', label: 'LinkedIn',   color: '#0A66C2', icon: ICONS.linkedin,  href: `https://www.linkedin.com/shareArticle?mini=true&url=${enc}&summary=${encLi}` },
-                { id: 'twitter',  label: 'X / Twitter', color: '#000',   icon: ICONS.twitter,   href: `https://twitter.com/intent/tweet?text=${encLi}&url=${enc}` },
-                { id: 'facebook', label: 'Facebook',   color: '#1877F2', icon: ICONS.facebook,  href: `https://www.facebook.com/sharer/sharer.php?u=${enc}` },
-                { id: 'whatsapp', label: 'WhatsApp',   color: '#25D366', icon: ICONS.whatsapp, href: `https://wa.me/?text=${encWa}` },
-                { id: 'email',    label: 'Email',      color: '#c9a84c', icon: ICONS.email,     href: `mailto:?subject=${encodeURIComponent('Join the UnSwap Waitlist')}&body=${encWa}` },
-                { id: 'instagram', label: 'Instagram', color: '#E1306C', icon: ICONS.instagram, href: `https://instagram.com` },
+                { id: 'linkedin', label: 'LinkedIn',   preview: 'The number is staggering \u2014 built for people with security clearances.', color: '#0A66C2', icon: ICONS.linkedin,  href: `https://www.linkedin.com/shareArticle?mini=true&url=${enc}&summary=${encLi}` },
+                { id: 'twitter',  label: 'X / Twitter', preview: 'Diplomat A: $60K\u2026 Diplomat B: $0. Same posting. One decision.',           color: '#1D9BF0', icon: ICONS.twitter,  href: `https://twitter.com/intent/tweet?text=${encTw}&url=${enc}` },
+                { id: 'facebook', label: 'Facebook',   preview: "You know the 3am feeling when you're posted abroad and wonder about home?",   color: '#1877F2', icon: ICONS.facebook, href: `https://www.facebook.com/sharer/sharer.php?u=${enc}&quote=${encFb}` },
+                { id: 'whatsapp', label: 'WhatsApp',   preview: 'The first home exchange system built for UN staff \u2014 not tourists.',        color: '#25D366', icon: ICONS.whatsapp, href: `https://wa.me/?text=${encWa}` },
+                { id: 'email',    label: 'Email',      preview: 'The first home exchange system built for UN staff \u2014 not tourists.',        color: '#c9a84c', icon: ICONS.email,    href: `mailto:?subject=${encodeURIComponent('Join the UnSwap Waitlist')}&body=${encWa}` },
+                { id: 'instagram', label: 'Instagram', preview: 'Copy your referral link and add it to your bio or story.',                    color: '#E1306C', icon: ICONS.instagram, href: `https://instagram.com` },
             ];
         }
 
         function renderPlatformButtons() {
             const container = document.getElementById('platform-buttons');
             container.innerHTML = buildPlatforms().map(p => `
-                <a href="${p.href}" target="_blank" rel="noopener noreferrer"
+                <a href="${p.href}" target="_blank" rel="noopener noreferrer" title="${p.preview ? p.preview.replace(/"/g, '&quot;') : ''}"
                    class="platform-btn"
-                   onmouseover="this.style.borderColor='${p.color}';this.style.color='${p.color}';this.style.background='${p.color}14';"
-                   onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--ivory)';this.style.background='rgba(10,14,26,0.55)';">
+                   onmouseover="this.style.borderColor='${p.color}';this.style.color='#FFFFFF';this.style.background='${p.color}28';var s=this.querySelector('span');if(s)s.style.color='#FFFFFF';"
+                   onmouseout="this.style.borderColor='rgba(201,168,76,0.15)';this.style.color='var(--ivory)';this.style.background='rgba(10,14,26,0.55)';var s=this.querySelector('span');if(s)s.style.color='${p.color}';">
                     <span style="color:${p.color};display:flex;align-items:center;">${p.icon}</span>
                     ${p.label}
                 </a>

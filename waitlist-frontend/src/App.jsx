@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Waitlist from './pages/Waitlist.jsx';
-import PartnerPropertyForm from './pages/PartnerPropertyForm.jsx';
+
 import SharePage from './pages/SharePage.jsx';
 
 export default function App() {
@@ -12,9 +12,7 @@ export default function App() {
     return () => window.removeEventListener('popstate', handleLocationChange);
   }, []);
 
-  if (currentPath === '/partner') {
-    return <PartnerPropertyForm />;
-  }
+
 
   if (currentPath === '/share' || currentPath === '/share/') {
     return <SharePage />;

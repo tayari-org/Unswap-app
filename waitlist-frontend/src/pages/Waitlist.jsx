@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
 import { api } from '../api/apiClient.js';
 
 export default function Waitlist() {
@@ -24,10 +25,17 @@ export default function Waitlist() {
     const [personalShareUrl, setPersonalShareUrl] = useState('https://www.unswap.net');
     const [copiedIndex, setCopiedIndex] = useState(null);
 
-    // ─── After signup, fetch personal referral URL ─────────────────────────
+    // ─── After signup, fetch personal referral URL + fire confetti ─────────
     useEffect(() => {
-        if (mode === 'success' && email) {
-            updateShareUrl(email);
+        if (mode === 'success') {
+            if (email) updateShareUrl(email);
+            // Celebratory burst
+            setTimeout(() => confetti({
+                particleCount: 120,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#C9A84C', '#F5F0E8', '#0A0E1A'],
+            }), 350);
         }
     }, [mode]);
 
@@ -292,7 +300,7 @@ export default function Waitlist() {
                             {/* Native Share Buttons */}
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
                                 {[{ id: 'linkedin',  label: 'LinkedIn',   color: '#0A66C2', href: `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(personalShareUrl)}&summary=${encodeURIComponent('I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering \u2014 and she built the solution specifically for people with security clearances.\n\nJoin the waitlist here: ' + personalShareUrl)}` },
-                                  { id: 'twitter',   label: 'X / Twitter', color: '#000',  href: `https://twitter.com/intent/tweet?text=${encodeURIComponent('I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering. ')}&url=${encodeURIComponent(personalShareUrl)}` },
+                                  { id: 'twitter',   label: 'X / Twitter', color: '#1D9BF0', href: `https://twitter.com/intent/tweet?text=${encodeURIComponent('I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering. ')}&url=${encodeURIComponent(personalShareUrl)}` },
                                   { id: 'facebook',  label: 'Facebook',   color: '#1877F2', href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(personalShareUrl)}` },
                                   { id: 'whatsapp',  label: 'WhatsApp',   color: '#25D366', href: `https://wa.me/?text=${encodeURIComponent('This is the first home exchange system I\'ve seen that was actually built for UN staff and foreign service professionals \u2014 not tourists. If your home sits empty during postings, get on this waitlist before it opens: ')}${encodeURIComponent(personalShareUrl)}` },
                                   { id: 'email',     label: 'Email',      color: '#c9a84c', href: `mailto:?subject=${encodeURIComponent('Join the UnSwap waitlist')}&body=${encodeURIComponent('This is the first home exchange system I\'ve seen that was actually built for UN staff and foreign service professionals \u2014 not tourists. If your home sits empty during postings, get on this waitlist before it opens: ')}${encodeURIComponent(personalShareUrl)}` },
@@ -305,8 +313,8 @@ export default function Waitlist() {
                                         rel="noopener noreferrer"
                                         className="flex items-center justify-center gap-2 px-3 py-3 text-[12px] font-medium tracking-wide rounded border transition-all hover:-translate-y-0.5"
                                         style={{ background: 'rgba(10,14,26,0.5)', borderColor: 'rgba(201,168,76,0.15)', color: 'var(--ivory)' }}
-                                        onMouseEnter={e => { e.currentTarget.style.borderColor = btn.color; e.currentTarget.style.color = btn.color; }}
-                                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(201,168,76,0.15)'; e.currentTarget.style.color = 'var(--ivory)'; }}
+                                        onMouseEnter={e => { e.currentTarget.style.borderColor = btn.color; e.currentTarget.style.color = '#FFFFFF'; e.currentTarget.style.background = `${btn.color}28`; }}
+                                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(201,168,76,0.15)'; e.currentTarget.style.color = 'var(--ivory)'; e.currentTarget.style.background = 'rgba(10,14,26,0.5)'; }}
                                     >
                                         {btn.label}
                                     </a>

@@ -1,13 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
 import { api } from './api/apiClient.js';
 
 // ─── Share message templates ────────────────────────────────────────────────
-const WHATSAPP_MESSAGE =
+// WhatsApp → Option 2 "The Finally" (peer-to-peer, conversational)
+const MSG_WHATSAPP =
   "This is the first home exchange system I've seen that was actually built for UN staff and foreign service professionals \u2014 not tourists. If your home sits empty during postings, get on this waitlist before it opens:";
 
-const LINKEDIN_MESSAGE =
-  "I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering \u2014 and she built the solution specifically for people with security clearances. Join the waitlist here:";
+// LinkedIn → Option 1 "The Calculation" (professional, curiosity-gap)
+const MSG_LINKEDIN =
+  "I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering \u2014 and she built the solution specifically for people with security clearances.\n\nJoin the waitlist here:";
+
+// X / Twitter → Option 4 "The Contrast" (scannable A vs B, punchy)
+const MSG_TWITTER =
+  "Diplomat A: $60K on serviced apartments, home unprotected for 18 months.\nDiplomat B: $0 on accommodation, home with a vetted UN peer, three future exchanges lined up.\n\nSame posting. One decision. Join the waitlist:";
+
+// Facebook → Option 3 "The Specific Pain" (emotional, personal storytelling)
+const MSG_FACEBOOK =
+  "You know the 3am feeling when you're posted abroad and you wonder if everything's okay at home? Jacqueline Tsuma built the answer to that.\n\nSecure your spot on the waitlist:";
 
 // ─── Platform icon SVGs (inline, no external deps) ─────────────────────────
 const Icons = {
@@ -102,7 +113,7 @@ function NativeShareButton({ shareUrl }) {
     try {
       await navigator.share({
         title: 'Join Unswap — Exclusive Waitlist',
-        text: `${WHATSAPP_MESSAGE} `,
+        text: `${MSG_WHATSAPP} `,
         url: shareUrl,
       });
       setUsed(true);
@@ -127,9 +138,11 @@ function NativeShareButton({ shareUrl }) {
 
 // ─── Platform buttons config ────────────────────────────────────────────────
 function buildPlatformButtons(shareUrl) {
-  const encodedUrl = encodeURIComponent(shareUrl);
-  const encodedWaMsg = encodeURIComponent(`${WHATSAPP_MESSAGE} `);
-  const encodedLiMsg = encodeURIComponent(`${LINKEDIN_MESSAGE} `);
+  const enc   = encodeURIComponent(shareUrl);
+  const encWa = encodeURIComponent(`${MSG_WHATSAPP} `);
+  const encLi = encodeURIComponent(`${MSG_LINKEDIN} `);
+  const encTw = encodeURIComponent(`${MSG_TWITTER} `);
+  const encFb = encodeURIComponent(`${MSG_FACEBOOK} `);
 
   return [
     {
@@ -137,41 +150,47 @@ function buildPlatformButtons(shareUrl) {
       label: 'LinkedIn',
       icon: Icons.linkedin,
       color: '#0A66C2',
-      href: `https://www.linkedin.com/shareArticle?mini=true&url=${encodedUrl}&summary=${encodedLiMsg}${encodedUrl}`,
+      preview: 'The number is staggering — solution built for people with security clearances.',
+      href: `https://www.linkedin.com/shareArticle?mini=true&url=${enc}&summary=${encLi}${enc}`,
     },
     {
       id: 'twitter',
       label: 'X / Twitter',
       icon: Icons.twitter,
-      color: '#000000',
-      href: `https://twitter.com/intent/tweet?text=${encodedLiMsg}&url=${encodedUrl}`,
+      color: '#1D9BF0',
+      preview: 'Diplomat A: $60K… Diplomat B: $0. Same posting. One decision.',
+      href: `https://twitter.com/intent/tweet?text=${encTw}&url=${enc}`,
     },
     {
       id: 'facebook',
       label: 'Facebook',
       icon: Icons.facebook,
       color: '#1877F2',
-      href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+      preview: "You know the 3am feeling when you're posted abroad and wonder about home?",
+      href: `https://www.facebook.com/sharer/sharer.php?u=${enc}&quote=${encFb}`,
     },
     {
       id: 'whatsapp',
       label: 'WhatsApp',
       icon: Icons.whatsapp,
       color: '#25D366',
-      href: `https://wa.me/?text=${encodedWaMsg}${encodedUrl}`,
+      preview: 'The first home exchange system built for UN staff — not tourists.',
+      href: `https://wa.me/?text=${encWa}${enc}`,
     },
     {
       id: 'email',
       label: 'Email',
       icon: Icons.email,
       color: '#c9a84c',
-      href: `mailto:?subject=${encodeURIComponent('Join the UnSwap waitlist')}&body=${encodedWaMsg}${encodedUrl}`,
+      preview: 'The first home exchange system built for UN staff — not tourists.',
+      href: `mailto:?subject=${encodeURIComponent('Join the UnSwap waitlist')}&body=${encWa}${enc}`,
     },
     {
       id: 'instagram',
       label: 'Instagram',
       icon: Icons.instagram,
       color: '#E1306C',
+      preview: 'Copy your referral link and add it to your bio or story.',
       href: `https://instagram.com`,
     },
   ];
@@ -185,6 +204,17 @@ export default function SharePage() {
   const [loadingRef, setLoadingRef] = useState(true);
   const [email, setEmail] = useState('');
   const [stats, setStats] = useState({ position: '-', points: '-', referrals: '-' });
+
+  // Confetti on page load — always fires regardless of email param
+  useEffect(() => {
+    const timer = setTimeout(() => confetti({
+      particleCount: 120,
+      spread: 72,
+      origin: { y: 0.65 },
+      colors: ['#C9A84C', '#F5F0E8', '#0A0E1A'],
+    }), 400);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Read email from URL query param ?email=... then fetch personal referral url
   useEffect(() => {
@@ -210,6 +240,13 @@ export default function SharePage() {
                 points: data.subscriber.points || '0',
                 referrals: data.subscriber.total_referrals || '0'
              });
+             // Secondary burst once stats are loaded
+             setTimeout(() => confetti({
+                particleCount: 80,
+                spread: 60,
+                origin: { y: 0.55 },
+                colors: ['#C9A84C', '#F5F0E8', '#0A0E1A']
+             }), 300);
           }
         }
       })
@@ -261,8 +298,11 @@ export default function SharePage() {
           >
             You're on the waitlist!
           </h1>
-          <p className="text-[16px] tracking-wide uppercase font-medium mb-1" style={{ color: 'var(--ivory)' }}>Unswap</p>
-          <p className="text-[14px] mb-8" style={{ color: 'rgba(245,240,232,0.6)' }}>{email}</p>
+          <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-xl border mb-9" style={{ background: 'rgba(201,168,76,0.08)', borderColor: 'rgba(201,168,76,0.2)' }}>
+              <span className="text-[15px] font-medium" style={{ color: 'var(--ivory)' }}>Unswap</span>
+              <span className="text-[16px]" style={{ lineHeight: 1 }}>🤝</span>
+              <span className="text-[15px]" style={{ color: 'rgba(245,240,232,0.8)' }}>{email}</span>
+          </div>
 
 
 
@@ -319,17 +359,15 @@ export default function SharePage() {
           </div>
         </div>
 
-        {/* ── Native share (mobile) ── */}
-        <NativeShareButton shareUrl={shareUrl} />
-
         {/* ── Platform buttons ── */}
-        <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
           {platformButtons.map((btn) => (
             <a
               key={btn.id}
               href={btn.href}
               target="_blank"
               rel="noopener noreferrer"
+              title={btn.preview}
               className="flex items-center gap-2.5 px-4 py-3.5 rounded border transition-all hover:-translate-y-0.5 hover:shadow-lg text-[13px] font-medium"
               style={{
                 background: 'rgba(10,14,26,0.5)',
@@ -338,13 +376,17 @@ export default function SharePage() {
               }}
               onMouseEnter={e => {
                 e.currentTarget.style.borderColor = btn.color;
-                e.currentTarget.style.color = btn.color;
-                e.currentTarget.style.background = `${btn.color}12`;
+                e.currentTarget.style.color = '#FFFFFF';
+                e.currentTarget.style.background = `${btn.color}28`;
+                const icon = e.currentTarget.querySelector('span');
+                if (icon) icon.style.color = '#FFFFFF';
               }}
               onMouseLeave={e => {
                 e.currentTarget.style.borderColor = 'rgba(201,168,76,0.15)';
                 e.currentTarget.style.color = 'var(--ivory)';
                 e.currentTarget.style.background = 'rgba(10,14,26,0.5)';
+                const icon = e.currentTarget.querySelector('span');
+                if (icon) icon.style.color = btn.color;
               }}
             >
               <span style={{ color: btn.color }}>{btn.icon}</span>
@@ -352,6 +394,9 @@ export default function SharePage() {
             </a>
           ))}
         </div>
+
+        {/* ── Native share (mobile) moved below ── */}
+        <NativeShareButton shareUrl={shareUrl} />
 
         {/* ── Waitlist Stats (Single Line) ── */}
         <div className="mt-12 flex flex-wrap items-center justify-center gap-6 sm:gap-10 pt-8" style={{ borderTop: '1px solid rgba(201,168,76,0.15)' }}>
