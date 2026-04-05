@@ -10,6 +10,7 @@ const SITE_NAME    = 'Unswap';
 const SITE_URL     = process.env.WAITLIST_FRONTEND_URL || 'https://www.unswap.net';
 const BACKEND_URL  = process.env.BACKEND_URL || 'https://api.unswap.com';
 const OG_IMAGE_URL = 'https://www.unswap.net/social-preview.png';
+const TWITTER_IMAGE_URL = 'https://www.unswap.net/twitter-preview.png';
 
 // ─── GET /ref/:code ──────────────────────────────────────────────────────────
 // - Social crawlers  → receive static HTML with OG/Twitter card tags
@@ -58,8 +59,8 @@ router.get('/:code', async (req, res) => {
   <meta name="twitter:site"        content="@unswap" />
   <meta name="twitter:title"       content="${ogTitle}" />
   <meta name="twitter:description" content="${ogDescription}" />
-  <meta name="twitter:image"       content="${OG_IMAGE_URL}" />
-  <meta name="twitter:image:src"   content="${OG_IMAGE_URL}" />
+  <meta name="twitter:image"       content="${TWITTER_IMAGE_URL}" />
+  <meta name="twitter:image:src"   content="${TWITTER_IMAGE_URL}" />
   <meta name="twitter:image:alt"   content="Unswap — Home exchange for UN and diplomatic professionals" />
 
   <!-- Open Graph (Facebook, LinkedIn, WhatsApp, etc.) -->
