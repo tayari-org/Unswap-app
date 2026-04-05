@@ -198,8 +198,8 @@ router.get('/confirm', async (req, res) => {
             body: JSON.stringify({ email: pending.email, name: pending.name, organization: pending.organization }),
         }).catch((e) => console.error('[Webhook] evidence.io failed:', e));
 
-        // Redirect user directly to our React share page
-        return res.redirect(`${process.env.WAITLIST_FRONTEND_URL}/share?email=${encodeURIComponent(pending.email)}`);
+        // Redirect user directly to our custom share page
+        return res.redirect(`${process.env.WAITLIST_FRONTEND_URL}/share.html?email=${encodeURIComponent(pending.email)}`);
 
     } catch (err) {
         console.error('Waitlist confirm error:', err);
