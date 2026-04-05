@@ -104,15 +104,12 @@ router.get('/confirm', async (req, res) => {
 
         const pending = pendingWaitlist.get(token);
 
-        // Use the env var, default to production domain. If someone accidentally left localhost in the live env vars, we can guard against it, but typically we want it to just work.
-        const FRONTEND_URL = process.env.WAITLIST_FRONTEND_URL || 'https://www.unswap.net';
-
         if (!pending) {
-            return res.redirect(`${FRONTEND_URL}?error=No+pending+signup+found+or+it+has+expired`);
+            return res.redirect(`${process.env.WAITLIST_FRONTEND_URL}?error=No+pending+signup+found+or+it+has+expired`);
         }
         if (Date.now() > pending.expiresAt) {
             pendingWaitlist.delete(token);
-            return res.redirect(`${FRONTEND_URL}?error=Confirmation+link+expired`);
+            return res.redirect(`${process.env.WAITLIST_FRONTEND_URL}?error=Confirmation+link+expired`);
         }
 
         const waitlisterApiKey = process.env.WAITLISTER_API_KEY;
@@ -202,7 +199,7 @@ router.get('/confirm', async (req, res) => {
         }).catch((e) => console.error('[Webhook] evidence.io failed:', e));
 
         // Redirect user directly to our React share page
-        return res.redirect(`${FRONTEND_URL}/share?email=${encodeURIComponent(pending.email)}`);
+        return res.redirect(`${process.env.WAITLIST_FRONTEND_URL}/share?email=${encodeURIComponent(pending.email)}`);
 
     } catch (err) {
         console.error('Waitlist confirm error:', err);
