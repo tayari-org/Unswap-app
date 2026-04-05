@@ -32,9 +32,9 @@ const Icons = {
       <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
     </svg>
   ),
-  telegram: (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-      <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
+  email: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-5 h-5">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
     </svg>
   ),
   instagram: (
@@ -133,11 +133,11 @@ function buildPlatformButtons(shareUrl) {
 
   return [
     {
-      id: 'whatsapp',
-      label: 'WhatsApp',
-      icon: Icons.whatsapp,
-      color: '#25D366',
-      href: `https://wa.me/?text=${encodedWaMsg}${encodedUrl}`,
+      id: 'linkedin',
+      label: 'LinkedIn',
+      icon: Icons.linkedin,
+      color: '#0A66C2',
+      href: `https://www.linkedin.com/shareArticle?mini=true&url=${encodedUrl}&summary=${encodedLiMsg}${encodedUrl}`,
     },
     {
       id: 'twitter',
@@ -147,13 +147,6 @@ function buildPlatformButtons(shareUrl) {
       href: `https://twitter.com/intent/tweet?text=${encodedLiMsg}&url=${encodedUrl}`,
     },
     {
-      id: 'linkedin',
-      label: 'LinkedIn',
-      icon: Icons.linkedin,
-      color: '#0A66C2',
-      href: `https://www.linkedin.com/shareArticle?mini=true&url=${encodedUrl}&summary=${encodedLiMsg}${encodedUrl}`,
-    },
-    {
       id: 'facebook',
       label: 'Facebook',
       icon: Icons.facebook,
@@ -161,11 +154,18 @@ function buildPlatformButtons(shareUrl) {
       href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
     },
     {
-      id: 'telegram',
-      label: 'Telegram',
-      icon: Icons.telegram,
-      color: '#26A5E4',
-      href: `https://t.me/share/url?url=${encodedUrl}&text=${encodedWaMsg}`,
+      id: 'whatsapp',
+      label: 'WhatsApp',
+      icon: Icons.whatsapp,
+      color: '#25D366',
+      href: `https://wa.me/?text=${encodedWaMsg}${encodedUrl}`,
+    },
+    {
+      id: 'email',
+      label: 'Email',
+      icon: Icons.email,
+      color: '#c9a84c',
+      href: `mailto:?subject=${encodeURIComponent('Join the UnSwap waitlist')}&body=${encodedWaMsg}${encodedUrl}`,
     },
     {
       id: 'instagram',
@@ -183,14 +183,17 @@ export default function SharePage() {
   const [isPersonal, setIsPersonal] = useState(false);
   const [copiedId, setCopiedId] = useState(null); // 'link' | template id
   const [loadingRef, setLoadingRef] = useState(true);
+  const [email, setEmail] = useState('');
+  const [stats, setStats] = useState({ position: '-', points: '-', referrals: '-' });
 
   // Read email from URL query param ?email=... then fetch personal referral url
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const email = params.get('email');
-    if (!email) { setLoadingRef(false); return; }
+    const emailParam = params.get('email');
+    if (!emailParam) { setLoadingRef(false); return; }
+    setEmail(emailParam);
 
-    api.waitlist.getStatus(email)
+    api.waitlist.getStatus(emailParam)
       .then(data => {
         if (data.found) {
           if (data.referral_code) {
@@ -200,6 +203,14 @@ export default function SharePage() {
             setShareUrl(data.thank_you_url);
           }
           setIsPersonal(true);
+          
+          if (data.subscriber) {
+             setStats({
+                position: data.subscriber.position || '-',
+                points: data.subscriber.points || '0',
+                referrals: data.subscriber.total_referrals || '0'
+             });
+          }
         }
       })
       .catch(() => {})
@@ -244,23 +255,26 @@ export default function SharePage() {
 
         {/* ── Header ── */}
         <div className="text-center mb-10">
-          <div className="flex items-center justify-center gap-3 mb-5">
-            <div className="h-px flex-1" style={{ background: 'linear-gradient(to right, transparent, rgba(201,168,76,0.35))' }} />
-            <span className="text-[11px] tracking-[0.22em] uppercase font-medium" style={{ color: 'rgba(245,240,232,0.5)' }}>
-              Skip the queue
-            </span>
-            <div className="h-px flex-1" style={{ background: 'linear-gradient(to left, transparent, rgba(201,168,76,0.35))' }} />
-          </div>
           <h1
-            className="text-[38px] sm:text-[52px] font-light leading-[1.1] mb-4"
+            className="text-[38px] sm:text-[48px] font-light leading-[1.1] mb-2"
             style={{ fontFamily: 'var(--serif)', color: 'var(--gold)' }}
           >
-            Share &amp; move up<br />
-            <em>the waitlist</em>
+            You're on the waitlist!
           </h1>
-          <p className="text-[15px] leading-relaxed" style={{ color: 'rgba(245,240,232,0.6)' }}>
-            Every person you refer moves you higher on the list.
-          </p>
+          <p className="text-[16px] tracking-wide uppercase font-medium mb-1" style={{ color: 'var(--ivory)' }}>Unswap</p>
+          <p className="text-[14px] mb-8" style={{ color: 'rgba(245,240,232,0.6)' }}>{email}</p>
+
+
+
+          <div className="text-center max-w-xl mx-auto mb-10">
+            <h3 className="text-[20px] font-medium tracking-wide mb-2" style={{ color: 'var(--gold)' }}>Refer friends +30</h3>
+            <p className="text-[14px] leading-relaxed mb-4" style={{ color: 'rgba(245,240,232,0.7)' }}>
+                Share your referral link and earn points for each friend who joins! The link below has some resources you can use for sharing, think of it as inspiration for your post content, just copy, edit and share it to along with your link.
+            </p>
+            <p className="text-[14px] leading-relaxed italic" style={{ color: 'rgba(201,168,76,0.8)' }}>
+                Perks include 5% discount for every person that you refer and others coming soon.
+            </p>
+          </div>
         </div>
 
 
@@ -339,88 +353,23 @@ export default function SharePage() {
           ))}
         </div>
 
-        {/* ── Divider ── */}
-        <div className="flex items-center gap-3 my-10">
-          <div className="h-px flex-1" style={{ background: 'rgba(201,168,76,0.2)' }} />
-          <span className="text-[11px] tracking-[0.22em] uppercase" style={{ color: 'rgba(245,240,232,0.35)' }}>
-            Ready-to-post templates
-          </span>
-          <div className="h-px flex-1" style={{ background: 'rgba(201,168,76,0.2)' }} />
+        {/* ── Waitlist Stats (Single Line) ── */}
+        <div className="mt-12 flex flex-wrap items-center justify-center gap-6 sm:gap-10 pt-8" style={{ borderTop: '1px solid rgba(201,168,76,0.15)' }}>
+           <div className="flex items-center gap-3">
+               <span className="text-[11px] uppercase tracking-wider" style={{ color: 'rgba(245,240,232,0.5)' }}>Position</span>
+               <span className="text-[18px] sm:text-[20px] font-light leading-none" style={{ fontFamily: 'var(--serif)', color: 'var(--gold)' }}>#{stats.position}</span>
+           </div>
+           <div className="hidden sm:block w-px h-5" style={{ background: 'rgba(201,168,76,0.2)' }} />
+           <div className="flex items-center gap-3">
+               <span className="text-[11px] uppercase tracking-wider" style={{ color: 'rgba(245,240,232,0.5)' }}>Points</span>
+               <span className="text-[18px] sm:text-[20px] font-light leading-none" style={{ fontFamily: 'var(--serif)', color: 'var(--ivory)' }}>{stats.points}</span>
+           </div>
+           <div className="hidden sm:block w-px h-5" style={{ background: 'rgba(201,168,76,0.2)' }} />
+           <div className="flex items-center gap-3">
+               <span className="text-[11px] uppercase tracking-wider" style={{ color: 'rgba(245,240,232,0.5)' }}>Referrals</span>
+               <span className="text-[18px] sm:text-[20px] font-light leading-none" style={{ fontFamily: 'var(--serif)', color: 'var(--ivory)' }}>{stats.referrals}</span>
+           </div>
         </div>
-
-        {/* ── Pro tip ── */}
-        <div
-          className="rounded-md p-4 mb-6 text-center text-[13px] leading-relaxed"
-          style={{
-            background: 'rgba(10,14,26,0.4)',
-            border: '1px solid rgba(201,168,76,0.15)',
-            color: 'rgba(245,240,232,0.6)',
-          }}
-        >
-          <strong style={{ color: 'var(--gold)' }}>💡 Pro-Tip:</strong> On LinkedIn, pair a template with a photo of a global landmark or prestigious interior for 3–5× more engagement.
-        </div>
-
-        {/* ── Templates ── */}
-        <AnimatePresence>
-          <div className="space-y-4">
-            {TEMPLATES.map((t, i) => {
-              const hydrated = t.content.replace('[LINK]', shareUrl);
-              const isCopied = copiedId === t.id;
-              return (
-                <motion.div
-                  key={t.id}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.06, duration: 0.4 }}
-                  className="rounded-lg border transition-all duration-200 cursor-pointer group overflow-hidden"
-                  style={{
-                    background: 'rgba(6,9,16,0.7)',
-                    borderColor: isCopied ? 'rgba(201,168,76,0.5)' : 'rgba(201,168,76,0.15)',
-                  }}
-                  onClick={() => copyTemplate(t.id, t.content)}
-                  onMouseEnter={e => {
-                    if (!isCopied) e.currentTarget.style.borderColor = 'rgba(201,168,76,0.4)';
-                    e.currentTarget.style.boxShadow = '0 4px 20px rgba(201,168,76,0.08)';
-                  }}
-                  onMouseLeave={e => {
-                    if (!isCopied) e.currentTarget.style.borderColor = 'rgba(201,168,76,0.15)';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                >
-                  <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-3">
-                    <div>
-                      <h4 className="text-[14px] font-medium" style={{ color: 'var(--ivory)' }}>{t.title}</h4>
-                      <p className="text-[11px] tracking-wide mt-0.5" style={{ color: 'rgba(245,240,232,0.4)' }}>{t.subtitle}</p>
-                    </div>
-                    <button
-                      className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded text-[11px] font-medium tracking-wide uppercase transition-all"
-                      style={{
-                        background: isCopied ? 'var(--gold)' : 'rgba(201,168,76,0.1)',
-                        color: isCopied ? 'var(--navy)' : 'var(--gold)',
-                        border: '1px solid rgba(201,168,76,0.25)',
-                      }}
-                    >
-                      {isCopied ? Icons.check : Icons.copy}
-                      {isCopied ? 'Copied!' : 'Copy'}
-                    </button>
-                  </div>
-                  <p
-                    className="px-5 pb-5 text-[13.5px] leading-[1.7] whitespace-pre-wrap italic border-l-2 ml-5"
-                    style={{
-                      fontFamily: 'var(--serif)',
-                      color: 'rgba(245,240,232,0.6)',
-                      borderColor: 'rgba(201,168,76,0.25)',
-                      paddingLeft: '16px',
-                      marginLeft: '20px',
-                    }}
-                  >
-                    "{hydrated}"
-                  </p>
-                </motion.div>
-              );
-            })}
-          </div>
-        </AnimatePresence>
 
         {/* ── Footer ── */}
         <div className="mt-16 text-center">

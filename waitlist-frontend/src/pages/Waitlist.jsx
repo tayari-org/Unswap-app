@@ -107,10 +107,10 @@ export default function Waitlist() {
                 return;
             }
 
-            if (data.thank_you_url) {
-                window.location.href = data.thank_you_url;
+            if (data.found) {
+                window.location.href = `/share.html?email=${encodeURIComponent(checkEmail)}`;
             } else {
-                setErrorMessage('Dashboard link not found');
+                setErrorMessage('Account not found on the waitlist.');
                 setStatus('error');
             }
         } catch (err) {
@@ -290,13 +290,13 @@ export default function Waitlist() {
                             <p className="font-['Cormorant_Garamond'] text-[#c9a84c] text-[20px] font-light italic mb-5">Share &amp; move up the waitlist</p>
 
                             {/* Native Share Buttons */}
-                            <div className="grid grid-cols-2 gap-2 mb-4">
-                                {[{ id: 'whatsapp',  label: 'WhatsApp',   color: '#25D366', href: `https://wa.me/?text=${encodeURIComponent('This is the first home exchange system I\'ve seen that was actually built for UN staff and foreign service professionals \u2014 not tourists. If your home sits empty during postings, get on this waitlist before it opens: ')}${encodeURIComponent(personalShareUrl)}` },
-                                  { id: 'facebook',  label: 'Facebook',   color: '#1877F2', href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(personalShareUrl)}` },
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+                                {[{ id: 'linkedin',  label: 'LinkedIn',   color: '#0A66C2', href: `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(personalShareUrl)}&summary=${encodeURIComponent('I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering \u2014 and she built the solution specifically for people with security clearances.\n\nJoin the waitlist here: ' + personalShareUrl)}` },
                                   { id: 'twitter',   label: 'X / Twitter', color: '#000',  href: `https://twitter.com/intent/tweet?text=${encodeURIComponent('I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering. ')}&url=${encodeURIComponent(personalShareUrl)}` },
-                                  { id: 'linkedin',  label: 'LinkedIn',   color: '#0A66C2', href: `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(personalShareUrl)}&summary=${encodeURIComponent('I found someone who calculated what diplomatic professionals actually lose on accommodation across a full career. The number is staggering \u2014 and she built the solution specifically for people with security clearances.\n\nJoin the waitlist here: ' + personalShareUrl)}` },
-                                  { id: 'instagram', label: 'Instagram',  color: '#E1306C', href: 'https://instagram.com' },
+                                  { id: 'facebook',  label: 'Facebook',   color: '#1877F2', href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(personalShareUrl)}` },
+                                  { id: 'whatsapp',  label: 'WhatsApp',   color: '#25D366', href: `https://wa.me/?text=${encodeURIComponent('This is the first home exchange system I\'ve seen that was actually built for UN staff and foreign service professionals \u2014 not tourists. If your home sits empty during postings, get on this waitlist before it opens: ')}${encodeURIComponent(personalShareUrl)}` },
                                   { id: 'email',     label: 'Email',      color: '#c9a84c', href: `mailto:?subject=${encodeURIComponent('Join the UnSwap waitlist')}&body=${encodeURIComponent('This is the first home exchange system I\'ve seen that was actually built for UN staff and foreign service professionals \u2014 not tourists. If your home sits empty during postings, get on this waitlist before it opens: ')}${encodeURIComponent(personalShareUrl)}` },
+                                  { id: 'instagram', label: 'Instagram',  color: '#E1306C', href: 'https://instagram.com' },
                                 ].map(btn => (
                                     <a
                                         key={btn.id}

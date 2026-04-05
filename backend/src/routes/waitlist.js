@@ -198,12 +198,8 @@ router.get('/confirm', async (req, res) => {
             body: JSON.stringify({ email: pending.email, name: pending.name, organization: pending.organization }),
         }).catch((e) => console.error('[Webhook] evidence.io failed:', e));
 
-        // Redirect user directly to their waitlister redirect URL status page
-        if (wlData.redirect_url) {
-            return res.redirect(wlData.redirect_url);
-        } else {
-            return res.send('Successfully joined the waitlist!');
-        }
+        // Redirect user directly to our custom share page
+        return res.redirect(`${process.env.WAITLIST_FRONTEND_URL}/share.html?email=${encodeURIComponent(pending.email)}`);
 
     } catch (err) {
         console.error('Waitlist confirm error:', err);
@@ -290,6 +286,7 @@ router.get('/status', async (req, res) => {
             found: true,
             thank_you_url: subscriber.thank_you_url,
             referral_code: subscriber.referral_code || null,
+            subscriber: subscriber,
         });
 
     } catch (err) {
