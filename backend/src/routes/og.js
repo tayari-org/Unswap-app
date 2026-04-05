@@ -3,13 +3,17 @@ const { prisma } = require('../db');
 const router = express.Router();
 
 // Known social media crawler user-agents
-// X sends: Twitterbot/1.0, also sometimes via: bot, crawl, spider
-const CRAWLER_AGENTS = /facebookexternalhit|LinkedInBot|Twitterbot|Twitterbot\/|WhatsApp|Slackbot|TelegramBot|Discordbot|pinterest|bingbot|Googlebot-Image|bot|crawl|spider/i;
+// X/Twitter sends: Twitterbot/1.0
+const CRAWLER_AGENTS  = /facebookexternalhit|LinkedInBot|Twitterbot|WhatsApp|Slackbot|TelegramBot|Discordbot|pinterest|bingbot|Googlebot-Image|bot|crawl|spider/i;
+// Twitterbot-specific: Twitter reads og:image, not twitter:image — so we swap it only for Twitter
+const TWITTER_BOT     = /Twitterbot/i;
 
-const SITE_NAME    = 'Unswap';
-const SITE_URL     = process.env.WAITLIST_FRONTEND_URL || 'https://www.unswap.net';
-const BACKEND_URL  = process.env.BACKEND_URL || 'https://api.unswap.com';
-const OG_IMAGE_URL = 'https://www.unswap.net/social-preview.png';
+const SITE_NAME         = 'Unswap';
+const SITE_URL          = process.env.WAITLIST_FRONTEND_URL || 'https://www.unswap.net';
+const BACKEND_URL       = process.env.BACKEND_URL || 'https://api.unswap.com';
+// social-preview.png (1200×630) — used for Facebook, LinkedIn, WhatsApp etc.
+const OG_IMAGE_URL      = 'https://www.unswap.net/social-preview.png';
+// twitter-preview.png (921×452) — used for Twitterbot via og:image swap
 const TWITTER_IMAGE_URL = 'https://www.unswap.net/twitter-preview.png';
 
 // ─── GET /ref/:code ──────────────────────────────────────────────────────────
@@ -48,6 +52,12 @@ router.get('/:code', async (req, res) => {
 
         // ── Crawlers: serve static OG HTML ───────────────────────────────────
         if (CRAWLER_AGENTS.test(userAgent)) {
+            // Twitter reads og:image (not twitter:image) — serve twitter-preview as og:image for Twitterbot
+            const isTwitterBot = TWITTER_BOT.test(userAgent);
+            const ogImg     = isTwitterBot ? TWITTER_IMAGE_URL : OG_IMAGE_URL;
+            const ogImgW    = isTwitterBot ? '921'  : '1200';
+            const ogImgH    = isTwitterBot ? '452'  : '630';
+
             const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -55,6 +65,7 @@ router.get('/:code', async (req, res) => {
   <title>${ogTitle}</title>
 
   <!-- Twitter / X Card — must appear FIRST; Twitterbot is order-sensitive -->
+  <!-- NOTE: Twitterbot reads og:image, so we swap og:image to twitter-preview for it above -->
   <meta name="twitter:card"        content="summary_large_image" />
   <meta name="twitter:site"        content="@unswap" />
   <meta name="twitter:title"       content="${ogTitle}" />
@@ -64,15 +75,16 @@ router.get('/:code', async (req, res) => {
   <meta name="twitter:image:alt"   content="Unswap — Home exchange for UN and diplomatic professionals" />
 
   <!-- Open Graph (Facebook, LinkedIn, WhatsApp, etc.) -->
+  <!-- For Twitterbot: og:image is swapped to twitter-preview.png -->
   <meta property="og:type"             content="website" />
   <meta property="og:url"              content="${canonicalUrl}" />
   <meta property="og:site_name"        content="${SITE_NAME}" />
   <meta property="og:title"            content="${ogTitle}" />
   <meta property="og:description"      content="${ogDescription}" />
-  <meta property="og:image"            content="${OG_IMAGE_URL}" />
-  <meta property="og:image:secure_url" content="${OG_IMAGE_URL}" />
-  <meta property="og:image:width"      content="1200" />
-  <meta property="og:image:height"     content="630" />
+  <meta property="og:image"            content="${ogImg}" />
+  <meta property="og:image:secure_url" content="${ogImg}" />
+  <meta property="og:image:width"      content="${ogImgW}" />
+  <meta property="og:image:height"     content="${ogImgH}" />
   <meta property="og:image:type"       content="image/png" />
   <meta property="og:image:alt"        content="Unswap — Home exchange for UN and diplomatic professionals" />
 </head>
@@ -86,7 +98,7 @@ router.get('/:code', async (req, res) => {
             return res
                 .status(200)
                 .setHeader('Content-Type', 'text/html; charset=utf-8')
-                // Let CDNs / proxies cache the HTML briefly (5 min)
+                // Short cache so image changes are picked up quickly
                 .setHeader('Cache-Control', 'public, max-age=300')
                 .send(html);
         }

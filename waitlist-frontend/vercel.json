@@ -1,0 +1,42 @@
+{
+  "rewrites": [
+    {
+      "source": "/share.html",
+      "destination": "/share.html"
+    },
+    {
+      "source": "/waitlist.html",
+      "destination": "/waitlist.html"
+    },
+    {
+      "source": "/((?!share\\.html|waitlist\\.html|assets/|favicon\\.png|logo\\.png|hero\\..+|social-preview\\.png|twitter-preview\\.png).*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/social-preview.png",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=3600" }
+      ]
+    },
+    {
+      "source": "/twitter-preview.png",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=3600" }
+      ]
+    },
+    {
+      "source": "/index.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/share.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    }
+  ]
+}
