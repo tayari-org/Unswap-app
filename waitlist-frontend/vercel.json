@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/ref/:path*",
+      "destination": "https://unswap-app-2tpv.onrender.com/ref/:path*"
+    },
+    {
       "source": "/share.html",
       "destination": "/share.html"
     },
