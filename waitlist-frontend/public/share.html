@@ -464,17 +464,17 @@
             const encTw = encodeURIComponent(MSG_TWITTER.trimEnd() + " ");
             const encFb = encodeURIComponent(MSG_FACEBOOK + shareUrl);
 
-            // Twitter: use the frontend /ref/ endpoint (which proxies to the backend OG proxy)
-            // so the visible URL in the tweet is clean (unswap.net).
-            const twitterOgUrl = referralCode
+            // Use the frontend /ref/ endpoint (which proxies to the backend OG proxy)
+            // so social crawlers (Twitter, Facebook, LinkedIn) pick up custom OG tags
+            const ogProxyUrl = referralCode
                 ? `${SITE_URL}/ref/${referralCode}`
-                : `${SITE_URL}/ref/home`;  // /ref/home = generic OG copy
-            const encTwUrl = encodeURIComponent(twitterOgUrl);
+                : `${SITE_URL}/ref/home`;
+            const encProxyUrl = encodeURIComponent(ogProxyUrl);
 
             return [
-                { id: 'linkedin', label: 'LinkedIn', preview: 'The number is staggering \u2014 built for people with security clearances.', color: '#0A66C2', icon: ICONS.linkedin, href: `https://www.linkedin.com/shareArticle?mini=true&url=${enc}&summary=${encLi}` },
-                { id: 'twitter', label: 'X / Twitter', preview: 'Diplomat A: $60K\u2026 Diplomat B: $0. Same posting. One decision.', color: '#1D9BF0', icon: ICONS.twitter, href: `https://twitter.com/intent/tweet?text=${encTw}&url=${encTwUrl}` },
-                { id: 'facebook', label: 'Facebook', preview: "You know the 3am feeling when you're posted abroad and wonder about home?", color: '#1877F2', icon: ICONS.facebook, href: `https://www.facebook.com/sharer/sharer.php?u=${enc}&quote=${encFb}` },
+                { id: 'linkedin', label: 'LinkedIn', preview: 'The number is staggering \u2014 built for people with security clearances.', color: '#0A66C2', icon: ICONS.linkedin, href: `https://www.linkedin.com/shareArticle?mini=true&url=${encProxyUrl}&summary=${encLi}` },
+                { id: 'twitter', label: 'X / Twitter', preview: 'Diplomat A: $60K\u2026 Diplomat B: $0. Same posting. One decision.', color: '#1D9BF0', icon: ICONS.twitter, href: `https://twitter.com/intent/tweet?text=${encTw}&url=${encProxyUrl}` },
+                { id: 'facebook', label: 'Facebook', preview: "You know the 3am feeling when you're posted abroad and wonder about home?", color: '#1877F2', icon: ICONS.facebook, href: `https://www.facebook.com/sharer/sharer.php?u=${encProxyUrl}&quote=${encFb}` },
                 { id: 'whatsapp', label: 'WhatsApp', preview: 'The first home exchange system built for UN staff \u2014 not tourists.', color: '#25D366', icon: ICONS.whatsapp, href: `https://wa.me/?text=${encWa}` },
                 { id: 'email', label: 'Email', preview: 'The first home exchange system built for UN staff \u2014 not tourists.', color: '#c9a84c', icon: ICONS.email, href: `mailto:?subject=${encodeURIComponent('Join the UnSwap Waitlist')}&body=${encWa}` },
                 { id: 'telegram', label: 'Telegram', preview: 'The first home exchange system built for UN staff \u2014 not tourists.', color: '#24A1DE', icon: ICONS.telegram, href: `https://t.me/share/url?url=${enc}&text=${encodeURIComponent(MSG_WHATSAPP)}` },

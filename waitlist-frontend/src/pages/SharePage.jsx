@@ -144,22 +144,33 @@ function buildPlatformButtons(shareUrl) {
   const encTw = encodeURIComponent(`${MSG_TWITTER} `);
   const encFb = encodeURIComponent(`${MSG_FACEBOOK} `);
 
+  // Extract referral code from URL safely
+  let code = null;
+  try { code = new URL(shareUrl).searchParams.get('ref'); } catch (_) {}
+
+  // Use the frontend /ref/ endpoint (which proxies to the backend OG proxy)
+  // so social crawlers (Twitter, Facebook, LinkedIn) pick up custom OG tags
+  const ogProxyUrl = code
+      ? `https://www.unswap.net/ref/${code}`
+      : `https://www.unswap.net/ref/home`;
+  const encProxyUrl = encodeURIComponent(ogProxyUrl);
+
   return [
     {
       id: 'linkedin',
       label: 'LinkedIn',
       icon: Icons.linkedin,
       color: '#0A66C2',
-      preview: 'The number is staggering — solution built for people with security clearances.',
-      href: `https://www.linkedin.com/shareArticle?mini=true&url=${enc}&summary=${encLi}${enc}`,
+      preview: 'The number is staggering \u2014 solution built for people with security clearances.',
+      href: `https://www.linkedin.com/shareArticle?mini=true&url=${encProxyUrl}&summary=${encLi}`,
     },
     {
       id: 'twitter',
       label: 'X / Twitter',
       icon: Icons.twitter,
       color: '#1D9BF0',
-      preview: 'Diplomat A: $60K… Diplomat B: $0. Same posting. One decision.',
-      href: `https://twitter.com/intent/tweet?text=${encTw}&url=${enc}`,
+      preview: 'Diplomat A: $60K\u2026 Diplomat B: $0. Same posting. One decision.',
+      href: `https://twitter.com/intent/tweet?text=${encTw}&url=${encProxyUrl}`,
     },
     {
       id: 'facebook',
@@ -167,7 +178,7 @@ function buildPlatformButtons(shareUrl) {
       icon: Icons.facebook,
       color: '#1877F2',
       preview: "You know the 3am feeling when you're posted abroad and wonder about home?",
-      href: `https://www.facebook.com/sharer/sharer.php?u=${enc}&quote=${encFb}`,
+      href: `https://www.facebook.com/sharer/sharer.php?u=${encProxyUrl}&quote=${encFb}`,
     },
     {
       id: 'whatsapp',
