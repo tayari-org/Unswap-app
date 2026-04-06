@@ -436,12 +436,11 @@
             const encTw = encodeURIComponent(MSG_TWITTER.trimEnd() + " ");
             const encFb = encodeURIComponent(MSG_FACEBOOK + shareUrl);
 
-            // Twitter: use the backend /ref/ OG proxy URL so Twitterbot triggers og.js
-            // og.js detects Twitterbot and serves twitter-preview.png as og:image.
-            // og:url in og.js points to www.unswap.net so the card displays cleanly.
+            // Twitter: use the frontend /ref/ endpoint (which proxies to the backend OG proxy)
+            // so the visible URL in the tweet is clean (unswap.net).
             const twitterOgUrl = referralCode
-                ? `${API_BASE}/ref/${referralCode}`
-                : `${API_BASE}/ref/home`;  // /ref/home = no DB match → generic OG copy
+                ? `${SITE_URL}/ref/${referralCode}`
+                : `${SITE_URL}/ref/home`;  // /ref/home = generic OG copy
             const encTwUrl = encodeURIComponent(twitterOgUrl);
 
             return [
