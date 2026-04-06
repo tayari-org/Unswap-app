@@ -5,8 +5,9 @@ const router = express.Router();
 // Known social media crawler user-agents
 // X/Twitter sends: Twitterbot/1.0
 const CRAWLER_AGENTS  = /facebookexternalhit|LinkedInBot|Twitterbot|WhatsApp|Slackbot|TelegramBot|Discordbot|pinterest|bingbot|Googlebot-Image|bot|crawl|spider/i;
-// Twitterbot-specific: Twitter reads og:image, not twitter:image — so we swap it only for Twitter
+// Specific bots for tailored og images and text
 const TWITTER_BOT     = /Twitterbot/i;
+const FACEBOOK_BOT    = /facebookexternalhit/i;
 
 const SITE_NAME         = 'Unswap';
 const SITE_URL          = process.env.WAITLIST_FRONTEND_URL || 'https://www.unswap.net';
@@ -15,6 +16,7 @@ const BACKEND_URL       = process.env.BACKEND_URL || 'https://api.unswap.com';
 const OG_IMAGE_URL      = 'https://www.unswap.net/social-preview.png';
 // twitter-preview.png (921×452) — used for Twitterbot via og:image swap
 const TWITTER_IMAGE_URL = 'https://www.unswap.net/twitter-preview.png';
+const FACEBOOK_IMAGE_URL = 'https://www.unswap.net/facebook-preview.png';
 
 // ─── GET /ref/:code ──────────────────────────────────────────────────────────
 // - Social crawlers  → receive static HTML with OG/Twitter card tags
@@ -53,24 +55,36 @@ router.get('/:code', async (req, res) => {
 
         // ── Crawlers: serve static OG HTML ───────────────────────────────────
         if (CRAWLER_AGENTS.test(userAgent)) {
-            // Twitter reads og:image (not twitter:image) — serve twitter-preview as og:image for Twitterbot
             const isTwitterBot = TWITTER_BOT.test(userAgent);
-            const ogImg     = isTwitterBot ? TWITTER_IMAGE_URL : OG_IMAGE_URL;
-            const ogImgW    = isTwitterBot ? '921'  : '1200';
-            const ogImgH    = isTwitterBot ? '452'  : '630';
+            const isFacebookBot = FACEBOOK_BOT.test(userAgent);
+
+            let finalOgTitle = ogTitle;
+            let finalOgDescription = ogDescription;
+            let ogImg = OG_IMAGE_URL;
+            let ogImgW = '1200';
+            let ogImgH = '630';
+
+            if (isTwitterBot) {
+                ogImg = TWITTER_IMAGE_URL;
+                ogImgW = '921';
+                ogImgH = '452';
+            } else if (isFacebookBot) {
+                ogImg = FACEBOOK_IMAGE_URL;
+                finalOgTitle = "This is the first home exchange system I've seen that was actually built for UN staff and foreign service professionals \u2014 not tourists. If your home sits empty during postings, get on this waitlist before it opens:";
+            }
 
             const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>${ogTitle}</title>
+  <title>${finalOgTitle}</title>
 
   <!-- Twitter / X Card — must appear FIRST; Twitterbot is order-sensitive -->
   <!-- NOTE: Twitterbot reads og:image, so we swap og:image to twitter-preview for it above -->
   <meta name="twitter:card"        content="summary_large_image" />
   <meta name="twitter:site"        content="@unswap" />
-  <meta name="twitter:title"       content="${ogTitle}" />
-  <meta name="twitter:description" content="${ogDescription}" />
+  <meta name="twitter:title"       content="${finalOgTitle}" />
+  <meta name="twitter:description" content="${finalOgDescription}" />
   <meta name="twitter:image"       content="${TWITTER_IMAGE_URL}" />
   <meta name="twitter:image:src"   content="${TWITTER_IMAGE_URL}" />
   <meta name="twitter:image:alt"   content="Unswap — Home exchange for UN and diplomatic professionals" />
@@ -80,8 +94,8 @@ router.get('/:code', async (req, res) => {
   <meta property="og:type"             content="website" />
   <meta property="og:url"              content="${canonicalUrl}" />
   <meta property="og:site_name"        content="${SITE_NAME}" />
-  <meta property="og:title"            content="${ogTitle}" />
-  <meta property="og:description"      content="${ogDescription}" />
+  <meta property="og:title"            content="${finalOgTitle}" />
+  <meta property="og:description"      content="${finalOgDescription}" />
   <meta property="og:image"            content="${ogImg}" />
   <meta property="og:image:secure_url" content="${ogImg}" />
   <meta property="og:image:width"      content="${ogImgW}" />

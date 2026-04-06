@@ -107,7 +107,7 @@ app.use((err, req, res, next) => {
         body: req.body,
         query: req.query,
     };
-    
+
     console.error('[Global Error]', errorInfo);
 
     // Also write to a file for easier debugging if console is hard to read
