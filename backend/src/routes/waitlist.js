@@ -168,7 +168,7 @@ router.get('/confirm', async (req, res) => {
 
         // ─── Post-Verification Kit Form Subscription ────────────────────────────────
         const kitApiSecret = process.env.KIT_API_KEY || process.env.KIT_API_SECRET;
-        const kitFormId = process.env.KIT_FORM_ID;
+        const kitFormId = process.env.KIT_FORM_ID || '9247374';
         
         if (kitApiSecret && kitFormId) {
             try {
@@ -191,6 +191,47 @@ router.get('/confirm', async (req, res) => {
             }
         }
 
+        // ─── Referrer Update Logic ────────────────────────────────────────────────
+        if (pending.ref) {
+            try {
+                // Find referring user in local DB
+                const referrer = await prisma.waitlistEntry.findUnique({
+                    where: { referral_code: pending.ref }
+                });
+
+                if (referrer) {
+                    // Update local DB verified count (this maps to 'referrals' in Kit)
+                    const updatedReferrer = await prisma.waitlistEntry.update({
+                        where: { id: referrer.id },
+                        data: { referred_users_verified_count: { increment: 1 } }
+                    });
+
+                    // Update 'referrals' field on Kit
+                    if (kitApiSecret) {
+                        const kitUpdateResponse = await fetch(`https://api.kit.com/v4/subscribers`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Kit-Api-Key': kitApiSecret
+                            },
+                            body: JSON.stringify({
+                                email_address: referrer.email,
+                                fields: {
+                                    Referrals_count: updatedReferrer.referred_users_verified_count
+                                }
+                            })
+                        });
+                        
+                        if (!kitUpdateResponse.ok) {
+                            console.warn('Silent fail updating referrer count in Kit:', await kitUpdateResponse.text());
+                        }
+                    }
+                }
+            } catch (refErr) {
+                console.error('Failed to update referrer count:', refErr.message);
+            }
+        }
+
         // Fire-and-forget webhook
         fetch('https://events.evidence.io/hook/vQrlDk0zuDnpKoqD', {
             method: 'POST',
@@ -198,8 +239,8 @@ router.get('/confirm', async (req, res) => {
             body: JSON.stringify({ email: pending.email, name: pending.name, organization: pending.organization }),
         }).catch((e) => console.error('[Webhook] evidence.io failed:', e));
 
-        // Redirect user directly to our custom share page
-        return res.redirect(`${process.env.WAITLIST_FRONTEND_URL}/share.html?email=${encodeURIComponent(pending.email)}`);
+        // Redirect user directly to our custom share page with referral code
+        return res.redirect(`${process.env.WAITLIST_FRONTEND_URL}/share.html?email=${encodeURIComponent(pending.email)}&ref=${encodeURIComponent(wlData.referral_code)}`);
 
     } catch (err) {
         console.error('Waitlist confirm error:', err);

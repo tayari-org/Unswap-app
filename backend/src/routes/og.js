@@ -4,16 +4,16 @@ const router = express.Router();
 
 // Known social media crawler user-agents
 // X/Twitter sends: Twitterbot/1.0
-const CRAWLER_AGENTS  = /facebookexternalhit|LinkedInBot|Twitterbot|WhatsApp|Slackbot|TelegramBot|Discordbot|pinterest|bingbot|Googlebot-Image|bot|crawl|spider/i;
+const CRAWLER_AGENTS = /facebookexternalhit|LinkedInBot|Twitterbot|WhatsApp|Slackbot|TelegramBot|Discordbot|pinterest|bingbot|Googlebot-Image|bot|crawl|spider/i;
 // Specific bots for tailored og images and text
-const TWITTER_BOT     = /Twitterbot/i;
-const FACEBOOK_BOT    = /facebookexternalhit/i;
+const TWITTER_BOT = /Twitterbot/i;
+const FACEBOOK_BOT = /facebookexternalhit/i;
 
-const SITE_NAME         = 'Unswap';
-const SITE_URL          = process.env.WAITLIST_FRONTEND_URL || 'https://www.unswap.net';
-const BACKEND_URL       = process.env.BACKEND_URL || 'https://api.unswap.com';
+const SITE_NAME = 'Unswap';
+const SITE_URL = process.env.WAITLIST_FRONTEND_URL || 'https://www.unswap.net';
+const BACKEND_URL = process.env.BACKEND_URL || 'https://api.unswap.com';
 // social-preview.png (1200×630) — used for Facebook, LinkedIn, WhatsApp etc.
-const OG_IMAGE_URL      = 'https://www.unswap.net/social-preview.png';
+const OG_IMAGE_URL = 'https://www.unswap.net/social-preview.png';
 // twitter-preview.png (921×452) — used for Twitterbot via og:image swap
 const TWITTER_IMAGE_URL = 'https://www.unswap.net/twitter-preview.png';
 const FACEBOOK_IMAGE_URL = 'https://www.unswap.net/facebook-preview.png';
@@ -36,9 +36,9 @@ router.get('/:code', async (req, res) => {
         });
 
         // Fall back gracefully if the code is unknown
-        const name        = entry?.full_name  || null;
+        const name = entry?.full_name || null;
         const thankYouUrl = entry?.thank_you_url || SITE_URL;
-        const referralUrl  = `${SITE_URL}?ref=${encodeURIComponent(code)}`;
+        const referralUrl = `${SITE_URL}?ref=${encodeURIComponent(code)}`;
         // og:url = the frontend referral URL so the Twitter card displays unswap.net cleanly.
         // Twitterbot crawled the backend /ref/:code endpoint (which has UA detection),
         // but og:url controls what URL is shown in the card — not what was crawled.
@@ -87,7 +87,7 @@ router.get('/:code', async (req, res) => {
   <meta name="twitter:description" content="${finalOgDescription}" />
   <meta name="twitter:image"       content="${TWITTER_IMAGE_URL}" />
   <meta name="twitter:image:src"   content="${TWITTER_IMAGE_URL}" />
-  <meta name="twitter:image:alt"   content="Unswap — Home exchange for UN and diplomatic professionals" />
+  <meta name="twitter:image:alt"   content="Unswap. Home exchange for UN and diplomatic professionals" />
 
   <!-- Open Graph (Facebook, LinkedIn, WhatsApp, etc.) -->
   <!-- For Twitterbot: og:image is swapped to twitter-preview.png -->
@@ -101,7 +101,7 @@ router.get('/:code', async (req, res) => {
   <meta property="og:image:width"      content="${ogImgW}" />
   <meta property="og:image:height"     content="${ogImgH}" />
   <meta property="og:image:type"       content="image/png" />
-  <meta property="og:image:alt"        content="Unswap — Home exchange for UN and diplomatic professionals" />
+  <meta property="og:image:alt"        content="Unswap. Home exchange for UN and diplomatic professionals" />
 </head>
 <body>
   <p>Redirecting you to Unswap…</p>
@@ -123,7 +123,8 @@ router.get('/:code', async (req, res) => {
 
     } catch (err) {
         console.error('[OG Proxy] Error:', err);
-        return res.redirect(302, SITE_URL);
+        const fallbackUrl = `${SITE_URL}?ref=${encodeURIComponent(code)}`;
+        return res.redirect(302, fallbackUrl);
     }
 });
 

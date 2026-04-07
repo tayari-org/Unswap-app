@@ -410,7 +410,7 @@
             };
 
             try {
-                const response = await fetch(`${API_URL}/waitlist/join`, {
+                const response = await fetch(`${API_URL}/waitlist/join/initiate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -428,12 +428,6 @@
                     document.getElementById('success-email').textContent = payload.email;
                     setMode('success');
                     updateShareUrl(payload.email);
-
-                    fetch('https://events.evidence.io/hook/vQrlDk0zuDnpKoqD', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload),
-                    }).catch(console.error);
                 }
             } catch (err) {
                 document.getElementById('error-text').textContent = err.message || 'Failed to initiate signup';
