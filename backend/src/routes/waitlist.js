@@ -62,10 +62,7 @@ router.post('/join/initiate', async (req, res) => {
                 email_address: normalizedEmail,
                 first_name: name.split(' ')[0],
                 state: 'active',
-                fields: { 
-                    waitlist_token: token,
-                    Organization: organization
-                }
+                fields: { waitlist_token: token }
             })
         });
 
