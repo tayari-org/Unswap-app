@@ -3,30 +3,22 @@ const { prisma } = require('../db');
 const router = express.Router();
 
 // Known social media crawler user-agents
-// X/Twitter sends: Twitterbot/1.0
 const CRAWLER_AGENTS = /facebookexternalhit|LinkedInBot|Twitterbot|WhatsApp|Slackbot|TelegramBot|Discordbot|pinterest|bingbot|Googlebot-Image|bot|crawl|spider/i;
-// Specific bots for tailored og images and text
-const TWITTER_BOT = /Twitterbot/i;
+// Specific bots for tailored copy (if needed)
 const FACEBOOK_BOT = /facebookexternalhit/i;
 
 const SITE_NAME = 'Unswap';
 const SITE_URL = process.env.WAITLIST_FRONTEND_URL || 'https://www.unswap.net';
 const BACKEND_URL = process.env.BACKEND_URL || 'https://api.unswap.com';
-// social-preview.png (1200×630) — used for Facebook, LinkedIn, WhatsApp etc.
 const OG_IMAGE_URL = 'https://www.unswap.net/social-preview.png';
-// twitter-preview.png (921×452) — used for Twitterbot via og:image swap
-const TWITTER_IMAGE_URL = 'https://www.unswap.net/twitter-preview.png';
-const FACEBOOK_IMAGE_URL = 'https://www.unswap.net/facebook-preview.png';
 
 // ─── GET /ref/:code ──────────────────────────────────────────────────────────
-// - Social crawlers  → receive static HTML with OG/Twitter card tags
-// - Real browsers    → 302 redirect to the React app with ?ref=CODE appended
-// NOTE: No meta http-equiv refresh in crawler HTML — Twitterbot follows it
-//       before finishing meta tag parsing, causing it to land on the SPA.
-// ─────────────────────────────────────────────────────────────────────────────
 router.get('/:code', async (req, res) => {
     const { code } = req.params;
     const userAgent = req.headers['user-agent'] || '';
+
+    let name = null;
+    let thankYouUrl = SITE_URL;
 
     try {
         // Look up the referral code in the local shadow DB
@@ -35,97 +27,81 @@ router.get('/:code', async (req, res) => {
             select: { full_name: true, thank_you_url: true }
         });
 
-        // Fall back gracefully if the code is unknown
-        const name = entry?.full_name || null;
-        const thankYouUrl = entry?.thank_you_url || SITE_URL;
-        const referralUrl = `${SITE_URL}?ref=${encodeURIComponent(code)}`;
-        // og:url = the frontend referral URL so the Twitter card displays unswap.net cleanly.
-        // Twitterbot crawled the backend /ref/:code endpoint (which has UA detection),
-        // but og:url controls what URL is shown in the card — not what was crawled.
-        const canonicalUrl = code === 'home' ? SITE_URL : referralUrl;
+        if (entry) {
+            name = entry.full_name;
+            if (entry.thank_you_url) thankYouUrl = entry.thank_you_url;
+        }
+    } catch (err) {
+        console.error('[OG Proxy] DB Error lookup:', err);
+        // We catch here so the crawler logic below still fires with default text!
+    }
 
-        // ── Build personalised copy ──────────────────────────────────────────
-        const ogTitle = name
-            ? `${name.split(' ')[0]} invited you to join Unswap`
-            : 'Join the Unswap Waitlist';
+    const referralUrl = `${SITE_URL}?ref=${encodeURIComponent(code)}`;
+    const canonicalUrl = code === 'home' ? SITE_URL : referralUrl;
 
-        const ogDescription = name
-            ? `${name.split(' ')[0]} thinks you should be on this — a closed-loop home exchange network for UN staff and foreign service professionals. Join via their personal invite link.`
-            : 'A closed-loop home exchange ecosystem exclusively for verified UN, World Bank, IMF and foreign service professionals.';
+    // ── Build personalised copy ──────────────────────────────────────────
+    const ogTitle = name
+        ? `${name.split(' ')[0]} invited you to join Unswap`
+        : 'Join the Unswap Waitlist';
 
-        // ── Crawlers: serve static OG HTML ───────────────────────────────────
-        if (CRAWLER_AGENTS.test(userAgent)) {
-            const isTwitterBot = TWITTER_BOT.test(userAgent);
-            const isFacebookBot = FACEBOOK_BOT.test(userAgent);
+    const ogDescription = name
+        ? `${name.split(' ')[0]} thinks you should be on this — a closed-loop home exchange network for UN staff and foreign service professionals. Join via their personal invite link.`
+        : 'A closed-loop home exchange ecosystem exclusively for verified UN, World Bank, IMF and foreign service professionals.';
 
-            let finalOgTitle = ogTitle;
-            let finalOgDescription = ogDescription;
-            let ogImg = OG_IMAGE_URL;
-            let ogImgW = '1200';
-            let ogImgH = '630';
+    // ── Crawlers: serve static OG HTML ───────────────────────────────────
+    if (CRAWLER_AGENTS.test(userAgent)) {
+        const isFacebookBot = FACEBOOK_BOT.test(userAgent);
 
-            if (isTwitterBot) {
-                ogImg = TWITTER_IMAGE_URL;
-                ogImgW = '921';
-                ogImgH = '452';
-            } else if (isFacebookBot) {
-                ogImg = FACEBOOK_IMAGE_URL;
-                finalOgTitle = "This is the first home exchange system I've seen that was actually built for UN staff and foreign service professionals \u2014 not tourists. If your home sits empty during postings, get on this waitlist before it opens:";
-            }
+        let finalOgTitle = ogTitle;
+        let finalOgDescription = ogDescription;
 
-            const html = `<!DOCTYPE html>
+        if (isFacebookBot) {
+            finalOgTitle = "This is the first home exchange system I've seen that was actually built for UN staff and foreign service professionals \u2014 not tourists. If your home sits empty during postings, get on this waitlist before it opens:";
+        }
+
+        const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>${finalOgTitle}</title>
 
-  <!-- Twitter / X Card — must appear FIRST; Twitterbot is order-sensitive -->
-  <!-- NOTE: Twitterbot reads og:image, so we swap og:image to twitter-preview for it above -->
+  <!-- Twitter / X Card -->
   <meta name="twitter:card"        content="summary_large_image" />
   <meta name="twitter:site"        content="@unswap" />
   <meta name="twitter:title"       content="${finalOgTitle}" />
   <meta name="twitter:description" content="${finalOgDescription}" />
-  <meta name="twitter:image"       content="${TWITTER_IMAGE_URL}" />
-  <meta name="twitter:image:src"   content="${TWITTER_IMAGE_URL}" />
+  <meta name="twitter:image"       content="${OG_IMAGE_URL}" />
+  <meta name="twitter:image:src"   content="${OG_IMAGE_URL}" />
   <meta name="twitter:image:alt"   content="Unswap. Home exchange for UN and diplomatic professionals" />
 
-  <!-- Open Graph (Facebook, LinkedIn, WhatsApp, etc.) -->
-  <!-- For Twitterbot: og:image is swapped to twitter-preview.png -->
+  <!-- Open Graph -->
   <meta property="og:type"             content="website" />
   <meta property="og:url"              content="${canonicalUrl}" />
   <meta property="og:site_name"        content="${SITE_NAME}" />
   <meta property="og:title"            content="${finalOgTitle}" />
   <meta property="og:description"      content="${finalOgDescription}" />
-  <meta property="og:image"            content="${ogImg}" />
-  <meta property="og:image:secure_url" content="${ogImg}" />
-  <meta property="og:image:width"      content="${ogImgW}" />
-  <meta property="og:image:height"     content="${ogImgH}" />
+  <meta property="og:image"            content="${OG_IMAGE_URL}" />
+  <meta property="og:image:secure_url" content="${OG_IMAGE_URL}" />
+  <meta property="og:image:width"      content="1200" />
+  <meta property="og:image:height"     content="630" />
   <meta property="og:image:type"       content="image/png" />
   <meta property="og:image:alt"        content="Unswap. Home exchange for UN and diplomatic professionals" />
 </head>
 <body>
   <p>Redirecting you to Unswap…</p>
-  <!-- JS redirect for browsers that land here directly (crawlers ignore this) -->
-  <script>window.location.replace('${thankYouUrl}');<\/script>
+  <script>window.location.replace('${thankYouUrl}');</script>
 </body>
 </html>`;
 
-            return res
-                .status(200)
-                .setHeader('Content-Type', 'text/html; charset=utf-8')
-                // Short cache so image changes are picked up quickly
-                .setHeader('Cache-Control', 'public, max-age=300')
-                .send(html);
-        }
-
-        // ── Real browsers: straight 302 to React app ─────────────────────────
-        return res.redirect(302, referralUrl);
-
-    } catch (err) {
-        console.error('[OG Proxy] Error:', err);
-        const fallbackUrl = `${SITE_URL}?ref=${encodeURIComponent(code)}`;
-        return res.redirect(302, fallbackUrl);
+        return res
+            .status(200)
+            .setHeader('Content-Type', 'text/html; charset=utf-8')
+            .setHeader('Cache-Control', 'public, max-age=300')
+            .send(html);
     }
+
+    // ── Real browsers: straight 302 to React app ─────────────────────────
+    return res.redirect(302, referralUrl);
 });
 
 module.exports = router;
