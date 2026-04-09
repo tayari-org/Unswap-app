@@ -317,7 +317,7 @@ export default function SharePage() {
 
         {/* ── Logo ── */}
         <div className="flex justify-center mb-8">
-          <img src="/logo.png" alt="UnSwap" className="w-20 h-20 object-contain" />
+          <img src="/logo.png" alt="UnSwap" className="w-32 h-32 object-contain" style={{ filter: 'drop-shadow(0 0 18px rgba(201,168,76,0.35))' }} />
         </div>
 
         {/* ── Header ── */}
