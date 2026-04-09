@@ -1,4 +1,14 @@
 import React, { useState, useEffect } from 'react';
+
+// ─── Meta Pixel injection ────────────────────────────────────────────────────
+function useMetaPixel() {
+  useEffect(() => {
+    if (window.fbq) return; // already loaded
+    const script = document.createElement('script');
+    script.innerHTML = `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','1309675737735561');fbq('track','PageView');`;
+    document.head.appendChild(script);
+  }, []);
+}
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { api } from '../api/apiClient.js';
@@ -209,6 +219,7 @@ function buildPlatformButtons(shareUrl) {
 
 // ─── Main SharePage component ───────────────────────────────────────────────
 export default function SharePage() {
+  useMetaPixel();
   const [shareUrl, setShareUrl] = useState('https://www.unswap.net');
   const [isPersonal, setIsPersonal] = useState(false);
   const [copiedId, setCopiedId] = useState(null); // 'link' | template id
@@ -286,6 +297,13 @@ export default function SharePage() {
       className="min-h-screen text-ivory font-sans relative overflow-x-hidden"
       style={{ background: 'var(--navy)' }}
     >
+      {/* Meta Pixel noscript fallback */}
+      <noscript>
+        <img height="1" width="1" style={{ display: 'none' }}
+          src="https://www.facebook.com/tr?id=1309675737735561&ev=PageView&noscript=1"
+          alt=""
+        />
+      </noscript>
       {/* Background radial glow */}
       <div
         className="pointer-events-none fixed inset-0"
@@ -295,7 +313,7 @@ export default function SharePage() {
         }}
       />
 
-      <div className="relative z-10 max-w-2xl mx-auto px-5 py-12 sm:py-16">
+      <div className="relative z-10 max-w-2xl mx-auto px-5 py-12 sm:py-16 pb-28">
 
         {/* ── Logo ── */}
         <div className="flex justify-center mb-8">
@@ -438,6 +456,40 @@ export default function SharePage() {
             ← Back to Waitlist
           </a>
         </div>
+      </div>
+
+      {/* ── Fixed Bottom Banner ── */}
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000,
+        padding: '14px 20px',
+        background: 'linear-gradient(135deg, rgba(10,14,26,0.97) 0%, rgba(15,20,35,0.97) 100%)',
+        borderTop: '1px solid rgba(201,168,76,0.28)',
+        backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px',
+      }}>
+        <span style={{ fontSize: '13px', color: 'rgba(245,240,232,0.65)', letterSpacing: '0.02em' }}>
+          Want to skip the queue?
+        </span>
+        <a
+          href="https://unswap-sales.vercel.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: '8px',
+            background: '#c9a84c', color: '#0a0e1a',
+            fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase',
+            textDecoration: 'none', padding: '9px 20px', borderRadius: '4px',
+            transition: 'background .2s, transform .15s',
+            boxShadow: '0 2px 16px rgba(201,168,76,0.3)',
+          }}
+          onMouseOver={e => { e.currentTarget.style.background = '#e4c97a'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+          onMouseOut={e => { e.currentTarget.style.background = '#c9a84c'; e.currentTarget.style.transform = 'translateY(0)'; }}
+        >
+          Get Early Access
+          <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14m-6-6l6 6-6 6" />
+          </svg>
+        </a>
       </div>
     </div>
   );

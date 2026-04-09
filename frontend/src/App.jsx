@@ -8,7 +8,6 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-import { useState } from 'react';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -28,8 +27,6 @@ const LayoutWrapper = ({ children, currentPageName }) =>
 
 // ─── Skip Queue Banner ────────────────────────────────────────────────────────
 const SkipQueueBanner = () => {
-  const [visible, setVisible] = useState(true);
-  if (!visible) return null;
   return (
     <div style={{
       position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000,
@@ -62,19 +59,6 @@ const SkipQueueBanner = () => {
           <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14m-6-6l6 6-6 6" />
         </svg>
       </a>
-      <button
-        onClick={() => setVisible(false)}
-        style={{
-          position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)',
-          background: 'none', border: 'none', color: 'rgba(245,240,232,0.3)',
-          cursor: 'pointer', fontSize: '18px', lineHeight: 1, padding: '4px',
-          transition: 'color .2s',
-        }}
-        onMouseOver={e => { e.currentTarget.style.color = 'rgba(245,240,232,0.7)'; }}
-        onMouseOut={e => { e.currentTarget.style.color = 'rgba(245,240,232,0.3)'; }}
-      >
-        &times;
-      </button>
     </div>
   );
 };
