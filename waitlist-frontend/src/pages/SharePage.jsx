@@ -459,7 +459,13 @@ export default function SharePage() {
       </div>
 
       {/* ── Fixed Bottom Banner ── */}
-      <div style={{
+      <style>{`
+        @media (max-width: 520px) {
+          #sqb-sharepage { flex-direction: column !important; gap: 10px !important; padding: 14px 16px !important; }
+          #sqb-sharepage a { width: 100%; justify-content: center; }
+        }
+      `}</style>
+      <div id="sqb-sharepage" style={{
         position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000,
         padding: '14px 20px',
         background: 'linear-gradient(135deg, rgba(10,14,26,0.97) 0%, rgba(15,20,35,0.97) 100%)',

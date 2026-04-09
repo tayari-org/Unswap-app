@@ -28,38 +28,46 @@ const LayoutWrapper = ({ children, currentPageName }) =>
 // ─── Skip Queue Banner ────────────────────────────────────────────────────────
 const SkipQueueBanner = () => {
   return (
-    <div style={{
-      position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000,
-      padding: '14px 20px',
-      background: 'linear-gradient(135deg, rgba(10,14,26,0.97) 0%, rgba(15,20,35,0.97) 100%)',
-      borderTop: '1px solid rgba(201,168,76,0.28)',
-      backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px',
-    }}>
-      <span style={{ fontSize: '13px', color: 'rgba(245,240,232,0.65)', letterSpacing: '0.02em' }}>
-        Want to skip the queue?
-      </span>
-      <a
-        href="https://unswap-sales.vercel.app/"
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          display: 'inline-flex', alignItems: 'center', gap: '8px',
-          background: '#c9a84c', color: '#0a0e1a',
-          fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase',
-          textDecoration: 'none', padding: '9px 20px', borderRadius: '4px',
-          transition: 'background .2s, transform .15s',
-          boxShadow: '0 2px 16px rgba(201,168,76,0.3)',
-        }}
-        onMouseOver={e => { e.currentTarget.style.background = '#e4c97a'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-        onMouseOut={e => { e.currentTarget.style.background = '#c9a84c'; e.currentTarget.style.transform = 'translateY(0)'; }}
-      >
-        Get Early Access
-        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14m-6-6l6 6-6 6" />
-        </svg>
-      </a>
-    </div>
+    <>
+      <style>{`
+        @media (max-width: 520px) {
+          #sqb-global { flex-direction: column !important; gap: 10px !important; padding: 14px 16px !important; }
+          #sqb-global a { width: 100%; justify-content: center; }
+        }
+      `}</style>
+      <div id="sqb-global" style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000,
+        padding: '14px 20px',
+        background: 'linear-gradient(135deg, rgba(10,14,26,0.97) 0%, rgba(15,20,35,0.97) 100%)',
+        borderTop: '1px solid rgba(201,168,76,0.28)',
+        backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px',
+      }}>
+        <span style={{ fontSize: '13px', color: 'rgba(245,240,232,0.65)', letterSpacing: '0.02em' }}>
+          Want to skip the queue?
+        </span>
+        <a
+          href="https://unswap-sales.vercel.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: '8px',
+            background: '#c9a84c', color: '#0a0e1a',
+            fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase',
+            textDecoration: 'none', padding: '9px 20px', borderRadius: '4px',
+            transition: 'background .2s, transform .15s',
+            boxShadow: '0 2px 16px rgba(201,168,76,0.3)',
+          }}
+          onMouseOver={e => { e.currentTarget.style.background = '#e4c97a'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+          onMouseOut={e => { e.currentTarget.style.background = '#c9a84c'; e.currentTarget.style.transform = 'translateY(0)'; }}
+        >
+          Get Early Access
+          <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14m-6-6l6 6-6 6" />
+          </svg>
+        </a>
+      </div>
+    </>
   );
 };
 
