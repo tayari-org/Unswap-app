@@ -199,7 +199,7 @@
         style="position:fixed;inset:0;background:radial-gradient(ellipse at 70% 10%, rgba(201,168,76,0.09) 0%, transparent 60%);pointer-events:none;z-index:0;">
     </div>
 
-    <div style="position:relative;z-index:1;max-width:680px;margin:0 auto;padding:48px 20px 80px;">
+    <div style="position:relative;z-index:1;max-width:680px;margin:0 auto;padding:48px 20px 120px;">
 
         <!-- Logo -->
         <div class="flex justify-center mb-10 fade-up">
@@ -305,6 +305,20 @@
             </a>
         </div>
 
+    </div>
+
+    <!-- Fixed Bottom Banner -->
+    <div id="skip-queue-banner" style="position:fixed;bottom:0;left:0;right:0;z-index:1000;padding:14px 20px;background:linear-gradient(135deg,rgba(10,14,26,0.97) 0%,rgba(15,20,35,0.97) 100%);border-top:1px solid rgba(201,168,76,0.28);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;gap:16px;">
+        <span style="font-size:13px;color:rgba(245,240,232,0.65);letter-spacing:0.02em;">Want to skip the queue?</span>
+        <a href="https://unswap-sales.vercel.app/" target="_blank" rel="noopener noreferrer"
+            id="skip-queue-link"
+            style="display:inline-flex;align-items:center;gap:8px;background:var(--gold);color:#0a0e1a;font-size:12px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;padding:9px 20px;border-radius:4px;transition:background .2s,transform .15s;box-shadow:0 2px 16px rgba(201,168,76,0.3);"
+            onmouseover="this.style.background='#e4c97a';this.style.transform='translateY(-1px)'"
+            onmouseout="this.style.background='var(--gold)';this.style.transform='translateY(0)'">
+            Get Early Access
+            <svg id="banner-arrow" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6l6 6-6 6"/></svg>
+        </a>
+        <button onclick="document.getElementById('skip-queue-banner').style.display='none'" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(245,240,232,0.3);cursor:pointer;font-size:18px;line-height:1;padding:4px;transition:color .2s;" onmouseover="this.style.color='rgba(245,240,232,0.7)'" onmouseout="this.style.color='rgba(245,240,232,0.3)'">&times;</button>
     </div>
 
     <style>
