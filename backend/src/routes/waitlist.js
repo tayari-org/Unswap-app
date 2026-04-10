@@ -1,7 +1,17 @@
 const express = require('express');
 const crypto = require('crypto');
+const rateLimit = require('express-rate-limit');
 const { prisma } = require('../db');
 const router = express.Router();
+
+// ─── Tight rate limit for the join endpoint (5 attempts / IP / hour) ──────────
+const joinLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    max: 5,
+    message: { error: 'Too many signup attempts. Please try again later.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 
 // ─── Token store (in-memory, 15-min TTL) ──────────────────────────────────────
 const pendingWaitlist = new Map();
@@ -18,7 +28,7 @@ function generateToken() {
 
 // ─── POST /api/waitlist/join/initiate ─────────────────────────────────────────
 // Sends confirmation link to email; does NOT write to the DB yet.
-router.post('/join/initiate', async (req, res) => {
+router.post('/join/initiate', joinLimiter, async (req, res) => {
     try {
         const { email, name, organization, ref } = req.body;
         if (!email) return res.status(400).json({ error: 'Email is required' });
@@ -150,26 +160,31 @@ router.get('/confirm', async (req, res) => {
         pendingWaitlist.delete(token);
 
         // Keep local DB in sync (using Waitlister's generated referral_code)
-        try {
-            await prisma.waitlistEntry.create({
-                data: {
-                    email: pending.email,
-                    full_name: pending.name,
-                    organization: pending.organization,
-                    waitlist_position: wlData.position,
-                    referral_code: wlData.referral_code,
-                    referred_by: pending.ref || null,
-                    is_verified: true
-                }
-            });
-        } catch (dbErr) {
-            console.warn('Silent fail writing to local waitlist shadow DB:', dbErr.message);
+        // Guard: referral_code is required (NOT NULL unique) — skip write if missing
+        if (wlData.referral_code) {
+            try {
+                await prisma.waitlistEntry.create({
+                    data: {
+                        email: pending.email,
+                        full_name: pending.name,
+                        organization: pending.organization,
+                        waitlist_position: wlData.position,
+                        referral_code: wlData.referral_code,
+                        referred_by: pending.ref || null,
+                        is_verified: true
+                    }
+                });
+            } catch (dbErr) {
+                console.warn('Silent fail writing to local waitlist shadow DB:', dbErr.message);
+            }
+        } else {
+            console.warn('[Waitlist Confirm] Waitlister did not return a referral_code — skipping DB write for:', pending.email);
         }
 
         // ─── Post-Verification Kit Form Subscription ────────────────────────────────
         const kitApiSecret = process.env.KIT_API_KEY || process.env.KIT_API_SECRET;
         const kitFormId = process.env.KIT_FORM_ID || '9247374';
-        
+
         if (kitApiSecret && kitFormId) {
             try {
                 const kitFormResponse = await fetch(`https://api.kit.com/v4/forms/${kitFormId}/subscribers`, {
@@ -206,7 +221,8 @@ router.get('/confirm', async (req, res) => {
                         data: { referred_users_verified_count: { increment: 1 } }
                     });
 
-                    // Update 'referrals' field on Kit
+                    // Update 'referrals_count' field on Kit
+                    // IMPORTANT: key must match exactly how the custom field is named in Kit (case-sensitive)
                     if (kitApiSecret) {
                         const kitUpdateResponse = await fetch(`https://api.kit.com/v4/subscribers`, {
                             method: 'POST',
@@ -217,11 +233,11 @@ router.get('/confirm', async (req, res) => {
                             body: JSON.stringify({
                                 email_address: referrer.email,
                                 fields: {
-                                    Referrals_count: updatedReferrer.referred_users_verified_count
+                                    referrals_count: updatedReferrer.referred_users_verified_count
                                 }
                             })
                         });
-                        
+
                         if (!kitUpdateResponse.ok) {
                             console.warn('Silent fail updating referrer count in Kit:', await kitUpdateResponse.text());
                         }
@@ -321,13 +337,17 @@ router.get('/status', async (req, res) => {
             return res.json({ found: false });
         }
 
-        // Return the thank you URL (for redirect) and referral_code (for share URL)
+        // Normalise subscriber shape — decouples frontend from Waitlister's API surface
         const subscriber = wlData.data.subscriber;
         return res.json({
             found: true,
-            thank_you_url: subscriber.thank_you_url,
             referral_code: subscriber.referral_code || null,
-            subscriber: subscriber,
+            thank_you_url: subscriber.thank_you_url || null,
+            subscriber: {
+                position: subscriber.position ?? null,
+                points: subscriber.points ?? null,
+                total_referrals: subscriber.total_referrals ?? 0,
+            },
         });
 
     } catch (err) {

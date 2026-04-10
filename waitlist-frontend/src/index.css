@@ -99,4 +99,30 @@ body::before {
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
+
+  .platform-btn {
+    transition: all 0.2s ease;
+  }
+
+  /* GPU-accelerated touch-friendly hovers using CSS vars injected by React */
+  .platform-btn:hover, .platform-btn:focus-visible {
+    border-color: var(--btn-color) !important;
+    background-color: var(--btn-bg) !important;
+    color: #ffffff !important;
+    transform: translateY(-2px);
+    box-shadow: var(--btn-glow);
+  }
 }
+
+/* Hide scrollbar completely but allow scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+.no-scrollbar {
+  -ms-overflow-style: none !important;  /* IE and Edge */
+  scrollbar-width: none !important;  /* Firefox */
+}
+

@@ -24,16 +24,15 @@ router.get('/:code', async (req, res) => {
         // Look up the referral code in the local shadow DB
         const entry = await prisma.waitlistEntry.findFirst({
             where: { referral_code: code },
-            select: { full_name: true, thank_you_url: true }
+            select: { full_name: true }   // thank_you_url does not exist on WaitlistEntry
         });
 
         if (entry) {
             name = entry.full_name;
-            if (entry.thank_you_url) thankYouUrl = entry.thank_you_url;
         }
     } catch (err) {
         console.error('[OG Proxy] DB Error lookup:', err);
-        // We catch here so the crawler logic below still fires with default text!
+        // Catch here so the crawler logic below still fires with default text
     }
 
     const referralUrl = `${SITE_URL}?ref=${encodeURIComponent(code)}`;

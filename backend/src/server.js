@@ -98,26 +98,29 @@ app.use((req, res) => {
 
 // ─── Global error handler ─────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
+    const isProd = process.env.NODE_ENV === 'production';
+
+    // In production: omit stack + req.body to avoid PII leakage in logs/files
     const errorInfo = {
         timestamp: new Date().toISOString(),
         message: err.message,
-        stack: err.stack,
         path: req.path,
         method: req.method,
-        body: req.body,
-        query: req.query,
+        ...(isProd ? {} : { stack: err.stack, body: req.body, query: req.query }),
     };
 
     console.error('[Global Error]', errorInfo);
 
-    // Also write to a file for easier debugging if console is hard to read
-    try {
-        const fs = require('fs');
-        const path = require('path');
-        const logPath = path.join(__dirname, '..', 'error_log.txt');
-        fs.appendFileSync(logPath, JSON.stringify(errorInfo, null, 2) + '\n---\n');
-    } catch (e) {
-        console.error('Failed to write to error_log.txt', e);
+    // Write to file only in development (avoids unbounded growth + PII on disk in prod)
+    if (!isProd) {
+        try {
+            const fs = require('fs');
+            const path = require('path');
+            const logPath = path.join(__dirname, '..', 'error_log.txt');
+            fs.appendFileSync(logPath, JSON.stringify({ ...errorInfo, stack: err.stack, body: req.body, query: req.query }, null, 2) + '\n---\n');
+        } catch (e) {
+            console.error('Failed to write to error_log.txt', e);
+        }
     }
 
     res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
